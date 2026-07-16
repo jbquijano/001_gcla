@@ -1,0 +1,637 @@
+---
+title: "Photosymbs in GCs"
+format: html
+theme: 
+  light: zephyr
+  dark: cyborg
+toc: true
+page-layout: full
+number-sections: true
+number-depth: 3
+editor: visual
+self-contained: true
+---
+
+# Notes
+
+A naming convention for dataframes was made.
+
+1.  Objects were named with a prefix per section arranged alphabetically.
+2.  A 2nd prefix was added to arrange all the data accordingly:
+    -   Dataframes: .**1**
+    -   Plots: .**2**
+    -   Stats: .**3** (those in dataframe format)
+    -   Others:
+        -   Vectors: .**vec**
+        -   Trees: .**tre**
+        -   Distances: .**dis**
+        -   Functions: .**fun**
+3.  If a dataframe will be used multiple times in case a raw dataframe is needed and an edited one should not supersede the raw one, add a suffix at the end (i.e., **\_1** for first edit, **\_2** for second....).
+4.  Limit 3rd prefix names to three letters and if 2 prefixes are needed, separate with "**.**".
+5.  If an object is just an auxiliary object, put a **Z** prefix.
+
+# Load pkgs
+
+```{r}
+pacman::p_load(tidyverse,
+               janitor,
+               vegan,
+               cowplot,
+               pairwiseAdonis,
+               svglite,
+               viridis,
+               multcompView,
+               scico,
+               ggbeeswarm,
+               ggupset,
+               rstatix,
+               ape,
+               ggtree)
+```
+
+# Genus
+
+Tidy data.
+
+```{r}
+B.1_ITS2 <- # clean its2 data with correct id info
+  A.1_ITS2_2
+
+B.1_ITS2_1 <- # pivot longer
+  B.1_ITS2 |> 
+  select(!c(1,3,4)) |> 
+  pivot_longer(!1,
+               names_to = "ITS2",
+               values_to = "Count")
+
+B.1_ITS2_2 <- # merge with metadata
+  B.1_ITS2_1 |> 
+  left_join(A.1_Metadata_1)
+
+B.1_ITS2_3 <- # genus info
+  B.1_ITS2_2 |> 
+  # Detect genus
+  mutate(Genus = case_when(str_detect(ITS2, "A") ~ "Symbiodinium",
+                           str_detect(ITS2, "C") ~ "Cladocopium",
+                           str_detect(ITS2, "D") ~ "Durusdinium",
+                           str_detect(ITS2, "G") ~ "Gerakladium",
+                           .default = NA)) |> 
+  drop_na() |> 
+  group_by(CorrectID, Genus, Species, region) |> 
+  summarise(Total = sum(Count)) |> 
+  ungroup() |> 
+  arrange(tolower(region)) %>%     # sort the data frame by region, then ID
+  mutate(CorrectID = factor(CorrectID, levels = unique(CorrectID)))
+```
+
+Plot.
+
+```{r}
+B.2_ITS2Genus <- 
+  B.1_ITS2_3 |> 
+  ggplot(aes(x = CorrectID,
+             y = Total,
+             fill = fct_relevel(Genus, c("Symbiodinium",
+                                         "Cladocopium",
+                                         "Durusdinium",
+                                         "Gerakladium")))) +
+  geom_col(position = "fill",
+           width = 1.15,
+           color = NA,
+           linewidth = 0) +
+  facet_grid(cols = vars(fct_relevel(Species,
+                                     c("H. hippopus",
+                                      "H. porcellanus",
+                                      "T. crocea",
+                                      "T. squamosa",
+                                      "T. noae",
+                                      "T. maxima",
+                                      "T. derasa",
+                                      "T. gigas"))),
+             space = "free",
+             scale = "free") +
+  scale_fill_manual(values = 
+                      c("Symbiodinium"= "#746FB4",
+                        "Cladocopium" = "#209E77",
+                        "Durusdinium" = "#E7AB06",
+                        "Gerakladium" = "#A9A9A9")) +
+  scale_y_continuous(expand = c(0,0)) +
+  scale_x_discrete(expand = c(0,0)) +
+  theme_minimal() +
+  theme(legend.title = element_blank(),
+        strip.background = element_blank(),
+        panel.spacing = unit(0.1,'lines'),
+        axis.text = element_blank(),
+        axis.title = element_blank(),
+        panel.grid = element_blank(),
+        axis.line.y = element_line(),
+        axis.ticks.y = element_line())
+```
+
+Save.
+
+```{r}
+(B.2_ITS2Genus +
+    theme(legend.position = "none")) |> 
+  ggsave(filename = "Barplot - Genus.svg", 
+         dpi = 900,
+         width = 14.75, 
+         height = 2,
+         unit = "cm")
+
+B.2_ITS2Genus |> 
+  ggsave(filename = "Barplot - Genus - With Legend.svg", 
+         dpi = 900,
+         width = 20, 
+         height = 10,
+         unit = "cm")
+```
+
+# Region labels
+
+Tidy data.
+
+```{r}
+E.1_Metadata <- # filter metadata to include samples with ITS2 seqs
+  A.1_Metadata_1 |> 
+  filter(CorrectID %in% (A.1_ITS2_2 |> 
+                           pull(CorrectID)))
+
+E.1_Metadata_1 <- # add counts which will be used to do barplots/labels
+  E.1_Metadata |> 
+  mutate(Count = 1)
+
+E.1_Metadata_2 <- # arrange
+  E.1_Metadata_1 |> 
+  arrange(CorrectID)
+```
+
+Plot.
+
+```{r}
+E.2_Region <- 
+  E.1_Metadata_2 |> 
+  ggplot(aes(x = fct_reorder(CorrectID, region),
+             y = Count,
+             fill = region)) +
+  geom_col(width = 1.15) +
+  facet_grid(cols = vars(fct_relevel(Species,
+                                    c("H. hippopus",
+                                      "H. porcellanus",
+                                      "T. crocea",
+                                      "T. squamosa",
+                                      "T. noae",
+                                      "T. maxima",
+                                      "T. derasa",
+                                      "T. gigas"))),
+             scales = "free",
+             space = "free") +
+  scale_y_continuous(expand = c(0,0)) +
+  scale_x_discrete(expand = c(0,0)) +
+  scale_fill_manual(values = c("Alaminos"="#E41A1C",
+                               "Antique"="#377EB8",
+                               "ARNP"="#4DAF4A",
+                               "Batangas"="#984EA3",
+                               "Bohol"="#FF7F00",
+                               "Bolinao"="#FFFF33",
+                               "Calaguas"="#A65628",
+                               "Camiguin"="#F781BF",
+                               "Palawan"="#999999",
+                               "Samar"="#66C2A5",
+                               "Zambales"="#FC8D62")) +
+  theme_minimal() +
+  theme(panel.grid = element_blank(),
+        axis.text = element_blank(),
+        panel.spacing = unit(0.1,'lines'),
+        axis.title = element_blank(),
+        legend.position = "top") +
+  guides(fill = guide_legend(nrow = 1))
+```
+
+Save plot.
+
+```{r}
+(E.2_Region +
+    theme(legend.position = "none",
+          axis.text = element_blank()))  |> 
+  ggsave(filename = "Labels - Regions - No legend.svg", 
+         dpi = 900,
+         width = 17.5, 
+         height = 4,
+         unit = "cm")
+
+E.2_Region |> 
+  ggsave(filename = "Labels - Regions.svg", 
+         dpi = 900,
+         width = 25, 
+         height = 4,
+         unit = "cm")
+```
+
+# ITS2 type profile
+
+```{r}
+F.1_ITS2TypeProf <- 
+  read_tsv("../raw_data/20250829T091611/its2_type_profiles/4_first_analysis_20250829T091611.profiles.absolute.abund_and_meta.txt")
+
+F.1_ITS2TypeProf_1 <- # tidy
+  F.1_ITS2TypeProf |> 
+  slice(-(1:5)) %>% # Remove first 5 rows (unnecessary rows)
+  row_to_names(1) |>  # Move first row to column header
+  rename(sample_name = 2) |>  # Name 2nd column
+  select(-1) |>  # Remove first column (unneeded)
+  drop_na() |> 
+  type_convert() 
+
+F.1_ITS2TypeProf_2 <- 
+  E.1_Metadata_1 |> 
+  select(sample_name, CorrectID, Species, region) |> 
+  left_join(F.1_ITS2TypeProf_1) |> 
+  select(!sample_name)
+
+F.1_ITS2TypeProf_3 <- 
+  read_csv("../raw_data/Edited ITS2 type profile naming.csv") |> 
+  rename(name = 1)
+
+F.1_ITS2TypeProf_4 <- 
+  F.1_ITS2TypeProf_2 |> 
+  pivot_longer(!1:3) |> 
+  filter(value > 0) |> 
+  left_join(F.1_ITS2TypeProf_3)
+
+F.1_ITS2TypeProf_5 <- # ITS2 type profiles
+  F.1_ITS2TypeProf_4 |> 
+  distinct(name) |> 
+  pull(name)
+```
+
+Initial plot.
+
+```{r}
+F.2_ITS2TypeProf <- 
+  F.1_ITS2TypeProf_4 |> 
+  group_by(CorrectID) |>
+  mutate(RelAbun = value/sum(value)) |> 
+  ungroup() |>
+  select(CorrectID, Edited, RelAbun) |> 
+  pivot_wider(names_from = Edited,
+              values_from = RelAbun,
+              values_fill = 0) |> 
+  pivot_longer(!1,
+               names_to = "ITS2TypeProf",
+               values_to = "RelAbun") |> 
+  mutate(RelAbun = sqrt(RelAbun),
+         Clade = str_extract(ITS2TypeProf, "[A-Z]")) |>
+  left_join(E.1_Metadata_1) |> 
+  ggplot(aes(x = CorrectID,
+             y = ITS2TypeProf,
+             fill = RelAbun)) +
+  geom_raster() +
+  facet_grid(cols = vars(Species),
+             rows = vars(Clade),
+             space = "free",
+             scale = "free") +
+  scale_y_discrete(expand = c(0,0)) +
+  scale_x_discrete(expand = c(0,0)) +
+  theme_minimal() +
+  theme(legend.title = element_blank(),
+        strip.background = element_blank(),
+        panel.spacing = unit(0.2,'lines'),
+        axis.text.x = element_blank(),
+        axis.text.y = element_text(size = 7, hjust = 0),
+        axis.title = element_blank(),
+        panel.grid = element_blank(),
+        legend.position = "bottom") +
+  scale_fill_viridis(option = "cividis")
+```
+
+Add Unifrac data.
+
+*Cladocopium*.
+
+```{r}
+## Cladocopium
+# read distance matrix
+G.1_Cladocopium <- 
+  read_tsv("../raw_data/20250829T091611/between_profile_distances/C/20250829T091611_unifrac_profile_distances_C_no_sqrt.dist",
+           col_names = F) |> 
+  select(!2)
+
+G.1_CladocopiumNames <- 
+  G.1_Cladocopium |> 
+  pull(X1)
+
+G.1_CladocopiumNames <- 
+  c("ITS2TypeProf", G.1_CladocopiumNames)
+
+G.1_Cladocopium <- 
+  G.1_Cladocopium |> 
+  set_names(G.1_CladocopiumNames)
+
+G.1_CladocopiumNames2 <- 
+  G.1_Cladocopium |> 
+  filter(ITS2TypeProf %in% F.1_ITS2TypeProf_5) |> 
+  pull(ITS2TypeProf)
+
+G.1_CladocopiumNames2 <- 
+  c("ITS2TypeProf", G.1_CladocopiumNames2)
+
+G.1_Cladocopium <- 
+  G.1_Cladocopium |> 
+  filter(ITS2TypeProf %in% G.1_CladocopiumNames2) |> 
+  select(all_of(G.1_CladocopiumNames2)) |> 
+  column_to_rownames("ITS2TypeProf")
+
+# distance object
+G.1_Cladocopium_2 <- as.dist(G.1_Cladocopium)
+
+# UPGMA
+G.1_Cladocopium_3 <- 
+  hclust(G.1_Cladocopium_2,
+         method = "average") |> 
+  as.phylo()
+
+# ggtree plot
+G.1_Cladocopium_4 <- 
+  G.1_Cladocopium_3 |> 
+  ggtree() +
+  geom_tiplab(size = 3) +
+  coord_cartesian(clip = "off") +
+  xlim(0, max(G.1_Cladocopium_3$edge.length) + 0.01)
+
+# Save
+G.1_Cladocopium_4 |> 
+  ggsave(filename = "Tree - Within Tgig - C.svg", 
+         dpi = 900,
+         width = 6, 
+         height = 5,
+         unit = "cm")
+
+G.1_Cladocopium_5 <- # tip order
+  G.1_Cladocopium_4$data |>
+  dplyr::filter(isTip) |>
+  dplyr::arrange(y) |>
+  dplyr::pull(label)
+```
+
+*Durusdinium*.
+
+```{r}
+## Durusdinium
+# read distance matrix
+G.1_Durusdinium <- 
+  read_tsv("../raw_data/20250829T091611/between_profile_distances/D/20250829T091611_unifrac_profile_distances_D_no_sqrt.dist",
+           col_names = F) |> 
+  select(!2)
+
+G.1_DurusdiniumNames <- 
+  G.1_Durusdinium |> 
+  pull(X1)
+
+G.1_DurusdiniumNames <- 
+  c("ITS2TypeProf", G.1_DurusdiniumNames)
+
+G.1_Durusdinium <- 
+  G.1_Durusdinium |> 
+  set_names(G.1_DurusdiniumNames)
+
+G.1_DurusdiniumNames2 <- 
+  G.1_Durusdinium |> 
+  filter(ITS2TypeProf %in% F.1_ITS2TypeProf_5) |> 
+  pull(ITS2TypeProf)
+
+G.1_DurusdiniumNames2 <- 
+  c("ITS2TypeProf", G.1_DurusdiniumNames2)
+
+G.1_Durusdinium <- 
+  G.1_Durusdinium |> 
+  filter(ITS2TypeProf %in% G.1_DurusdiniumNames2) |> 
+  select(all_of(G.1_DurusdiniumNames2)) |> 
+  column_to_rownames("ITS2TypeProf")
+
+# distance object
+G.1_Durusdinium_2 <- as.dist(G.1_Durusdinium)
+
+# UPGMA
+G.1_Durusdinium_3 <- 
+  hclust(G.1_Durusdinium_2,
+         method = "average") |> 
+  as.phylo()
+
+# ggtree plot
+G.1_Durusdinium_4 <- 
+  G.1_Durusdinium_3 |> 
+  ggtree() +
+  geom_tiplab(size = 3) +
+  coord_cartesian(clip = "off") +
+  xlim(0, max(G.1_Durusdinium_3$edge.length) + 0.01)
+
+# Save
+G.1_Durusdinium_4 |> 
+  ggsave(filename = "Tree - Within Tgig - D.svg", 
+         dpi = 900,
+         width = 6, 
+         height = 5,
+         unit = "cm")
+
+G.1_Durusdinium_5 <- # tip order
+  G.1_Durusdinium_4$data |>
+  dplyr::filter(isTip) |>
+  dplyr::arrange(y) |>
+  dplyr::pull(label)
+```
+
+*Symbiodinium*.
+
+```{r}
+## Symbiodinium
+# read distance matrix
+G.1_Symbiodinium <- 
+  read_tsv("../raw_data/20250829T091611/between_profile_distances/A/20250829T091611_unifrac_profile_distances_A_no_sqrt.dist",
+           col_names = F) |> 
+  select(!2)
+
+G.1_SymbiodiniumNames <- 
+  G.1_Symbiodinium |> 
+  pull(X1)
+
+G.1_SymbiodiniumNames <- 
+  c("ITS2TypeProf", G.1_SymbiodiniumNames)
+
+G.1_Symbiodinium <- 
+  G.1_Symbiodinium |> 
+  set_names(G.1_SymbiodiniumNames)
+
+G.1_SymbiodiniumNames2 <- 
+  G.1_Symbiodinium |> 
+  filter(ITS2TypeProf %in% F.1_ITS2TypeProf_5) |> 
+  pull(ITS2TypeProf)
+
+G.1_SymbiodiniumNames2 <- 
+  c("ITS2TypeProf", G.1_SymbiodiniumNames2)
+
+G.1_Symbiodinium <- 
+  G.1_Symbiodinium |> 
+  filter(ITS2TypeProf %in% G.1_SymbiodiniumNames2) |> 
+  select(all_of(G.1_SymbiodiniumNames2)) |> 
+  column_to_rownames("ITS2TypeProf")
+
+# distance object
+G.1_Symbiodinium_2 <- as.dist(G.1_Symbiodinium)
+
+# UPGMA
+G.1_Symbiodinium_3 <- 
+  hclust(G.1_Symbiodinium_2,
+         method = "average") |> 
+  as.phylo()
+
+# ggtree plot
+G.1_Symbiodinium_4 <- 
+  G.1_Symbiodinium_3 |> 
+  ggtree() +
+  geom_tiplab(size = 3) +
+  coord_cartesian(clip = "off") +
+  xlim(0, max(G.1_Symbiodinium_3$edge.length) + 0.01)
+
+# Save
+G.1_Symbiodinium_4 |> 
+  ggsave(filename = "Tree - Within Tgig - A.svg", 
+         dpi = 900,
+         width = 6, 
+         height = 5,
+         unit = "cm")
+
+G.1_Symbiodinium_5 <- # tip order
+  G.1_Symbiodinium_4$data |>
+  dplyr::filter(isTip) |>
+  dplyr::arrange(y) |>
+  dplyr::pull(label)
+```
+
+Arrange y-axis based on the trees.
+
+```{r}
+H.1_ITS2TypeProfNames <- 
+  c(G.1_Cladocopium_5, G.1_Durusdinium_5, G.1_Symbiodinium_5) %>%
+  tibble("name" = .) |> 
+  left_join(F.1_ITS2TypeProf_3) |> 
+  pull(Edited)
+```
+
+Arrange plot.
+
+```{r}
+H.2_ITS2TypeProf <- 
+  F.1_ITS2TypeProf_4 |> 
+  group_by(CorrectID) |>
+  mutate(RelAbun = value/sum(value)) |> 
+  ungroup() |>
+  select(CorrectID, Edited, RelAbun) |> 
+  pivot_wider(names_from = Edited,
+              values_from = RelAbun,
+              values_fill = 0) |> 
+  pivot_longer(!1,
+               names_to = "ITS2TypeProf",
+               values_to = "RelAbun") |> 
+  mutate(RelAbun = sqrt(RelAbun),
+         Clade = str_extract(ITS2TypeProf, "[A-Z]")) |>
+  left_join(E.1_Metadata_1) |>
+  mutate(ITS2TypeProf = factor(ITS2TypeProf, levels = H.1_ITS2TypeProfNames)) |> 
+  ungroup() |> 
+  arrange(tolower(region)) %>%     # sort the data frame by region, then ID
+  mutate(CorrectID = factor(CorrectID, levels = unique(CorrectID))) |> 
+  ggplot(aes(x = CorrectID,
+             y = ITS2TypeProf,
+             fill = RelAbun)) +
+  geom_raster() +
+  facet_grid(cols = vars(fct_relevel(Species, c("H. hippopus",
+                                      "H. porcellanus",
+                                      "T. crocea",
+                                      "T. squamosa",
+                                      "T. noae",
+                                      "T. maxima",
+                                      "T. derasa",
+                                      "T. gigas"))),
+             rows = vars(Clade),
+             space = "free",
+             scale = "free") +
+  scale_y_discrete(expand = c(0,0)) +
+  scale_x_discrete(expand = c(0,0)) +
+  theme_minimal() +
+  theme(legend.title = element_blank(),
+        strip.background = element_blank(),
+        panel.spacing = unit(0.2,'lines'),
+        axis.text.x = element_blank(),
+        axis.text.y = element_text(size = 7, hjust = 0),
+        axis.title = element_blank(),
+        panel.grid = element_blank(),
+        legend.position = "bottom") +
+  scale_fill_viridis(option = "cividis")
+
+H.2_ITS2TypeProf |> 
+  ggsave(filename = "ITS2 type profile - By species.svg", 
+         dpi = 900,
+         width = 15, 
+         height = 11,
+         unit = "cm")
+```
+
+# Lineages
+
+## Species
+
+```{r}
+I.1_ITS2TypeProf <- 
+  F.1_ITS2TypeProf_4
+
+I.1_ITS2TypeProf_1 <- # get the dominant DIV
+  I.1_ITS2TypeProf |> 
+  separate(Edited, into = "lineage", sep = "-", extra = "drop", remove = FALSE)
+
+I.1_ITS2TypeProf_2 <- # get total per sample per lineage per species
+  I.1_ITS2TypeProf_1 |> 
+  mutate(lineage = if_else(lineage == "C66/C93a", "C93a/C66", lineage)) |> # consolidate
+  mutate(lineage = if_else(lineage == "D4/D5/D9b", "D5/D4/D9b", lineage))	|> # consolidate
+  group_by(CorrectID, Species, region, lineage) |> 
+  summarise(Total = sum(value)) |> 
+  ungroup() |> 
+  group_by(CorrectID) |> 
+  mutate(RelativeAbundance = Total/sum(Total)) |> 
+  ungroup()
+
+I.1_ITS2TypeProf_3 <- # get dominant lineages per sample (>=0.6)
+  I.1_ITS2TypeProf_2 |> 
+  mutate(IsDominant = if_else(RelativeAbundance >= 0.8, 1, 0)) |> 
+  group_by(Species, lineage) |> 
+  summarise(Total = sum(IsDominant)) |> 
+  ungroup()
+
+I.1_ITS2TypeProf_4 <- # no. of samples per species
+  E.1_Metadata |> 
+  count(Species)
+
+I.1_ITS2TypeProf_5 <- 
+  I.1_ITS2TypeProf_3 |> 
+  left_join(I.1_ITS2TypeProf_4) |> 
+  mutate(Prop = Total/n *100)
+```
+
+## Region
+
+```{r}
+J.1_ITS2TypeProf <- # get total per sample per lineage per region
+  I.1_ITS2TypeProf_2 |> 
+  mutate(IsDominant = if_else(RelativeAbundance >= 0.6, 1, 0)) |> 
+  group_by(region, lineage) |> 
+  summarise(Total = sum(IsDominant)) |> 
+  ungroup()
+
+J.1_ITS2TypeProf_1 <- # get dominant lineages per sample (>=0.6)
+  E.1_Metadata |> 
+  count(region)
+
+J.1_ITS2TypeProf_2 <- 
+  J.1_ITS2TypeProf |> 
+  left_join(J.1_ITS2TypeProf_1) |> 
+  mutate(Prop = Total/n *100)
+```

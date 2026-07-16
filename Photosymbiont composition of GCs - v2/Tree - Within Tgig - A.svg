@@ -1,0 +1,56 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' width='170.08pt' height='141.73pt' viewBox='0 0 170.08 141.73'>
+<g class='svglite'>
+<defs>
+  <style type='text/css'><![CDATA[
+    .svglite line, .svglite polyline, .svglite polygon, .svglite path, .svglite rect, .svglite circle {
+      fill: none;
+      stroke: #000000;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-miterlimit: 10.00;
+    }
+    .svglite text {
+      white-space: pre;
+    }
+    .svglite g.glyphgroup path {
+      fill: inherit;
+      stroke: none;
+    }
+  ]]></style>
+</defs>
+<rect width='100%' height='100%' style='stroke: none; fill: #FFFFFF;'/>
+<defs>
+  <clipPath id='cpMC4wMHwxNzAuMDh8MC4wMHwxNDEuNzM='>
+    <rect x='0.00' y='0.00' width='170.08' height='141.73' />
+  </clipPath>
+</defs>
+<g clip-path='url(#cpMC4wMHwxNzAuMDh8MC4wMHwxNDEuNzM=)'>
+<rect x='0.00' y='0.00' width='170.08' height='141.73' style='stroke-width: 1.07; stroke: #FFFFFF; fill: #FFFFFF;' />
+<rect x='5.48' y='5.48' width='159.12' height='130.77' style='stroke-width: 1.07; stroke: #FFFFFF; fill: #FFFFFF;' />
+<line x1='77.82' y1='96.01' x2='78.89' y2='96.01' style='stroke-width: 1.07;' />
+<line x1='75.02' y1='45.72' x2='78.89' y2='45.72' style='stroke-width: 1.07;' />
+<line x1='75.02' y1='20.57' x2='78.89' y2='20.57' style='stroke-width: 1.07;' />
+<line x1='77.82' y1='70.87' x2='78.89' y2='70.87' style='stroke-width: 1.07;' />
+<line x1='12.71' y1='121.16' x2='78.89' y2='121.16' style='stroke-width: 1.07;' />
+<line x1='12.71' y1='89.73' x2='12.71' y2='89.73' style='stroke-width: 1.07;' />
+<line x1='12.71' y1='58.29' x2='70.53' y2='58.29' style='stroke-width: 1.07;' />
+<line x1='70.53' y1='83.44' x2='77.82' y2='83.44' style='stroke-width: 1.07;' />
+<line x1='70.53' y1='33.14' x2='75.02' y2='33.14' style='stroke-width: 1.07;' />
+<line x1='77.82' y1='83.44' x2='77.82' y2='96.01' style='stroke-width: 1.07;' />
+<line x1='75.02' y1='33.14' x2='75.02' y2='45.72' style='stroke-width: 1.07;' />
+<line x1='75.02' y1='33.14' x2='75.02' y2='20.57' style='stroke-width: 1.07;' />
+<line x1='77.82' y1='83.44' x2='77.82' y2='70.87' style='stroke-width: 1.07;' />
+<line x1='12.71' y1='89.73' x2='12.71' y2='121.16' style='stroke-width: 1.07;' />
+<line x1='12.71' y1='89.73' x2='12.71' y2='89.73' style='stroke-width: 1.07;' />
+<line x1='12.71' y1='89.73' x2='12.71' y2='58.29' style='stroke-width: 1.07;' />
+<line x1='70.53' y1='58.29' x2='70.53' y2='83.44' style='stroke-width: 1.07;' />
+<line x1='70.53' y1='58.29' x2='70.53' y2='33.14' style='stroke-width: 1.07;' />
+<text x='79.22' y='99.07' style='font-size: 8.54px; font-family: "Arial";' textLength='28.47px' lengthAdjust='spacingAndGlyphs'>A3-A6b</text>
+<text x='79.22' y='48.77' style='font-size: 8.54px; font-family: "Arial";' textLength='78.31px' lengthAdjust='spacingAndGlyphs'>A3/A6b-A3g-1371_A</text>
+<text x='79.22' y='23.63' style='font-size: 8.54px; font-family: "Arial";' textLength='46.50px' lengthAdjust='spacingAndGlyphs'>A3-A6b-A3g</text>
+<text x='79.22' y='73.92' style='font-size: 8.54px; font-family: "Arial";' textLength='10.44px' lengthAdjust='spacingAndGlyphs'>A3</text>
+<text x='79.22' y='124.22' style='font-size: 8.54px; font-family: "Arial";' textLength='19.00px' lengthAdjust='spacingAndGlyphs'>1634</text>
+</g>
+</g>
+</svg>
