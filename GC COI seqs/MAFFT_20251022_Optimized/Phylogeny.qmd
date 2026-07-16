@@ -1,0 +1,389 @@
+---
+title: "GC COI ML tree"
+format: html
+theme: 
+  light: zephyr
+  dark: cyborg
+toc: true
+page-layout: full
+number-sections: true
+number-depth: 3
+editor: visual
+self-contained: true
+---
+
+# Notes
+
+A naming convention for dataframes was made.
+
+1.  Objects were named with a prefix per section arranged alphabetically.
+2.  A 2nd prefix was added to arrange all the data accordingly:
+    -   Dataframes: .**1**
+    -   Plots: .**2**
+    -   Stats: .**3** (those in dataframe format)
+    -   Others:
+        -   Vectors: .**vec**
+        -   Trees: .**tre**
+        -   Distances: .**dis**
+        -   Functions: .**fun**
+3.  If a dataframe will be used multiple times in case a raw dataframe is needed and an edited one should not supersede the raw one, add a suffix at the end (i.e., **\_1** for first edit, **\_2** for second....).
+4.  Limit 3rd prefix names to three letters and if 2 prefixes are needed, separate with "**.**".
+5.  If an object is just an auxiliary object, put a **Z** prefix.
+
+# Load pkgs
+
+```{r}
+pacman::p_load(ggtree,
+               tidyverse,
+               treeio,
+               ape)
+```
+
+# Load data
+
+## Load prior work
+
+```{r}
+load("GC COI ML tree.RData")
+```
+
+## Load metadata
+
+```{r}
+A.1_meta <- 
+  read_csv("../Sequence metadata_202510.csv")
+```
+
+## Load tree
+
+```{r}
+A.tree <- 
+  read.iqtree("GCCOISeqs_AlignedAllAddKeep_20251022_clipkitsmartgap.fa.treefile")
+```
+
+# Edit tree
+
+```{r}
+B.1_Tree <- 
+  A.tree |> 
+  as_tibble() |> 
+  mutate(label = if_else(str_detect(label, "\\|"), # only if it has "|"
+                         str_extract(label, "(?<=\\|)[^|]+$"), # extract after the last "|"
+                         label)) |>  # otherwise keep as is
+  mutate(SampleID = label) |> 
+  left_join(A.1_meta) |> 
+  mutate(Species = str_replace(Species, pattern = "Tridacna", "T."),
+         Species = str_replace(Species, pattern = "Hippopus", "H.")) |> 
+  mutate(label = if_else(!is.na(Species),
+                         paste(Species, SampleID, sep = " "),
+                         SampleID))
+```
+
+# Plot
+
+```{r}
+B.1_Tree_1 <- 
+  B.1_Tree |> 
+  as.treedata()
+
+B.2_Tree <- 
+  B.1_Tree_1 |> 
+  ggtree(layout = "rectangular") +
+  geom_tiplab(size = 2)
+
+B.2_Tree_1 <- 
+  B.1_Tree_1 |> 
+  ggtree(layout = "rectangular",
+         branch.length = "none") +
+  geom_nodelab(aes(label = node),
+               size = 1,
+               nudge_x = 0.4) +
+  geom_tiplab(size = 1.5) + 
+  coord_cartesian(clip = "off") +
+  theme(plot.margin = margin(10, 50, 10, 10))
+
+ggsave(plot = B.2_Tree_1,
+       filename = "Tree01.svg",
+       width = 10,
+       height = 50,
+       unit = "cm")
+```
+
+# Reroot
+
+```{r}
+C.1_Tree <- 
+  B.1_Tree_1 |> 
+  root(node = 360,
+       resolve.root = T)
+
+C.1_Tree_1 <- 
+  C.1_Tree |>
+  as_tibble() |> 
+  mutate(label = if_else(!is.na(Species),
+                         paste(Species, SampleID, sep = " "),
+                         SampleID))
+
+C.1_Tree_2 <- 
+  C.1_Tree_1 |> 
+  as.treedata()
+
+C.2_Tree <- 
+  C.1_Tree_2 |> 
+  ggtree(layout = "rectangular",
+         branch.length = "none") +
+  geom_nodelab(aes(label = node),
+               size = 1,
+               nudge_x = 0.4) +
+  geom_tiplab(size = 1.5) + 
+  coord_cartesian(clip = "off") +
+  theme(plot.margin = margin(10, 50, 10, 10))
+
+C.2_Tree <- 
+  C.2_Tree |> 
+  ggtree::rotate(216)
+
+C.2_Tree <- 
+  C.2_Tree |> 
+  ggtree::rotate(429)
+
+C.2_Tree <- 
+  C.2_Tree |> 
+  ggtree::rotate(360)
+
+
+C.2_Tree <- 
+  C.2_Tree |> 
+  ggtree::rotate(253)
+
+ggsave(plot = C.2_Tree,
+       filename = "Tree02.svg",
+       width = 10,
+       height = 50,
+       unit = "cm")
+```
+
+# Finalize
+
+```{r}
+D.2_Tree <- 
+  C.1_Tree_2 |> 
+  ggtree(layout = "rectangular",
+         branch.length = "none") +
+  geom_nodelab(size = 1,
+               nudge_x = 1) +
+  geom_tiplab(size = 1.5) + 
+  coord_cartesian(clip = "off") +
+  theme(plot.margin = margin(10, 50, 10, 10))
+
+D.2_Tree <- 
+  D.2_Tree |> 
+  ggtree::rotate(216)
+
+D.2_Tree <- 
+  D.2_Tree |> 
+  ggtree::rotate(429)
+
+D.2_Tree <- 
+  D.2_Tree |> 
+  ggtree::rotate(360)
+
+
+D.2_Tree <- 
+  D.2_Tree |> 
+  ggtree::rotate(253)
+
+ggsave(plot = D.2_Tree,
+       filename = "Tree03.svg",
+       width = 10,
+       height = 50,
+       unit = "cm")
+```
+
+# Collapsed
+
+```{r}
+E.2_TreeCollapsed <- 
+  D.2_Tree |> 
+  ggtree::collapse(361, mode = "mixed", fill = "darkred", color = "darkred") |> 
+  ggtree::collapse(383, mode = "mixed", fill = "#cf202e", color = "#cf202e") |> 
+  ggtree::collapse(290, mode = "mixed", fill = "#f78822", color = "#f78822") |> 
+  ggtree::collapse(254, mode = "mixed", fill = "#f6db35", color = "#f6db35") |> 
+  ggtree::collapse(319, mode = "mixed", fill = "#6dc067", color = "#6dc067") |> 
+  ggtree::collapse(248, mode = "mixed", fill = "#4185be", color = "#4185be") |> 
+  ggtree::collapse(339, mode = "mixed", fill = "#8f499c", color = "#8f499c") |> 
+  ggtree::collapse(387, mode = "mixed", fill = "#201146", color = "#201146")
+
+E.vec_NodeToRemove <- 
+  E.2_TreeCollapsed |> 
+  offspring(419) |> 
+  filter(is.na(SH_aLRT)) |> 
+  pull(label)
+
+E.vec_TipsToRemove <- 
+  c(E.vec_NodeToRemove, "T. mbalavuana KU058677")
+
+E.2_TreeCollapsed_1 <- 
+  E.2_TreeCollapsed %>%
+  .$data |> 
+  as.phylo() |> 
+  drop.tip(E.vec_TipsToRemove)
+
+E.2_TreeCollapsed_2 <- 
+  E.2_TreeCollapsed_1 |> 
+  ggtree(layout = "rectangular") + 
+  coord_cartesian(clip = "off")
+
+E.2_TreeCollapsed_3 <- 
+  E.2_TreeCollapsed_2 |> 
+  ggtree::rotate(205) |> 
+  ggtree::rotate(206) |> 
+  ggtree::rotate(245) |> 
+  ggtree::rotate(381) |> 
+  ggtree::rotate(246) |> 
+  ggtree::rotate(282)
+
+E.2_TreeCollapsed_4 <- 
+  E.2_TreeCollapsed_3 |> 
+  ggtree::collapse(382, mode = "mixed", fill = "darkred", color = "darkred") |> 
+  ggtree::collapse(404, mode = "mixed", fill = "#cf202e", color = "#cf202e") |> 
+  ggtree::collapse(282, mode = "mixed", fill = "#f78822", color = "#f78822") |> 
+  ggtree::collapse(246, mode = "mixed", fill = "#f6db35", color = "#f6db35") |> 
+  ggtree::collapse(311, mode = "mixed", fill = "#6dc067", color = "#6dc067") |> 
+  ggtree::collapse(209, mode = "mixed", fill = "#4185be", color = "#4185be") |> 
+  ggtree::collapse(329, mode = "mixed", fill = "#8f499c", color = "#8f499c") |> 
+  ggtree::collapse(349, mode = "mixed", fill = "#201146", color = "#201146")
+
+E.2_TreeCollapsed_5 <- 
+  E.2_TreeCollapsed_3 + 
+  layout_fan(angle = 0) +
+  geom_tiplab(size = 1.5, aes(label = SampleID))
+```
+
+Save.
+
+```{r}
+ggsave(plot = E.2_TreeCollapsed_3,
+       filename = "Tree04.svg",
+       width = 10,
+       height = 30,
+       unit = "cm")
+
+ggsave(plot = E.2_TreeCollapsed_4,
+       filename = "Tree04 - Collapsed.svg",
+       width = 4.5,
+       height = 6.5,
+       unit = "cm")
+
+
+ggsave(plot = E.2_TreeCollapsed_5,
+       filename = "Tree04 - Uncollapsed.svg",
+       width = 17,
+       height = 17,
+       unit = "cm")
+```
+
+# Tree
+
+Initial tree.
+
+```{r}
+A.2_tree <- 
+  A.tree |> 
+  ggtree() +
+  geom_tiplab()
+
+reroot(A.2_tree)
+```
+
+Reroot.
+
+```{r}
+B.tree <- 
+  A.tree |> 
+  as.phylo() |> 
+  root(outgroup = "MW278344.1", resolve.root = TRUE)
+```
+
+Rooted tree.
+
+```{r}
+B.2_tree <- 
+  B.tree |> 
+  ggtree(layout = "fan", 
+         open.angle = 90, 
+         branch.length = "none")
+```
+
+Change color.
+
+```{r}
+Z.vec_col.spe <-
+  c("Tridacna noae"="#5E4FA2",
+    "Tridacna squamosa"="#3288BD",
+    "Hippopus porcellanus"="#66C2A5",
+    "Hippopus hippopus"="#ABDDA4",
+    "Tridacna derasa"="#FDAE61",
+    "Tridacna gigas"="#F46D43",
+    "Tridacna maxima"="#D53E4F",
+    "Tridacna crocea"="#9E0142")
+
+
+C.1_meta <- 
+  A.1_meta |> 
+  rename(label = SampleID)
+
+C.2_tree <- 
+  B.tree |> 
+  ggtree(layout = "fan",
+         open.angle = 90,
+         branch.length = "none")
+
+C.2_tree_1 <- C.2_tree %<+% C.1_meta
+
+C.2_tree_2 <- 
+  C.2_tree_1  +
+  geom_tippoint(aes(color = Species)) +
+  scale_color_manual(values = Z.vec_col.spe)
+
+###
+C.2_tree <- 
+  B.tree |> 
+  ggtree(layout = "rectangular",
+         branch.length = "none")
+
+C.2_tree_1 <- C.2_tree %<+% C.1_meta
+
+C.2_tree_3 <- 
+  C.2_tree_1 +
+  geom_tiplab(size = 2,
+              offset = 0.5) +
+  geom_tippoint(aes(color = Species),show.legend = F) +
+  scale_color_manual(values = Z.vec_col.spe) +
+  coord_cartesian(clip = "off") +
+  theme(plot.margin = margin(6, 40, 6, 6, "pt"))
+
+C.2_tree_3 |> 
+  ggsave(filename = 'tree_20250725.png',
+         dpi = 900,
+         width = 2500,
+         height = 12000,
+         units = "px")
+
+# Edit
+C.1_tree <- 
+  B.tree |> 
+  as_tibble() |> 
+  mutate(SampleID = label) |> 
+  left_join(A.1_meta, by = "SampleID")
+
+# Plot
+C.2_tree <- 
+  C.1_tree |> 
+  as.treedata() |> 
+  ggtree(aes(color = Species),
+         layout = "fan",
+         open.angle = 90,
+         branch.length = "none") +
+  scale_color_manual(values = Z.vec_col.spe)
+```
