@@ -1,0 +1,255 @@
+---
+title: "COI compiler"
+format: html
+theme: 
+  light: zephyr
+  dark: cyborg
+toc: true
+page-layout: full
+number-sections: true
+number-depth: 3
+editor: visual
+self-contained: true
+---
+
+# Notes
+
+A naming convention for dataframes was made.
+
+1.  Objects were named with a prefix per section arranged alphabetically.
+2.  A 2nd prefix was added to arrange all the data accordingly:
+    -   Dataframes: .**1**
+    -   Plots: .**2**
+    -   Stats: .**3** (those in dataframe format)
+    -   Others:
+        -   Vectors: .**vec**
+        -   Trees: .**tre**
+        -   Distances: .**dis**
+        -   Functions: .**fun**
+3.  If a dataframe will be used multiple times in case a raw dataframe is needed and an edited one should not supersede the raw one, add a suffix at the end (i.e., **\_1** for first edit, **\_2** for second....).
+4.  Limit 3rd prefix names to three letters and if 2 prefixes are needed, separate with "**.**".
+5.  If an object is just an auxiliary object, put a **Z** prefix.
+
+# Load pkgs
+
+```{r}
+pacman::p_load(readr,
+               dplyr,
+               stringr,
+               Biostrings,
+               ape, 
+               pegas,
+               svglite)
+```
+
+# Load data
+
+```{r}
+fasta <- read_lines("GCCOISeqs_AlignedAllAddKeep_20251022_clipkitsmartgap.fa")
+```
+
+# Tidy
+
+```{r}
+df <- tibble(line = fasta) %>%
+  mutate(is_header = str_starts(line, ">"),
+         group = cumsum(is_header)) %>%
+  group_by(group) %>%
+  summarise(
+    header = str_remove(dplyr::first(line), "^>"),
+    sequence = str_c(line[!is_header], collapse = ""),
+    .groups = "drop"
+  ) %>%
+  select(header, sequence)
+
+df
+```
+
+# *T. maxima*
+
+Filter.
+
+```{r}
+Tmaxima <- 
+  df |> 
+  filter(str_detect(header, "TM"))%>%
+  mutate(header = str_extract(header, "TM\\d+")) |> 
+  dplyr::rename("SampleID" = header)
+
+TmaximaMeta <- 
+  read_csv("TM - Metadata.csv")
+```
+
+Haplotyping
+
+```{r}
+# Convert to a dnabin object (for pegas)
+TmaximaDNA <- 
+  Tmaxima |> 
+  pull(sequence) |> 
+  strsplit(split = "") %>%
+  do.call(rbind, .)
+
+rownames(TmaximaDNA) <- 
+  Tmaxima$SampleID
+  
+TmaximaDNA <- 
+  as.DNAbin(TmaximaDNA)
+image.DNAbin(TmaximaDNA) # Check distribution
+
+# Export for re-clipping (if there are gaps)
+TmaximaDNA |> 
+  write.FASTA("Tmaxima alignment.fasta")
+
+# Re-import (TM09 was removed due to many gaps)
+TmaximaDNA <- 
+  read_lines("Tmaxima alignment - Clipped - 2.fas")
+
+TmaximaDNA <- 
+  TmaximaDNA %>%
+  tibble(line = .) |> 
+  mutate(is_header = str_starts(line, ">"),
+         group = cumsum(is_header)) %>%
+  group_by(group) %>%
+  summarise(
+    header = str_remove(dplyr::first(line), "^>"),
+    sequence = str_c(line[!is_header], collapse = ""),
+    .groups = "drop"
+  ) %>%
+  select(header, sequence)
+
+TmaximaDNA <- 
+  TmaximaDNA |> 
+  pull(sequence) |> 
+  strsplit(split = "") %>%
+  do.call(rbind, .)
+
+rownames(TmaximaDNA) <- 
+  ((Tmaxima$SampleID) |> 
+     purrr::discard(~ .x == "TM09"))
+  
+TmaximaDNA <- 
+  as.DNAbin(TmaximaDNA)
+image.DNAbin(TmaximaDNA) # Check distribution
+
+# Run haplotype
+TmaximaHaps <- 
+  haplotype(TmaximaDNA)
+```
+
+Haplotype network.
+
+```{r}
+# Tidy
+TmaximaHaps <- sort(TmaximaHaps, what = "labels")
+
+# Create a data frame linking each individual to its haplotype label
+# and to its population from the metadata.
+# First, get the haplotype index list.
+TmaximaHapAssign <- 
+  attr(TmaximaHaps, "index")   # a list, each element contains row indices of individuals
+
+names(TmaximaHapAssign) <-  labels(TmaximaHaps)
+
+
+# Build a data frame: one row per individual, with columns "id", "haplotype", "population".
+TmaximaIndividuals <- 
+  do.call(rbind, 
+          lapply(names(TmaximaHapAssign), 
+                 function(hap) {
+                   ids <- rownames(TmaximaDNA)[TmaximaHapAssign[[hap]]] # ind names for this haplotype
+                   data.frame(SampleID = ids,
+                              Haplotype = hap,
+                              stringsAsFactors = FALSE)}))
+
+# Merge with metadata to add population information
+TmaximaIndividuals <- 
+  TmaximaIndividuals |> 
+  left_join(TmaximaMeta)
+
+# Export
+TmaximaIndividuals |> 
+  write_csv("Tmaxima - Haplotype - Results - 2.csv")
+  
+TmaximaIndividuals <- 
+  table(TmaximaIndividuals$Haplotype, 
+        TmaximaIndividuals$Region)
+
+# Convert to a matrix (pegas expects a matrix)
+TmaximaIndividuals <- as.matrix(TmaximaIndividuals)
+
+# Plot
+TmaximaHapNet <- 
+  haploNet(TmaximaHaps)
+
+# Open an SVG device
+svglite("TmaximaHaplonet - 2.svg", width = 17/2.54, height = 17/2.54)   # adjust dimensions as needed
+
+# Plot the network with pie charts
+plot(TmaximaHapNet,
+     size = attr(TmaximaHapNet, "freq"), # Scale circles by haplotype frequency
+     scale.ratio = 1, # Adjust to avoid circle overlap
+     cex = 0.8, # Label size
+     pie = TmaximaIndividuals, # YOUR PIE CHART DATA
+     # legend = TRUE, # Display a legend for the pies
+     show.mutation = 2
+     )
+
+# Close the device – this saves the file
+dev.off()
+```
+
+## Hd stats
+
+We analysed 428 bp of the mitochondrial COI gene from 24 individuals. A total of 31 polymorphic sites were identified, defining 20 haplotypes (Table 1).
+
+1 Sequence length.
+
+```{r}
+# Number of base pairs (columns in the alignment)
+seq_length <- ncol(TmaximaDNA)
+print(seq_length)
+```
+
+2 Number of polymorphic (segragating) sites
+
+```{r}
+# Find positions of segregating sites
+poly_sites <- seg.sites(TmaximaDNA)
+
+# Count them
+num_poly <- length(poly_sites)
+print(num_poly)
+```
+
+3 Number of Haplotypes
+
+```{r}
+# Number of distinct haplotypes
+num_haplotypes <- nrow(TmaximaHaps)
+print(num_haplotypes)
+```
+
+Overall haplotype diversity was Hd = 0.99 ± 0.03, and nucleotide diversity was π = 0.008 ± 0.001. Among populations, Hd ranged from 0.45 (Population C) to 0.92 (Population A) (Table 2).
+
+```{r}
+Hd <- 
+  hap.div(TmaximaHaps)
+
+Hd_var <- 
+  hap.div(TmaximaHaps, variance = T)
+
+Hd_sd <- 
+  Hd_var[2] |> 
+  sqrt()
+
+N <- 
+  nuc.div(TmaximaHaps)
+
+N_var <- 
+  nuc.div(TmaximaHaps, variance = T)
+
+N_sd <- 
+  N_var[2] |> 
+  sqrt()
+```

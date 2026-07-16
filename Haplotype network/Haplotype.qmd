@@ -1,0 +1,84 @@
+---
+title: "Haplotype"
+format: html
+theme: 
+  light: zephyr
+  dark: cyborg
+toc: true
+page-layout: full
+number-sections: true
+number-depth: 3
+editor: visual
+self-contained: true
+---
+
+# Notes
+
+A naming convention for dataframes was made.
+
+1.  Objects were named with a prefix per section arranged alphabetically.
+2.  A 2nd prefix was added to arrange all the data accordingly:
+    -   Dataframes: .**1**
+    -   Plots: .**2**
+    -   Stats: .**3** (those in dataframe format)
+    -   Others:
+        -   Vectors: .**vec**
+        -   Trees: .**tre**
+        -   Distances: .**dis**
+        -   Functions: .**fun**
+3.  If a dataframe will be used multiple times in case a raw dataframe is needed and an edited one should not supersede the raw one, add a suffix at the end (i.e., **\_1** for first edit, **\_2** for second....).
+4.  Limit 3rd prefix names to three letters and if 2 prefixes are needed, separate with "**.**".
+5.  If an object is just an auxiliary object, put a **Z** prefix.
+
+# Load pkgs
+
+```{r}
+pacman::p_load(ggplot2,
+               dplyr,
+               readr,
+               tidyr,
+               stringr,
+               tibble,
+               forcats,
+               pegas,
+               ape)
+```
+
+# Load data
+
+```{r}
+loc <- sample(c("north","south"),26,replace=T)
+
+names <- labels(data)
+
+meta <- data.frame(cbind(names,loc))
+
+data <- 
+  read.dna("TM_Sample.fasta", format = "fasta")
+
+hap <- haplotype(data)
+
+hapInfo <- stack(setNames(attr(hap,"index"),rownames(hap)))
+head(hapInfo)
+
+names(hapInfo) <- c("index","haplotype")
+
+merged <- data.frame(cbind(hapInfo,meta[hapInfo$index,]))
+
+net <- haploNet(hap)
+plot(net,size=attr(net,"freq"))
+
+pie <- table(merged$haplotype,merged$loc)
+head(pie)
+
+
+svg("COI_TCS_haplotype.svg", width = 7, height = 6)
+plot(net,size=attr(net,"freq"),pie=pie)
+legend("bottomleft", colnames(pie), col=rainbow(ncol(pie)), pch=19, ncol=2)
+dev.off()
+```
+
+```{r}
+write.nexus.data(data,
+                 file = "TM.nex")
+```

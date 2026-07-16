@@ -1,0 +1,211 @@
+#NEXUS
+[This is an example of a Nexus file, modified from a sample file distributed 
+with DNASP. It should run in PopART. Any text appearing between square braces is
+a comment and will be ignored by the program.]
+
+BEGIN DATA;
+  DIMENSIONS NTAX=26 NCHAR=428;
+  FORMAT DATATYPE=DNA MISSING=? GAP=- INTERLEAVE=YES;
+  MATRIX
+    TM24      ggcctgcttcatggctgcagaataatagactttataatactacacatgcattaattataattttatggtaatgccggtga
+    TM21      ggcctgcttcatggctgcagaataatagactttataatactacacatgcattaattataattttatggtaatgccggtga
+    TM15      ggcctgcttcatggctgcagaataatagactttataatactacacatgcattaattataattttatggtaatgccggtga
+    TM11      ggcctgcttcatggctgcagaataatagactttataatactacacatgcattaattataattttatggtaatgccggtga
+    TM20      ggcctgcttcatggctgcagaataatagactttataatactacacatgcattaattataattttatggtaatgccggtga
+    TM01      ggcctgcttcatggctgcagaataatagactttataatactacacatgcattaattataattttatggtaatgccggtga
+    TM12      ggcctgcttcatggctgcagaataatagactttataatactacacatgcattaattataattttatggtaatgccggtga
+    TM23      ggcctgcttcatggctgcagaataatagactttataatactacacatgcattaattataattttatggtaatgccggtga
+    TM17      ggcctgcttcatggctgcagaataatagactttataatactacacatgcattaattataattttatggtaatgccggtga
+    TM18      ggcctgcttcatggctgcagaataatagactttataatactacacatgcattaattataattttatggtaatgccggtga
+    TM02      ggcctgcttcatggctgcagaataatagactttataatactacacatgcattaattataattttatggtaatgccggtga
+    TM06      ggcctgcttcatggctgcagaataatagactttataatactacacatgcattaattataattttatggtaatgccggtga
+    TM16      ggcctgcttcatggctgcagaataatagactttataatactacacatgcattaattataattttatggtaatgccggtga
+    TM22      ggcctgcttcatggctgcagaataatagactttataatactacacatgcattaattataattttatggtaatgccggtga
+    TM13      ggcctgcttcatggctgcagaataatagactttataatactacacatgcattaattataattttatggtaatgccggtga
+    TM07      ggcctgcttcatggctgcagaataatagactttataatactacacatgcattaattataattttatggtaatgccggtga
+    TM04      ggcctgcttcatggctgcagaataatagactttataatactacacatgcattaattataattttatggtaatgccggtga
+    TM14      ggcctgcttcatggctgcagaataatagactttataatactacacatgcattaattataattttatggtaatgccggtga
+    TM03      ggcctgcttcatggctgcagaataatagactttataatactacacatgcattaattataattttatggtaatgccggtga
+    TM19      ggcctgcttcatggctgcagaataatagactttataatactacacatgcattaattataattttatggtaatgccggtga
+    TM25      ggcctgcttcatggctgcagaataatagactttataatactacacatgcattaattataattttatggtaatgccggtga
+    TM27      ggcctgcttcatggctgcagaataatagactttataatactacacatgcattaattataattttatggtaatgccggtga
+    TM26      ggcctgcttcatggctgcagaataatagactttataatactacacatgcattaattataattttatggtaatgccggtga
+    TM28      ggcctgcttcatggctgcagaataatagactttataatactacacatgcattaattataattttatggtaatgccggtga
+    TM10      gacctgcttcatggctgcagaataatagactttataacactacacatgcattaattataattttatggtaatgccggtga
+    TM05      ggcctgcttcatggctgcagaataatagactttataatactacacatgcattaattataattttatggtaatgccggtga
+
+    TM24      taataggtttggaaattgacttgtacctttaataatggtaataccatatgcatttccctcgattaaataatttgaggttt
+    TM21      taataggtttggaaattgacttgtacctttaataatggtaataccatatgcatttccctcgattaaataatttgaggttt
+    TM15      taataggtttggaaattgacttgtacctttaataatggtaataccatatgcatttccctcgattaaataatttgaggttt
+    TM11      taataggtttggaaattgacttgtacctttaataatggtaataccatatgcatttccctcgattaaataatttgaggttt
+    TM20      taataggtttggaaattgacttgtacctttaataatggtaataccatatgcatttccctcgattaaataacttgaggttt
+    TM01      taataggtttggaaattgacttgtacctttaataatggtaataccatatgcatttccctcgattaaataatttgaggttt
+    TM12      taataggtttggaaattgacttgtacctttaataatggtaataccatatgcatttccctcgattaaataatttgaggttt
+    TM23      taataggtttggaaattgacttgtacctttaataatggtaataccatatgcatttccctcgattaaataatttgaggttt
+    TM17      taataggtttggaaattgacttgtacctttaataatggtaataccatatgcatttccctcgattaaataatttgaggttt
+    TM18      taataggtttggaaattgacttgtacctttaataatggtaataccatatgcatttccctcgattaaataatttgaggttt
+    TM02      taataggtttggaaattgacttgtacctttaataatggtaataccatatgcatttccctcgattaaataatttaaggttt
+    TM06      taataggtttggaaattgacttgtacctttaataatggtaataccatatgcatttccctcgattaaataatttgaggttt
+    TM16      taataggtttggaaattgacttgtacctttaataatggtaataccatatgcatttccctcgattaaataatttgaggttt
+    TM22      taataggtttggaaattgacttgtacctttaataatggtaataccatatgcatttccctcgattaaataatttgaggttt
+    TM13      taataggtttggaaattgacttgtacctttaataatggtaataccatatgcatttccctcgattaaataatttgaggttt
+    TM07      taataggtttggaaattgacttgtacctttaataatggtaataccatatgcatttccctcgattaaataatttgaggttt
+    TM04      taataggtttggaaattgacttgtacctttaataatggtaataccatatgcatttccctcgattaaataatttgaggttt
+    TM14      taataggtttggaaattgacttgtacccttaataatggtaataccatatgcatttccctcgattaaataatttgaggttt
+    TM03      taataggtttggaaattgacttgtacctttaataatggtaataccatatgcatttccctcgattaaataatttgaggttt
+    TM19      taataggtttggaaattgacttgtacctttaataatggtaataccatatgcatttccctcgattaaataatttgaggttt
+    TM25      taataggtttggaaattgacttgtacctttaataatggtaataccatatgcatttccctcgattaaataatttgaggttt
+    TM27      taataggtttggaaattgacttgtacctttaataatggtaataccatatgcatttccctcgattaaataatttgaggttt
+    TM26      taataggtttggaaattgacttgtacctttaataatggtaataccatatgcatttccctcgattaaataatttgaggttt
+    TM28      taataggtttggaaattgacttgtacctttaataatggtaataccacatgcatttccctcgattaaataatttgaggttt
+    TM10      taataggtttggaaattgacttgtacctttaataatggtaataccatatgcatttccctcgattaaataatttgaggttt
+    TM05      taataggtttggaaattgacttgtacctttaataatggtaataccatatgcatttccctcgattaaataatttgaggttt
+
+    TM24      tggtttgtacctaatgcattttttttgttaggagtatctggatttgtagaaggaggcatgggtgctggttgaacaatcta
+    TM21      tggtttgtacctaatgcattttttttgttaggagtatctggatttgtagaaggaggcatgggtgctggttgaacaatcta
+    TM15      tggtttgtacctaatgcattttttttgttaggagtatctggatttgtagaaggaggcatgggtgctggttgaacaatcta
+    TM11      tggtttgtacctaatgcattttttttgttaggagtatctggatttgtagaaggaggcatgggtgctggttgaacaatcta
+    TM20      tggtttgtacctaatgcattttttttgttaggagtatctggatttgtagaaggaggcatgggtgctggttgaacaatcta
+    TM01      tggtttgtacctaatgcattttttttgttaggagtatctggatttgtagaaggaggcatgggtgctggttgaacaatcta
+    TM12      tggtttgtacctaatgcattttttttgttaggagtatctggatttgtagaaggaggcatgggtgctggttgaacaatcta
+    TM23      tggtttgtacctaatgcattttttttgttaggagtatctggatttgtagaaggaggcatgggtgctggttgaacaatcta
+    TM17      tggtttgtacctaatgcattttttttgttaggagtatctggatttgtagaaggaggcatgggtgctggttgaacaatcta
+    TM18      tggtttgtacctaatgcattttttttgttaggagtatctggatttgtagaaggaggcatgggtgctggttgaacaatcta
+    TM02      tggtttgtacctaatgcattttttttgttaggagtatctggatttgtagaaggaggcatgggtgctggttgaacaatcta
+    TM06      tggtttgtacctaatgcattttttttgttaggagtatctggatttgtagaaggaggcatgggtgccggttgaacaatcta
+    TM16      tggtttgtacctaatgcattttttttgttaggagtatctggatttgtagaaggaggcatgggtgctggttgaacaatcta
+    TM22      tggtttgtacctaatgcattttttttgttaggagtatctggatttgtagaaggaggcatgggtgctggttgaacaatcta
+    TM13      tggtttgtacctaatgcattttttttgttaggagtatctggatttgtagaaggaggcatgggtgctggttgaacaatcta
+    TM07      tggtttgtacctaatgcattttttttgttaggagtatctggatttgtagaaggaggcatgggtgctggttgaacaatcta
+    TM04      tggtttgtacctaatgcattttttttgttaggagtatctggatttgtagaaggaggcatgggcgctggttgaacaatcta
+    TM14      tggtttgtacctaatgcattttttttgttaggagtatctggatttgtagaaggaggcatgggtgctggttgaacaatcta
+    TM03      tggtttgtacctaatgcattttttttgttaggagtatctggatttgtagaaggaggcatgggtgctggttgaacaatcta
+    TM19      tggtttgtacctaatgcattttttttgttaggagtatctggatttgtagaaggaggcatgggtgctggttgaacaatcta
+    TM25      tggtttgtacctaatgcattttttttgttaggagtatctggatttgtagaaggaggcatgggtgctggttgaacaatcta
+    TM27      tggtttgtacctaatgcantttttttgttaggagtatctggatttgtagaaggaggcatgggtgctggttgaacaatcta
+    TM26      tggtttgtacctaatgcattttttttgttaggagtatctggatttgtagaaggaggcatgggtgccggttgaacaatcta
+    TM28      tggtttgtacctaatgcattttttttgttaggagtatctggatttgtagagggaggcatgggtgctggttgaacaatcta
+    TM10      tggtttgtacctaatgcattttttttgttaggagtatctggattcgtagaaggaggcatgggtgctggttgaacaatcta
+    TM05      tggtttgtacctaatgcattttttttgttaggagtatctggatttgtagaaggaggcatgggtgcaggttgaacaatcta
+
+    TM24      ccccccactgacttcaatcgatttcttaagagatccgtctatagatctattttttcccttcacttaggcggtgcctcatc
+    TM21      ccccccactgacttcaatcgatttcttaagagatccgtctatagatctattttttcccttcacttaggcggtgcctcatc
+    TM15      ccccccactgacttcaatcgatttcttaagagatccgtctatagatccattttttcccttcacttaggcggtgcctcatc
+    TM11      ccccccactgacttcaatcgatttcttaagagatccgtctatagatccattttttcccttcacttaggcggtgcctcatc
+    TM20      ccccccactgacttcaatcgatttcttaagagatccgtctatagatccattttttcccttcacttaggcggtgcctcatc
+    TM01      ccccccactgacttcaatcgatttcttaagagatccgtctatagatccattttttcccttcacttaggcggtgcctcatc
+    TM12      ccccccactgacttcaatcgatttcttaagagatccgtctatagatccattttttcccttcacttaggcggtgcctcatc
+    TM23      ccccccactgacttcaatcgatttcttaagagatccgtctatagatccattttttcccttcacttaggcggtgcctcatc
+    TM17      ccccccactgacttcaatcgatttcttaagagatccgtctatagatccattttttcccttcacttaggcggtgcctcatc
+    TM18      ccccccactgacttcaatcgatttcttaagagatccgtctatagatccattttttcccttcacttaggcggtgcctcatc
+    TM02      ccccccactgacttcaatcgatttcttaagagatccgtctatagatccattttttcccttcacttaggcggtgcctcatc
+    TM06      ccccccactgacttcaatcgatttcttaagagatccgtctatagatccattttttcccttcacttaggcggtgcttcatc
+    TM16      ccccccactgacttcaatcgatttcttaagagatccgtctatagatccattttttcccttcacttaggcggtgcctcatc
+    TM22      ccccccactgacttcaatcgatttcttaagagatccgtctatagatccattttttcccttcacttaggcggtgcctcatc
+    TM13      ccccccactgacttcaatcgatttcttaagagatccgtctatagatccattttttcccttcacttaggcggtgcctcatc
+    TM07      ccccccactgacttcaatcgatttcttaagagatccgtctatagatccattttttcccttcacttaggcggtgcctcatc
+    TM04      ccccccactgacttcaatcgatttcttaagagatccgtctatagatccattttttcccttcacttaggcggtgcctcatc
+    TM14      ccccccactgacttcaatcgatttcttaagagatccgtctatagatccattttttcccttcacttaggcggtgcctcatc
+    TM03      ccccccactgacttcaatcgatttcttaagagatccgtctatagatccattttttcccttcacttaggcggtgcctcatc
+    TM19      ccccccactgacttcaatcgatttcttaagagatccgtctatagatccattttttcccttcacttaggcggtgcctcatc
+    TM25      ccccccactgacttcaatcgatttcttaagagatccgtctatagatccattttttcccttcacttaggcggtgcctcatc
+    TM27      ccccccactgacttcaatcgatttcttaagagatccgtctatagatccattttttcccttcacttaggcggtgcctcatc
+    TM26      ccccccactgacttcaatcgatttcttaagagatccgtctatagatccattttttcccttcacttaggcggtgcttcatc
+    TM28      ccccccactgacttcaatcgatttcttaagagatccgtctatagatccattttttcccttcacttaggcggtgcctcatc
+    TM10      tcccccactaacttcaatcgatttcttaagagatccgtctatagatctattttttcccttcacttaggcggtgcctcatc
+    TM05      ccccccactgacttcaatcgatttcttaagagatccgtctatagatccattttttcccttcacttaggcggtgcctcatc
+
+    TM24      tattgcagccaggttaaatttggactgtggctaatatacggaaaaacgtggtttccatttcctatgtttccagtgtcatt
+    TM21      tattgcagccaggttaaatttggactgtggctaatatacggaaaaacgtggtttccatttcctatgtttccagtgtcatt
+    TM15      tattgcagccaggttaaatttggactgtggctaatatacggaaaaacgtggtttccatttcctatgtttccagtgtcatt
+    TM11      tattgcagccaggttaaatttggactgtggctaatatacggaaaaacgtggtttccatttcctatgtttccagtgtcatt
+    TM20      tattgcagccaggttaaatttggactgtggctaatatgcggaaaaacgtggtttccatttcctatgtttccagtgtcatt
+    TM01      tattgcagccaggttaaatttggactgtggctaatatacggaaaaacgtggtttccatttcctatgtttccagtgtcatt
+    TM12      tattgcagccaggttaaatttggactgtggctaatatacggaaaaacgtggtttccatttcctatgtttccagtgtcatt
+    TM23      tattgcagccaggttaaatttggactgtggctaatatacggaaaaacgtggtttccatttcctatgtttccagtgtcatt
+    TM17      tattgcagccaggttaaatttggactgtggctaatatacggaaaaacgtggtttccatttcctatgtttccagtgtcatt
+    TM18      tattgcagccaggttaaatttggactgtggctaatatacggaaaaacgtggtttccatttcctatgtttccagtgtcatt
+    TM02      tattgcagccaggttaaatttggactgtggctaatatacggaaaaacgtggtttccatttcctatgtttccagtgtcatt
+    TM06      tattgcagccaggttaaatttggactgtggctaatatacggaaaaacgtggtttccatttcctatgtttccagtgtcatt
+    TM16      tattgcagccaggttaaatttggactgtagctaatatacggaaaaacgtggtttccatttcctatgtttccagtgtcatt
+    TM22      tattgcagccaggttaaatttggactgtggctaatatacggaaaaacgtggtttccatttcctatgtttccagtgtcatt
+    TM13      tattgcagccaggttaaatttggactgtggctaatatacggaaaaacgtggtttccatttcctatgtttccagtgtcatt
+    TM07      tattgcagccaggttaaatttggactgtggctaatatacggaaaaacgtggtttccatttcctatgtttccagtgtcatt
+    TM04      tattgcagccaggttaaatttggactgtggctaatatacggaaaaacgtggtttccatttcctatgtttccagtgtcatt
+    TM14      tattgcagccaggttaaatttggactgtggctaatatacggaaaaacgtggtttccatttcctatgtttccagtgtcatt
+    TM03      tattgcagccaggttaaatttggactgtggctaatatacggaaaaacgtggtttccatttcctatgtttccagtgtcatt
+    TM19      tattgcagccaggttaaatttggactgtggctaatatacggaaaaacgtggtttccatttcctat-tttccagtgtcatt
+    TM25      tattgcagccaggttaaatttggactgtggctaatatacggaaaaacgtggtttccatttcctatgtttccagtgtcatt
+    TM27      tattgcagccaggttaaatttggactgtggctaatatacggaaaaacgtggtttccatttcctatgtttccagtgtcatt
+    TM26      tattgcagccaggttaaatttggactgtggctaatatacggaaaaacgtggtttccatttcctatgtttccagtgtcatt
+    TM28      tattgcagccaggttaaatttggactgtggctaatatacggaaaaacgtggtttccatttcctatgtttccagtgtcatt
+    TM10      tattgcagccaggttaaacttggactgtggctaatatacggaaaaacgtggcttccatttcctatgtttccagtgtcatt
+    TM05      tattgcagccaggttaaatttggactgtggctaatatacggaaaaacgtggtttccatttcctatgtttccagtgtcata
+
+    TM24      aggtattacagcgttcct----------
+    TM21      aggtattacagcgttgcttctgtgcaat
+    TM15      aggtattacagcgttgcttctgtgcaat
+    TM11      aggtattacagcgttgcttctgtgcaat
+    TM20      aggtattacagcgttgcttctgtgcaat
+    TM01      aggtattacagcgttgcttctgtgcaat
+    TM12      aggtattacagcgttgcttctgtgcaat
+    TM23      aggtattacagcgttgcttctgtgcaat
+    TM17      aggtattacagcgttgcttctgtgcaat
+    TM18      aggtattacagcgttgcttctgtgcaat
+    TM02      aggtattacagcgttgcttctgtgcaat
+    TM06      aggtattacagcgttgcttctgtgcaat
+    TM16      aggtattacagcgttgcttctgtgcaat
+    TM22      aggtattacagcgttgcttctgtgcaat
+    TM13      aggtattacagcgttgcttctgtgcaat
+    TM07      aggtattacagcgttgcttctgtgcaat
+    TM04      aggtattacagcgttgcttctgtgcaat
+    TM14      aggtattacagcgttgcttctgtgcaat
+    TM03      gggtattacagcgttgcttctgtgcaat
+    TM19      aggtattacagcgttgcttctgtgcaat
+    TM25      aggtattacagcgttgctc---------
+    TM27      aggtattacagcgttgcttctgtgcaat
+    TM26      aggtattacagcgttgcttctgtgcaat
+    TM28      aggtattacagcgttgcttctgtgcaat
+    TM10      aggtattacagcgttgctcctgtgcaat
+    TM05      g---------------------------
+  ;
+END;
+
+BEGIN TRAITS;
+[The traits block is specific to PopART. The numbers in the matrix are number of
+samples associated with each trait. The order of the columns must match the 
+order of TraitLabels. Separator can be comma, space, or tab.]
+  Dimensions NTRAITS=7;
+  Format labels=yes missing=? separator=Comma;
+  [Optional: if you include TraitLatitude and TraitLongitude they will be used to place trait groups on the map]
+  TraitLabels Antique ARNP Batangas Bohol Calaguas Camiguin Samar;
+  Matrix
+
+TM26	1,0,0,0,0,0,0
+TM27	1,0,0,0,0,0,0
+TM28	1,0,0,0,0,0,0
+TM01	0,1,0,0,0,0,0
+TM02	0,1,0,0,0,0,0
+TM03	0,1,0,0,0,0,0
+TM04	0,1,0,0,0,0,0
+TM05	0,1,0,0,0,0,0
+TM16	0,1,0,0,0,0,0
+TM06	0,0,1,0,0,0,0
+TM07	0,0,1,0,0,0,0
+TM17	0,0,0,1,0,0,0
+TM18	0,0,0,1,0,0,0
+TM19	0,0,0,1,0,0,0
+TM10	0,0,0,0,1,0,0
+TM11	0,0,0,0,1,0,0
+TM12	0,0,0,0,1,0,0
+TM13	0,0,0,0,1,0,0
+TM14	0,0,0,0,1,0,0
+TM15	0,0,0,0,1,0,0
+TM20	0,0,0,0,0,1,0
+TM21	0,0,0,0,0,1,0
+TM22	0,0,0,0,0,1,0
+TM23	0,0,0,0,0,0,1
+TM24	0,0,0,0,0,0,1
+TM25	0,0,0,0,0,0,1
+;
+END;

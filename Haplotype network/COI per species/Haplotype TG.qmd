@@ -1,0 +1,230 @@
+---
+title: "COI compiler"
+format: html
+theme: 
+  light: zephyr
+  dark: cyborg
+toc: true
+page-layout: full
+number-sections: true
+number-depth: 3
+editor: visual
+self-contained: true
+---
+
+# Notes
+
+A naming convention for dataframes was made.
+
+1.  Objects were named with a prefix per section arranged alphabetically.
+2.  A 2nd prefix was added to arrange all the data accordingly:
+    -   Dataframes: .**1**
+    -   Plots: .**2**
+    -   Stats: .**3** (those in dataframe format)
+    -   Others:
+        -   Vectors: .**vec**
+        -   Trees: .**tre**
+        -   Distances: .**dis**
+        -   Functions: .**fun**
+3.  If a dataframe will be used multiple times in case a raw dataframe is needed and an edited one should not supersede the raw one, add a suffix at the end (i.e., **\_1** for first edit, **\_2** for second....).
+4.  Limit 3rd prefix names to three letters and if 2 prefixes are needed, separate with "**.**".
+5.  If an object is just an auxiliary object, put a **Z** prefix.
+
+# Load pkgs
+
+```{r}
+pacman::p_load(readr,
+               dplyr,
+               stringr,
+               Biostrings,
+               ape, 
+               pegas,
+               svglite)
+```
+
+# Load data
+
+```{r}
+fasta <- read_lines("GCCOISeqs_AlignedAllAddKeep_20251022_clipkitsmartgap.fa")
+```
+
+# Tidy
+
+```{r}
+df <- tibble(line = fasta) %>%
+  mutate(is_header = str_starts(line, ">"),
+         group = cumsum(is_header)) %>%
+  group_by(group) %>%
+  summarise(
+    header = str_remove(dplyr::first(line), "^>"),
+    sequence = str_c(line[!is_header], collapse = ""),
+    .groups = "drop"
+  ) %>%
+  select(header, sequence)
+
+df
+```
+
+# *T. gigas*
+
+Filter.
+
+```{r}
+Tgigas <- 
+  df |> 
+  filter(str_detect(header, "TG"))%>%
+  mutate(header = str_extract(header, "TG\\d+")) |> 
+  dplyr::rename("SampleID" = header)
+
+TgigasMeta <- 
+  read_csv("TG - Metadata.csv")
+```
+
+Haplotyping
+
+```{r}
+# Convert to a dnabin object (for pegas)
+TgigasDNA <- 
+  Tgigas |> 
+  pull(sequence) |> 
+  strsplit(split = "") %>%
+  do.call(rbind, .)
+
+rownames(TgigasDNA) <- 
+  Tgigas$SampleID
+  
+TgigasDNA <- 
+  as.DNAbin(TgigasDNA)
+image.DNAbin(TgigasDNA) # Check distribution
+
+# Filter out a sample ()
+# TgigasDNA <- TgigasDNA[!rownames(TcroceaDNA) %in% "TC30", ]
+# image.DNAbin(TcroceaDNA) # Check distribution
+
+# Export for re-clipping (if there are gaps)
+TgigasDNA |> 
+  write.FASTA("Tgigas alignment.fasta")
+
+# Run haplotype
+TgigasHaps <- 
+  haplotype(TgigasDNA)
+```
+
+Haplotype network.
+
+```{r}
+# Tidy
+TgigasHaps <- sort(TgigasHaps, what = "labels")
+
+# Create a data frame linking each individual to its haplotype label
+# and to its population from the metadata.
+# First, get the haplotype index list.
+TgigasHapAssign <- 
+  attr(TgigasHaps, "index")   # a list, each element contains row indices of individuals
+
+names(TgigasHapAssign) <-  labels(TgigasHaps)
+
+
+# Build a data frame: one row per individual, with columns "id", "haplotype", "population".
+TgigasIndividuals <- 
+  do.call(rbind, 
+          lapply(names(TgigasHapAssign), 
+                 function(hap) {
+                   ids <- rownames(TgigasDNA)[TgigasHapAssign[[hap]]] # ind names for this haplotype
+                   data.frame(SampleID = ids,
+                              Haplotype = hap,
+                              stringsAsFactors = FALSE)}))
+
+# Merge with metadata to add population information
+TgigasIndividuals <- 
+  TgigasIndividuals |> 
+  left_join(TgigasMeta)
+
+# Export
+TgigasIndividuals |> 
+  write_csv("Tgigas - Haplotype - Results.csv")
+  
+TgigasIndividuals <- 
+  table(TgigasIndividuals$Haplotype, 
+        TgigasIndividuals$Region)
+
+# Convert to a matrix (pegas expects a matrix)
+TgigasIndividuals <- as.matrix(TgigasIndividuals)
+
+# Plot
+TgigasHapNet <- 
+  haploNet(TgigasHaps)
+
+# Open an SVG device
+svglite("TgigasHaplonet.svg", width = 17/2.54, height = 17/2.54)   # adjust dimensions as needed
+
+# Plot the network with pie charts
+plot(TgigasHapNet,
+     size = attr(TgigasHapNet, "freq"), # Scale circles by haplotype frequency
+     scale.ratio = 1, # Adjust to avoid circle overlap
+     cex = 0.8, # Label size
+     pie = TgigasIndividuals, # YOUR PIE CHART DATA
+     #legend = TRUE, # Display a legend for the pies
+     show.mutation = 2
+     )
+
+# Close the device – this saves the file
+dev.off()
+```
+
+## Hd stats
+
+We analysed 428 bp of the mitochondrial COI gene from 24 individuals. A total of 31 polymorphic sites were identified, defining 20 haplotypes (Table 1).
+
+1 Sequence length.
+
+```{r}
+# Number of base pairs (columns in the alignment)
+seq_length <- ncol(TgigasDNA)
+print(seq_length)
+```
+
+2 Number of polymorphic (segragating) sites
+
+```{r}
+# Find positions of segregating sites
+poly_sites <- seg.sites(TgigasDNA)
+
+# Count them
+num_poly <- length(poly_sites)
+print(num_poly)
+```
+
+3 Number of Haplotypes
+
+```{r}
+# Number of distinct haplotypes
+num_haplotypes <- nrow(TgigasHaps)
+print(num_haplotypes)
+```
+
+Overall haplotype diversity was Hd = 0.99 ± 0.03, and nucleotide diversity was π = 0.008 ± 0.001. Among populations, Hd ranged from 0.45 (Population C) to 0.92 (Population A) (Table 2).
+
+1 Overall haplotype diversity (Hd)
+
+```{r}
+Hd <- 
+  hap.div(TgigasHaps)
+
+Hd_var <- 
+  hap.div(TgigasHaps, variance = T)
+
+Hd_sd <- 
+  Hd_var[2] |> 
+  sqrt()
+
+N <- 
+  nuc.div(TgigasHaps)
+
+N_var <- 
+  nuc.div(TgigasHaps, variance = T)
+
+N_sd <- 
+  N_var[2] |> 
+  sqrt()
+```
