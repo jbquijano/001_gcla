@@ -1,0 +1,199 @@
+---
+title: "Sequencing stats"
+format: html
+theme: 
+  light: zephyr
+  dark: cyborg
+toc: true
+page-layout: full
+number-sections: true
+number-depth: 3
+editor: visual
+self-contained: true
+---
+
+# Notes
+
+A naming convention for dataframes was made.
+
+1.  Objects were named with a prefix per section arranged alphabetically.
+2.  A 2nd prefix was added to arrange all the data accordingly:
+    -   Dataframes: .**1**
+    -   Plots: .**2**
+    -   Stats: .**3** (those in dataframe format)
+    -   Others:
+        -   Vectors: .**vec**
+        -   Trees: .**tre**
+        -   Distances: .**dis**
+        -   Functions: .**fun**
+3.  If a dataframe will be used multiple times in case a raw dataframe is needed and an edited one should not supersede the raw one, add a suffix at the end (i.e., **\_1** for first edit, **\_2** for second....).
+4.  Limit 3rd prefix names to three letters and if 2 prefixes are needed, separate with "**.**".
+5.  If an object is just an auxiliary object, put a **Z** prefix.
+
+# Load pkgs
+
+```{r}
+pacman::p_load(tidyverse,
+               janitor,
+               vegan,
+               cowplot,
+               viridis)
+```
+
+# ITS2 results
+
+Load metadata.
+
+```{r}
+A.1_Metadata <- 
+  readxl::read_xlsx("../metadata/metadata_20251021.xlsx")
+
+A.1_Metadata_1 <- 
+  A.1_Metadata |> 
+  select(c(1, 2, 3, 12)) |> 
+  rename(sample_name = 1)
+```
+
+Load Symportal analysis results.
+
+```{r}
+A.1_ITS2 <- 
+  read_tsv("../raw_data/20250829T091611/post_med_seqs/4_first_analysis_20250829T091611.seqs.absolute.abund_and_meta.txt")
+
+A.1_ITS2_1 <- 
+  A.1_ITS2 |> 
+  drop_na()  |> 
+  filter(post_med_unique != 0) |> 
+  left_join(A.1_Metadata_1) |> 
+  relocate(sample_name, CorrectID, Species, region)
+
+A.1_ITS2_2 <- # tidy
+  A.1_ITS2_1 |> 
+  select(CorrectID, Species, region, 12, 13, 43:503)
+```
+
+Plot.
+
+```{r}
+A.2_ITS2 <- 
+  A.1_ITS2_2 |> 
+  mutate(raw_contigs = raw_contigs/10000,
+         post_qc_absolute_seqs = post_qc_absolute_seqs/10000) |> 
+  ggplot() +
+  geom_col(aes(x = CorrectID,
+               y = raw_contigs),
+           fill = "#282E2C",
+           width = 1.15) +
+  geom_col(aes(x = CorrectID,
+               y = post_qc_absolute_seqs),
+           fill = "#299B47",
+           width = 1.15) +
+  facet_grid(cols = vars(fct_relevel(Species,
+                                    c("H. hippopus",
+                                      "H. porcellanus",
+                                      "T. crocea",
+                                      "T. squamosa",
+                                      "T. noae",
+                                      "T. maxima",
+                                      "T. derasa",
+                                      "T. gigas"))),
+             scales = "free",
+             space = "free") +
+  scale_y_continuous(expand = c(0,0)) +
+  theme_minimal() +
+  theme(panel.grid = element_blank(),
+        axis.line = element_line(),
+        axis.text.x = element_blank(),
+        panel.spacing = unit(0.1,'lines'),
+        axis.title = element_blank(),
+        axis.ticks.y =  element_line())
+```
+
+Save.
+
+```{r}
+A.2_ITS2 |> 
+  ggsave(filename = "Sequence stats.svg", 
+         dpi = 900,
+         width = 16.5, 
+         height = 4,
+         unit = "cm")
+```
+
+Stats.
+
+```{r}
+A.1_RawContigsTotal <- 
+  A.1_ITS2_2 |> 
+  summarise(Total = sum(raw_contigs),
+            Mean = mean(raw_contigs),
+            SD = sd(raw_contigs))
+
+A.1_PostQCsTotal <- 
+  A.1_ITS2_2 |> 
+  summarise(Total = sum(post_qc_absolute_seqs),
+            Mean = mean(post_qc_absolute_seqs),
+            SD = sd(post_qc_absolute_seqs))
+```
+
+Save supplementary table.
+
+```{r}
+A.1_ITS2_3 <- # for saving
+  A.1_ITS2_2 |> 
+  select(1:5) |> 
+  rename(SampleID = 1,
+         Region = 3,
+         RawContigs = 4,
+         PostQC = 5)
+
+A.1_ITS2_3 |> # save
+  write_csv("ST - Sequencing stats.csv")
+```
+
+Save supplementary table for ITS2 sequences.
+
+```{r}
+A.1_ITS2_4 <- # exact its2 sequences
+  A.1_ITS2_2 |> 
+  select(1,6:last_col()) |> 
+  pivot_longer(!CorrectID,
+               names_to = "ITS2Sequence",
+               values_to = "Count") |> 
+  group_by(ITS2Sequence) |> 
+  summarise(Count = sum(Count)) |> 
+  ungroup() |> 
+  mutate(Clade = str_extract_all(ITS2Sequence, "[A-Z]")) |> 
+  arrange(Clade, desc(Count)) |> 
+  select(!last_col())
+
+A.1_ITS2_4 |> # save
+  write_csv("ST - ITS2 sequences.csv")
+```
+
+# ITS2 type profiles
+
+```{r}
+B.1_ITS2TypeProf <- 
+  read_tsv("../raw_data/20250829T091611/its2_type_profiles/4_first_analysis_20250829T091611.profiles.absolute.abund_and_meta.txt")
+
+B.1_ITS2TypeProf_1 <- # tidy
+  B.1_ITS2TypeProf |> 
+  slice(-(1:5)) %>% # Remove first 5 rows (unnecessary rows)
+  row_to_names(1) |>  # Move first row to column header
+  rename(sample_name = 2) |>  # Name 2nd column
+  select(-1) |>  # Remove first column (unneeded)
+  drop_na() |> 
+  type_convert() 
+
+B.1_ITS2TypeProf_2 <- # for saving
+  B.1_ITS2TypeProf_1 |>  
+  pivot_longer(!sample_name,
+               names_to = "ITS2TypeProfile",
+               values_to = "Count") |> 
+  group_by(ITS2TypeProfile) |> 
+  summarize(Count = sum(Count))
+
+B.1_ITS2TypeProf_2 |> # save
+  write_csv("ST - ITS2 type profiles.csv")
+```
