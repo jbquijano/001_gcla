@@ -1,0 +1,316 @@
+---
+title: "Alpha diversity"
+format: html
+theme: 
+  light: zephyr
+  dark: cyborg
+toc: true
+page-layout: full
+number-sections: true
+number-depth: 3
+editor: visual
+self-contained: true
+---
+
+# Load pkgs
+
+```{r}
+pacman::p_load(tidyverse,
+               janitor,
+               vegan,
+               cowplot,
+               rstatix,
+               multcompView)
+```
+
+# Load data
+
+```{r}
+# ITS2 type profile
+its2_prof <- 
+  read_tsv("../raw_data/20250829T091611/its2_type_profiles/4_first_analysis_20250829T091611.profiles.absolute.abund_and_meta.txt")
+
+its2_prof_1 <- # tidy
+  its2_prof |> 
+  slice(-(1:5)) %>% # Remove first 5 rows (unnecessary rows)
+  row_to_names(1) |>  # Move first row to column header
+  rename(sample_name = 2) |>  # Name 2nd column
+  select(-1) |>  # Remove first column (unneeded)
+  drop_na() |> 
+  type_convert() 
+
+its2_prof_2 <- 
+  its2_prof_1 |> 
+  rowwise() |> 
+  mutate(total = sum(c_across(A3:`1510`), na.rm = TRUE)) |> 
+  filter(total != 0)
+
+sample_clean <- # samples with ITS2
+  its2_prof_2 |> 
+  pull(sample_name)
+
+# Metadata
+metadata <- 
+  read_csv("metadata_all_clean.csv")
+
+metadata_1 <- # clean meatdata
+  metadata |> 
+  filter(sample_name %in% sample_clean)
+
+# Get manually renamed ITS2 type profiles
+its2_rename <- 
+  read_csv("edited_its2prof_naming.csv")
+```
+
+# Tidy
+
+```{r}
+its2_prof_3 <- 
+  its2_prof_2 |> 
+  select(!total) |> 
+  pivot_longer(!c(sample_name),
+               names_to = "its2_prof",
+               values_to = "count") |> 
+  left_join(its2_rename) |> # get manually renamed its2prof
+  select(!its2_prof) |> # rename columns
+  rename(its2_prof = edited) |> 
+  left_join(metadata_1) # get metadata
+
+# Compute alpha diversity
+its2_prof_4 <- 
+  its2_prof_3 |> 
+  group_by(corrected_id) |> 
+  summarise(shannon = diversity(count, index = "shannon"),
+            richness = specnumber(count)) |> 
+  ungroup() |> 
+  left_join(metadata_1)
+```
+
+# Plot
+
+```{r}
+spec_comp <- 
+  its2_prof_4 |> 
+  ggplot(aes(x = fct_relevel(species,
+                             c("Hpor",
+                               "Hhip",
+                               "Tgig",
+                               "Tder",
+                               "Tmax",
+                               "Tnoa",
+                               "Tsqu",
+                               "Tcro")),
+             y = shannon)) +
+  geom_jitter(alpha = 0.5,
+              color = "gray",
+              width = 0.15,
+              size = 1.5) +
+  geom_boxplot(fill = 'black',
+               width = 0.05,
+               outlier.shape = NA,
+               color = 'black') +
+  scale_y_continuous(expand = c(0,0),
+                     limits = c(0,1)) +
+  stat_summary(fun = "median", 
+               fill = 'white',
+               color = 'black',
+               size = 2.5,
+               geom = 'point',
+               shape = 21,
+               stroke = 1) +
+  coord_cartesian(clip = "off") +
+  theme_minimal() +
+  theme(panel.grid = element_blank(),
+        axis.line.y = element_line(),
+        axis.ticks.y = element_line(),
+        axis.title = element_blank(),
+        axis.text = element_text(size = 7))
+
+
+
+reg_comp <- 
+  its2_prof_4 |> 
+  ggplot(aes(x = fct_relevel(region,
+                             c("Cal",
+                               "Sam",
+                               "Ant",
+                               "Pal",
+                               "Ala",
+                               "ARN",
+                               "Bat",
+                               "Bol",
+                               "Zam",
+                               "Cam",
+                               "Boh")),
+             y = shannon)) +
+  geom_jitter(alpha = 0.5,
+              color = "gray",
+              width = 0.15,
+              size = 1.5) +
+  geom_boxplot(fill = 'black',
+               width = 0.05,
+               outlier.shape = NA,
+               color = 'black') +
+  scale_y_continuous(expand = c(0,0),
+                     limits = c(0,1)) +
+  stat_summary(fun = "median", 
+               fill = 'white',
+               color = 'black',
+               size = 2.5,
+               geom = 'point',
+               shape = 21,
+               stroke = 1) +
+  coord_cartesian(clip = "off") +
+  theme_minimal() +
+  theme(panel.grid = element_blank(),
+        axis.line.y = element_line(),
+        axis.ticks.y = element_line(),
+        axis.title = element_blank(),
+        axis.text = element_text(size = 7))
+
+bioreg_comp <- 
+  its2_prof_4 |> 
+  ggplot(aes(x = bio_region,
+             y = shannon)) +
+  geom_jitter(alpha = 0.5,
+              color = "gray",
+              width = 0.15,
+              size = 1.5) +
+  geom_boxplot(fill = 'black',
+               width = 0.05,
+               outlier.shape = NA,
+               color = 'black') +
+  scale_y_continuous(expand = c(0,0),
+                     limits = c(0,1)) +
+  stat_summary(fun = "median", 
+               fill = 'white',
+               color = 'black',
+               size = 2.5,
+               geom = 'point',
+               shape = 21,
+               stroke = 1) +
+  coord_cartesian(clip = "off") +
+  theme_minimal() +
+  theme(panel.grid = element_blank(),
+        axis.line.y = element_line(),
+        axis.ticks.y = element_line(),
+        axis.title = element_blank(),
+        axis.text = element_text(size = 7))
+
+
+thermal_comp <- 
+  its2_prof_4 |> 
+  ggplot(aes(x = thermal_cluster,
+             y = shannon)) +
+  geom_jitter(alpha = 0.5,
+              color = "gray",
+              width = 0.15,
+              size = 1.5) +
+  geom_boxplot(fill = 'black',
+               width = 0.05,
+               outlier.shape = NA,
+               color = 'black') +
+  scale_y_continuous(expand = c(0,0),
+                     limits = c(0,1)) +
+  stat_summary(fun = "median", 
+               fill = 'white',
+               color = 'black',
+               size = 2.5,
+               geom = 'point',
+               shape = 21,
+               stroke = 1) +
+  coord_cartesian(clip = "off") +
+  theme_minimal() +
+  theme(panel.grid = element_blank(),
+        axis.line.y = element_line(),
+        axis.ticks.y = element_line(),
+        axis.title = element_blank(),
+        axis.text = element_text(size = 7))
+
+merged_plots <- 
+  plot_grid(spec_comp,
+            reg_comp,
+            bioreg_comp,
+            thermal_comp)
+```
+
+# Save
+
+```{r}
+merged_plots |> 
+  ggsave(filename = "alpha_diversity.svg", 
+         dpi = 900,
+         width = 18, 
+         height = 7,
+         unit = "cm")
+```
+
+# Stats
+
+Global.
+
+```{r}
+stats_spec_comp <- 
+  its2_prof_4 |> 
+  kruskal_test(shannon ~ species)
+
+stats_reg_comp <- 
+  its2_prof_4 |> 
+  kruskal_test(shannon ~ region)
+
+stats_bioreg_comp <- 
+  its2_prof_4 |> 
+  kruskal_test(shannon ~ bio_region)
+
+stats_thermal_comp <- 
+  its2_prof_4 |> 
+  kruskal_test(shannon ~ thermal_cluster)
+```
+
+Pairwise.
+
+```{r}
+stats_spec_comp_pair <- 
+  its2_prof_4 |> 
+  dunn_test(shannon ~ species, p.adjust.method = "BH")
+
+stats_spec_comp_pair_1 <- 
+  stats_spec_comp_pair |> 
+  mutate(group = paste(group1, group2, sep = "-")) |> 
+  select(group,p.adj) |> 
+  deframe() |> 
+  multcompLetters(threshold = 0.05)
+```
+
+# Misc.
+
+```{r}
+# T. gigas
+its2_prof_5 <- 
+  its2_prof_4 |> 
+  filter(species == "Tgig")
+
+# Correlation
+haplos <- # read haplotypes
+  read_csv("haplotypes.csv")
+
+its2_prof_6 <- # mean shannon
+  its2_prof_4 |> 
+  left_join(haplos)
+
+corr_its2h <- 
+  its2_prof_6 |> 
+  ggplot(aes(x = h,
+             y = shannon)) +
+  geom_point(alpha = 0.25,
+             color = "#e69f00") +
+  geom_smooth(method = "lm",
+              color = "#e69f00",
+              fill = "#e69f00") +
+  theme_classic()
+
+# Corr stats
+corr_its2h_stats <- 
+  its2_prof_6 |> 
+  cor_test(shannon, h, method = "spearman")
+```
