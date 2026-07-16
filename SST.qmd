@@ -1,0 +1,268 @@
+---
+title: "SST"
+format: html
+theme: 
+  light: zephyr
+  dark: cyborg
+toc: true
+page-layout: full
+number-sections: true
+number-depth: 3
+editor: visual
+self-contained: true
+---
+
+# Load pkgs
+
+```{r}
+pacman::p_load(tidyverse,
+               terra,
+               ncdf4,
+               tidyterra,
+               rnaturalearth,
+               sf,
+               ggspatial)
+```
+
+# SSTs
+
+```{r}
+files <- 
+  list.files(pattern = "\\.nc$",
+  full.names = TRUE
+)
+
+sst <- rast(files)
+```
+
+Mean SST.
+
+```{r}
+sst_mean <- mean(sst, na.rm = TRUE)
+```
+
+Save.
+
+```{r}
+writeCDF(
+  sst_mean,
+  "results/mean_sst_1985_2025.nc",
+  overwrite = TRUE
+)
+```
+
+Read.
+
+```{r}
+sst_mean <- 
+  rast("results/mean_sst_1985_2025.nc")
+```
+
+# Plot mean SST
+
+```{r}
+coast <- ne_countries(scale = "large", returnclass = "sf")
+
+latlon <- 
+  read_csv("latlon.csv")
+
+sites_sf <- st_as_sf(
+  latlon,
+  coords = c("longitude", "latitude"),
+  crs = 4326
+)
+
+mean_sst_map_legend <- 
+  ggplot() +
+  geom_spatraster(data = sst_mean[[1]]) +
+  geom_sf(data = coast, fill = "white", color = "white", linewidth = 0.3) +
+  geom_sf(data = sites_sf, color = "gray", fill = "black", size = 2, shape = 21) +
+  geom_sf_text(data = sites_sf, aes(label = region), size = 3, nudge_y = 0.2) +
+  coord_sf(xlim = c(115,130), ylim = c(4,22), expand = FALSE) +
+  scale_fill_viridis_c(name = "SST (°C)",
+                       option = "rocket") +
+  annotation_scale(location = "tr", width_hint = 0.3) +
+  theme_bw() +
+  theme(legend.position = "bottom",
+        axis.text = element_text(size = 7),
+        legend.text = element_text(size = 7),
+        legend.title = element_text(size = 8))
+
+mean_sst_map <- 
+  ggplot() +
+  geom_spatraster(data = sst_mean[[1]]) +
+  geom_sf(data = coast, fill = "white", color = "white", linewidth = 0.3) +
+  geom_sf(data = sites_sf, color = "gray", fill = "black", size = 2, shape = 21) +
+  geom_sf_text(data = sites_sf, aes(label = region), size = 3, nudge_y = 0.2) +
+  coord_sf(xlim = c(115,130), ylim = c(4,22), expand = FALSE) +
+  scale_fill_viridis_c(name = "SST (°C)",
+                       option = "rocket") +
+  annotation_scale(location = "tr", width_hint = 0.3) +
+  theme_bw() +
+  theme(legend.position = "none",
+        axis.text = element_text(size = 7),
+        legend.text = element_text(size = 7),
+        legend.title = element_text(size = 8))
+```
+
+Save.
+
+```{r}
+mean_sst_map_legend |> 
+  ggsave(filename = "SST_with_legend.svg", 
+         dpi = 900,
+         width = 10, 
+         height = 12,
+         unit = "cm")
+
+mean_sst_map |> 
+  ggsave(filename = "SST_without_legend.svg", 
+         dpi = 900,
+         width = 8, 
+         height = 10,
+         unit = "cm")
+```
+
+Do k-means clustering.
+
+```{r}
+vals <- values(sst_mean)
+vals <- vals[!is.na(vals)]
+
+set.seed(123)
+
+km <- kmeans(vals, centers = 6)
+
+
+cluster_raster <- sst_mean
+
+v <- values(cluster_raster)
+
+v[!is.na(v)] <- km$cluster
+
+values(cluster_raster) <- v
+```
+
+Compute mean SST per cluster.
+
+```{r}
+cluster_mean <- zonal(
+  sst_mean,
+  cluster_raster,
+  fun = mean,
+  na.rm = TRUE
+)
+```
+
+Plot.
+
+```{r}
+cluster_raster <- as.factor(cluster_raster)
+
+mean_sst_map_cluster <- 
+  ggplot() +
+  geom_spatraster(data = cluster_raster[[1]]) +
+  geom_sf(data = coast, fill = "white", color = "gray", linewidth = 0.25) +
+  geom_sf(data = sites_sf, color = "gray", fill = "black", size = 2, shape = 21) +
+  geom_sf_text(data = sites_sf, aes(label = region), size = 3, nudge_y = 0.2) +
+  coord_sf(xlim = c(115,130), ylim = c(4,22), expand = FALSE) +
+  scale_fill_manual(values = c("#fdd081", "#4591C3","#344A91","#2066AE","#e34d34","#f99858" )) +
+  annotation_scale(location = "tr", width_hint = 0.3) +
+  theme_bw() +
+  theme(legend.position = "none",
+        axis.text = element_text(size = 7),
+        legend.text = element_text(size = 7),
+        legend.title = element_text(size = 8))
+
+mean_sst_map_cluster |> 
+  ggsave(filename = "SST_clusters.svg", 
+         dpi = 900,
+         width = 8, 
+         height = 10,
+         unit = "cm")
+```
+
+Yearly mean SST
+
+```{r}
+yearly_sst <- tapp(
+  sst,
+  index = format(time(sst), "%Y"),
+  fun = mean,
+  na.rm = TRUE
+)
+```
+
+Save.
+
+```{r}
+writeCDF(
+  yearly_sst,
+  "results/yearly_sst_1985_2025.nc",
+  varname = "sst",
+  unit = "degree_C",
+  overwrite = TRUE
+)
+```
+
+Read computed data.
+
+```{r}
+yearly_sst <- 
+  rast("results/yearly_sst_1985_2025.nc")
+```
+
+Compute SST per cluster per year.
+
+```{r}
+cluster_year <- zonal(
+  yearly_sst,
+  cluster_raster,
+  fun = mean,
+  na.rm = TRUE
+)
+
+cluster_year_clean <- 
+  cluster_year |> 
+  pivot_longer(!mean_sst_1985_2025,
+               names_to = "year",
+               values_to = "temp") |> 
+  mutate(year = as.numeric(str_remove(year, "X"))) |> 
+  mutate(cluster = as.factor(mean_sst_1985_2025 ))
+
+cluster_year_clean <- 
+  read_csv("results/yearly mean SST per cluster.csv")
+
+cluster_year_clean_plot <- 
+  cluster_year_clean |> 
+  ggplot(aes(x = year,
+             y = temp,
+             color = as.factor(cluster))) +
+  geom_line() +
+  geom_point(size = 1) +
+  scale_color_manual(values = c("#fdd081", "#4591C3","#344A91","#2066AE","#e34d34","#f99858" )) +
+  scale_x_continuous(breaks = seq(1985, 2025, by = 5)) +
+  scale_y_continuous(limits = c(25, 30)) +
+  theme_classic() +
+  theme(legend.position = "none",
+        axis.title = element_blank(),
+        axis.text = element_text(size = 7))
+```
+
+Save raw data.
+
+```{r}
+cluster_year_clean |> 
+  write_csv("results/yearly mean SST per cluster.csv")
+```
+
+Save plot.
+
+```{r}
+cluster_year_clean_plot |> 
+  ggsave(filename = "SST_clusters_yearly_SST.svg", 
+         dpi = 900,
+         width = 7.25, 
+         height = 5,
+         unit = "cm") 
+```
