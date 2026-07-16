@@ -1,0 +1,1195 @@
+---
+title: "Photosymbiont composition among regions"
+format: html
+theme: 
+  light: zephyr
+  dark: cyborg
+toc: true
+page-layout: full
+number-sections: true
+number-depth: 3
+editor: visual
+self-contained: true
+---
+
+# Notes
+
+A naming convention for dataframes was made.
+
+1.  Objects were named with a prefix per section arranged alphabetically.
+2.  A 2nd prefix was added to arrange all the data accordingly:
+    -   Dataframes: .**1**
+    -   Plots: .**2**
+    -   Stats: .**3** (those in dataframe format)
+    -   Others:
+        -   Vectors: .**vec**
+        -   Trees: .**tre**
+        -   Distances: .**dis**
+        -   Functions: .**fun**
+3.  If a dataframe will be used multiple times in case a raw dataframe is needed and an edited one should not supersede the raw one, add a suffix at the end (i.e., **\_1** for first edit, **\_2** for second....).
+4.  Limit 3rd prefix names to three letters and if 2 prefixes are needed, separate with "**.**".
+5.  If an object is just an auxiliary object, put a **Z** prefix.
+
+# Comm. structure
+
+Load pkgs.
+
+```{r}
+pacman::p_load(tidyverse,
+               janitor,
+               vegan,
+               cowplot,
+               pairwiseAdonis,
+               svglite,
+               viridis,
+               multcompView,
+               ANCOMBC,
+               phyloseq,
+               scico,
+               ggbeeswarm,
+               ggupset,
+               rstatix)
+```
+
+Load metadata.
+
+```{r}
+A.1_Metadata <- 
+  readxl::read_xlsx("../metadata/metadata_20251021.xlsx")
+```
+
+Load ITS.
+
+```{r}
+A.1_ITS2 <- read_tsv("../raw_data/20250829T091611/post_med_seqs/4_first_analysis_20250829T091611.seqs.absolute.abund_and_meta.txt")
+```
+
+Tidy.
+
+```{r}
+A.1_Metadata_1 <- 
+  A.1_Metadata |> 
+  select(c(1, 2, 3, 12)) |> 
+  rename(sample_name = 1)
+
+A.1_ITS2_1 <- 
+  A.1_ITS2 |> 
+  drop_na()  |> 
+  filter(post_med_unique != 0) |> 
+  select(!c(1, 3:39))
+
+A.1_ITS2_2 <- 
+  A.1_ITS2_1 |> 
+  left_join(A.1_Metadata_1) |> 
+  relocate(sample_name, CorrectID, Species, region)
+```
+
+Make matrix.
+
+```{r}
+A.1_ITS2_3 <- # retain CorrectID only
+  A.1_ITS2_2 |> 
+  select(!c(1,3,4)) |> 
+  arrange(CorrectID) |> 
+  column_to_rownames("CorrectID") |> 
+  as.matrix() |> 
+  sqrt()
+```
+
+Compute Bray-Curtis dissimilarity.
+
+```{r}
+A.1_ITS2BrayCurtis <- 
+  A.1_ITS2_3 |> 
+  vegdist()
+```
+
+Do NMDS.
+
+```{r}
+A.1_ITS2BrayCurtisNMDS <- 
+  A.1_ITS2BrayCurtis |> 
+  metaMDS(k = 2)
+
+A.1_ITS2BrayCurtisNMDS_1 <- # tidy NMDS data
+  as.data.frame(scores(A.1_ITS2BrayCurtisNMDS)) |> 
+  rownames_to_column("CorrectID")
+
+A.1_ITS2BrayCurtisNMDS_2 <- # add metadata
+  A.1_ITS2BrayCurtisNMDS_1 |> 
+  left_join(A.1_Metadata_1)
+```
+
+Plot.
+
+```{r}
+A.2_ITS2BrayCurtisNMDS <- 
+  A.1_ITS2BrayCurtisNMDS_2 |> 
+  ggplot(aes(x = NMDS1, y = NMDS2)) +
+  geom_hline(yintercept = 0,
+             color = 'darkgray',
+             linetype = 'dashed',
+             linewidth = 0.25) +
+  geom_vline(xintercept = 0,
+             color = 'darkgray',
+             linetype = 'dashed',
+             linewidth = 0.25) +
+  geom_point(aes(color = fct_relevel(region,
+                                    c("Alaminos",
+                                      "Antique",
+                                      "ARNP",
+                                      "Batangas",
+                                      "Bohol",
+                                      "Bolinao",
+                                      "Calaguas",
+                                      "Camiguin",
+                                      "Palawan",
+                                      "Samar",
+                                      "Zambales"))),
+             size = 2) +
+  labs(x = "NMDS1",
+       y = "NMDS2",
+       color = "Region") +
+  scale_color_manual(values = 
+                       c("Alaminos"="#E41A1C",
+                         "Antique"="#377EB8",
+                         "ARNP"="#4DAF4A",
+                         "Batangas"="#984EA3",
+                         "Bohol"="#FF7F00",
+                         "Bolinao"="#FFFF33",
+                         "Calaguas"="#A65628",
+                         "Camiguin"="#F781BF",
+                         "Palawan"="#999999",
+                         "Samar"="#66C2A5",
+                         "Zambales"="#FC8D62")) +
+  theme_minimal() +
+  theme(panel.grid = element_blank(),
+        strip.background = element_blank(),
+        axis.ticks = element_blank(),
+        axis.text = element_blank(),
+        axis.line = element_line(),panel.background    = element_rect(fill = "transparent", colour = NA),
+        plot.background     = element_rect(fill = "transparent", colour = NA),
+        legend.background   = element_rect(fill = "transparent", colour = NA),
+        legend.box.background = element_rect(fill = "transparent", colour = NA),
+        legend.position = "bottom")
+
+# Save
+A.2_ITS2BrayCurtisNMDS |> 
+  ggsave(filename = "NMDS - All regions.svg", 
+         dpi = 900,
+         width = 17.5, 
+         units = "cm")
+
+(A.2_ITS2BrayCurtisNMDS +
+  theme(legend.position = "none")) |> 
+  ggsave(filename = "NMDS - All regions - No legend.svg", 
+         dpi = 900,
+         width = 8.5,
+         height = 8.5, 
+         units = "cm")
+```
+
+Plot, separated by regions.
+
+```{r}
+A.2_ITS2BrayCurtisNMDS_1 <- 
+  A.1_ITS2BrayCurtisNMDS_2 |> 
+  ggplot(aes(x = NMDS1, y = NMDS2)) +
+  geom_hline(yintercept = 0,
+             color = 'darkgray',
+             linetype = 'dashed',
+             linewidth = 0.25) +
+  geom_vline(xintercept = 0,
+             color = 'darkgray',
+             linetype = 'dashed',
+             linewidth = 0.25) +
+  stat_ellipse(level = 0.5,
+               aes(fill = region),
+               geom = "polygon",
+               alpha = 0.5) +
+  stat_ellipse(level = 0.75,
+               aes(fill = region),
+               geom = "polygon",
+               alpha = 0.25) +
+  stat_ellipse(level = 0.9,
+               aes(fill = region),
+               geom = "polygon",
+               alpha = 0.1) +
+  geom_point(aes(color = fct_relevel(region,
+                                    c("Alaminos",
+                                      "Antique",
+                                      "ARNP",
+                                      "Batangas",
+                                      "Bohol",
+                                      "Bolinao",
+                                      "Calaguas",
+                                      "Camiguin",
+                                      "Palawan",
+                                      "Samar",
+                                      "Zambales"))),
+             size = 1) +
+  labs(x = "NMDS1",
+       y = "NMDS2",
+       color = "GC species") +
+  scale_color_manual(values = 
+                       c("Alaminos"="#E41A1C",
+                         "Antique"="#377EB8",
+                         "ARNP"="#4DAF4A",
+                         "Batangas"="#984EA3",
+                         "Bohol"="#FF7F00",
+                         "Bolinao"="#FFFF33",
+                         "Calaguas"="#A65628",
+                         "Camiguin"="#F781BF",
+                         "Palawan"="#999999",
+                         "Samar"="#66C2A5",
+                         "Zambales"="#FC8D62")) +
+  scale_fill_manual(values = 
+                       c("Alaminos"="#E41A1C",
+                         "Antique"="#377EB8",
+                         "ARNP"="#4DAF4A",
+                         "Batangas"="#984EA3",
+                         "Bohol"="#FF7F00",
+                         "Bolinao"="#FFFF33",
+                         "Calaguas"="#A65628",
+                         "Camiguin"="#F781BF",
+                         "Palawan"="#999999",
+                         "Samar"="#66C2A5",
+                         "Zambales"="#FC8D62")) +
+  facet_wrap(~fct_relevel(region,
+                         c("Alaminos",
+                           "Antique",
+                           "ARNP",
+                           "Batangas",
+                           "Bohol",
+                           "Bolinao",
+                           "Calaguas",
+                           "Camiguin",
+                           "Palawan",
+                           "Samar",
+                           "Zambales"))) +
+  theme_minimal() +
+  theme(panel.grid = element_blank(),
+        strip.background = element_blank(),
+        strip.text = element_text(),
+        axis.ticks = element_blank(),
+        axis.text = element_blank(),
+        axis.line = element_line(),panel.background    = element_rect(fill = "transparent", colour = NA),
+        plot.background     = element_rect(fill = "transparent", colour = NA),
+        legend.background   = element_rect(fill = "transparent", colour = NA),
+        legend.box.background = element_rect(fill = "transparent", colour = NA),
+        legend.text = element_text())
+
+# Save
+(A.2_ITS2BrayCurtisNMDS_1 +
+  theme(legend.position = "none")) |> 
+  ggsave(filename = "NMDS - Per region - No legend.svg", 
+         dpi = 900,
+         width = 8.5,
+         height = 8.5, 
+         units = "cm")
+```
+
+## PERMANOVA
+
+Stats.
+
+```{r}
+A.2_PERMANOVA <- 
+  adonis2(A.1_ITS2BrayCurtis ~ get("region"), 
+          data = (A.1_Metadata_1 |> 
+                    filter(CorrectID %in% (A.1_ITS2_2 |>
+                                             pull(CorrectID))) |>
+                    arrange(CorrectID)))
+
+A.2_PERMANOVAPwise <- # Pairwise PERMANOVA
+  pairwise.adonis2(A.1_ITS2BrayCurtis ~ region,
+                   data = (A.1_Metadata_1 |>
+                             filter(CorrectID %in% (A.1_ITS2_2 |>
+                                                      pull(CorrectID))) |>
+                      arrange(CorrectID)),
+                   nperm = 9999)
+```
+
+Script to tidy pairwisePERMANOVA.
+
+```{r}
+Z.fun_PPERMANOVACleaner <- 
+  function(pmanova_res){
+    a <- 
+      pmanova_res[-1] |> 
+      bind_rows(.id = 'groups') |> 
+      drop_na() %>%
+      .$`Pr(>F)` |> 
+      p.adjust(method = 'BH') 
+    
+    b <- 
+      unique(pmanova_res[-1] |> 
+               bind_rows(.id = 'groups'))$groups |> 
+      unique()
+      
+    d <- 
+       a %>% 
+        data.frame(b,.) |> 
+        rename('groups' = 1,
+               `P-adjusted` = 2) %>% 
+        left_join(pmanova_res[-1] |> 
+                    bind_rows(.id = 'groups'), 
+                  ., 
+                  by = 'groups') |> 
+        mutate(`P-adjusted` = case_when(is.na(`Pr(>F)`) ~ NA,
+                                        .default = `P-adjusted`)) |> 
+        mutate(Parameter = rep(c('Species', 'Residual', 'Total'), length.out = n())) |> 
+        relocate(last_col(), .after = 1)
+    
+    return(d)
+  }
+```
+
+Tidy.
+
+```{r}
+A.2_PERMANOVAPwise_1 <- # tidy
+  A.2_PERMANOVAPwise |> 
+  Z.fun_PPERMANOVACleaner()
+
+# Save
+A.2_PERMANOVAPwise_1 |> 
+  writexl::write_xlsx(path = "ST - PERMANOVA - Region.xlsx")
+
+A.2_PERMANOVAPwise_2 <- # tidier (for cld)
+  A.2_PERMANOVAPwise_1 |> 
+  drop_na() |> 
+  mutate(groups = str_replace(groups, "_vs_", "-")) |> 
+  select(groups, `P-adjusted`) |> 
+  deframe()
+
+A.2_PERMANOVAPwise_3 <- 
+  multcompLetters(A.2_PERMANOVAPwise_2, threshold = 0.05)
+```
+
+## PERMDISP
+
+```{r}
+A.1_PERMDISP <- 
+  betadisper(A.1_ITS2BrayCurtis, 
+             group = (A.1_Metadata_1 |>
+                        filter(CorrectID %in% (A.1_ITS2_2 |>
+                                                 pull(CorrectID))))[["region"]]) |> 
+  anova()
+
+
+A.1_PERMDISPPwise <- 
+  TukeyHSD(betadisper(A.1_ITS2BrayCurtis, 
+             group = (A.1_Metadata_1 |>
+                        filter(CorrectID %in% (A.1_ITS2_2 |>
+                                                 pull(CorrectID))))[["region"]]))$group |> 
+  as.data.frame() |> 
+  rownames_to_column('Comparison') |> 
+  mutate(diff = abs(diff)) |> 
+  separate(Comparison,
+           into = c("Group2", "Group1"),
+           sep = "-") %>%
+  mutate(sig = case_when(
+    `p adj` <= 0.05  ~ "bold",
+    TRUE ~ "plain"
+  )) %>%
+  mutate(diff_label = round(diff,2))
+
+# Save
+A.1_PERMDISPPwise |> 
+  writexl::write_xlsx(path = "ST - PERMDISP - Region.xlsx")
+
+A.1_PERMDISPPwise_1 <- 
+  A.1_PERMDISPPwise |> 
+  mutate(Comparison = paste0(Group1, "-", Group2)) |> 
+  select(Comparison, `p adj`) |> 
+  deframe() |> 
+  multcompLetters(threshold = 0.05)
+```
+
+# Genus
+
+Tidy data.
+
+```{r}
+B.1_ITS2 <- # clean its2 data with correct id info
+  A.1_ITS2_2
+
+B.1_ITS2_1 <- # pivot longer
+  B.1_ITS2 |> 
+  select(!c(1,3,4)) |> 
+  pivot_longer(!1,
+               names_to = "ITS2",
+               values_to = "Count")
+
+B.1_ITS2_2 <- # merge with metadata
+  B.1_ITS2_1 |> 
+  left_join(A.1_Metadata_1)
+
+B.1_ITS2_3 <- # genus info
+  B.1_ITS2_2 |> 
+  # Detect genus
+  mutate(Genus = case_when(str_detect(ITS2, "A") ~ "Symbiodinium",
+                           str_detect(ITS2, "C") ~ "Cladocopium",
+                           str_detect(ITS2, "D") ~ "Durusdinium",
+                           str_detect(ITS2, "G") ~ "Gerakladium",
+                           .default = NA)) |> 
+  drop_na() |> 
+  group_by(CorrectID, Genus, Species, region) |> 
+  summarise(Total = sum(Count))
+```
+
+Plot.
+
+```{r}
+B.2_ITS2Genus <- 
+  B.1_ITS2_3 |> 
+  ungroup() |> 
+  ggplot(aes(x = CorrectID,
+             y = Total,
+             fill = Genus)) +
+  geom_bar(stat = "identity",
+           position = "fill",
+           width = 1) +
+  facet_grid(cols = vars(region),
+             space = "free",
+             scale = "free") +
+  scale_fill_manual(values = 
+                      c("Symbiodinium"= "#746FB4",
+                        "Cladocopium" = "#209E77",
+                        "Durusdinium" = "#E7AB06",
+                        "Gerakladium" = "#A9A9A9")) +
+  scale_y_continuous(expand = c(0,0)) +
+  scale_x_discrete(expand = c(0,0)) +
+  theme_minimal() +
+  theme(legend.title = element_blank(),
+        strip.background = element_blank(),
+        panel.spacing = unit(0.1,'lines'),
+        axis.text = element_blank(),
+        axis.title = element_blank(),
+        panel.grid = element_blank())
+```
+
+Cluster per region.
+
+```{r}
+B.1_ITS2_4 <- # samples based on ITS2 withing species
+  A.1_ITS2_2 |> 
+  select(!c(1,3)) |> 
+  
+  # Prepare for transformation to matrix
+  arrange(CorrectID) |> 
+  group_by(region) |> 
+  group_split(.keep = TRUE) |> 
+  map_dfr(~ {
+    df <- .x
+
+    # Safely convert to matrix: remove SampleID and any non-numeric columns
+    mat_sub <- df %>%
+      column_to_rownames("CorrectID") %>%
+      select(where(is.numeric)) %>%
+      as.matrix() |> 
+      sqrt()
+    
+    dist_mat <- vegdist(mat_sub)  # you can use vegdist() if ecological
+    hc <- hclust(dist_mat, method = "ward.D2")
+    
+    ordered_sample_ids <- .x$CorrectID[hc$order]
+    
+    tibble(CorrectID = ordered_sample_ids,
+           order_within_region = seq_along(ordered_sample_ids),
+           region = unique(.x$region))
+  }) %>%
+  bind_rows()
+```
+
+Replot.
+
+```{r}
+B.1_ITS2_5 <- 
+  B.1_ITS2_3 %>%
+  ungroup() |> 
+  left_join(B.1_ITS2_4, by = c("CorrectID", "region")) |> 
+  arrange(region, order_within_region) |> 
+  mutate(
+    CorrectID = as.character(CorrectID),
+    CorrectID = factor(CorrectID, levels = unique(CorrectID))
+  )
+
+
+B.2_ITS2Genus_1 <- 
+  B.1_ITS2_5 |> 
+  ggplot(aes(x = CorrectID,
+             y = Total,
+             fill = fct_relevel(Genus,
+                                c("Symbiodinium",
+                                  "Cladocopium",
+                                  "Durusdinium")))) +
+  geom_col(position = "fill",
+           width = 1.15,
+           color = NA,
+           linewidth = 0) +
+  facet_grid(cols = vars(fct_relevel(region,
+                                     c("Alaminos",
+                                       "Antique",
+                                       "ARNP",
+                                       "Batangas",
+                                       "Bohol",
+                                       "Bolinao",
+                                       "Calaguas",
+                                       "Camiguin",
+                                       "Palawan",
+                                       "Samar",
+                                       "Zambales"))),
+             space = "free",
+             scales = "free_x") +
+  scale_fill_manual(values = c(
+    "Symbiodinium"= "#746FB4",
+    "Cladocopium" = "#209E77",
+    "Durusdinium" = "#E7AB06",
+    "Gerakladium" = "#A9A9A9"
+  )) +
+  scale_y_continuous(expand = c(0,0)) +
+  scale_x_discrete(expand = c(0,0)) +
+  theme_minimal() +
+  theme(
+    legend.title = element_blank(),
+    strip.background = element_blank(),
+    panel.spacing = unit(0.1,'lines'),
+    axis.title = element_blank(),
+    panel.grid = element_blank(),
+    axis.line.y = element_line(),
+    axis.ticks.y = element_line(),
+    axis.text = element_blank(),
+  )
+```
+
+Save.
+
+```{r}
+(B.2_ITS2Genus_1 +
+    theme(legend.position = "none")) |> 
+  ggsave(filename = "Barplot - Genus - Region - No legend.svg", 
+         dpi = 900,
+         width = 14.75, 
+         height = 2,
+         unit = "cm")
+
+B.2_ITS2Genus_1 |> 
+  ggsave(filename = "Barplot - Genus - Region.svg", 
+         dpi = 900,
+         width = 20, 
+         height = 10,
+         unit = "cm")
+```
+
+# ITS2
+
+Tidy data.
+
+```{r}
+C.1_ITS2 <- # clean its2 data with correct id info
+  A.1_ITS2_2
+
+C.1_ITS2_1 <- # pivot longer
+  C.1_ITS2 |> 
+  select(!c(1,3,4)) |> 
+  pivot_longer(!1,
+               names_to = "ITS2",
+               values_to = "Count")
+
+C.1_ITS2_2 <- # merge with metadata
+  C.1_ITS2_1 |> 
+  left_join(A.1_Metadata_1)
+
+C.1_ITS2_3 <- # genus info
+  C.1_ITS2_2 |> 
+  # Detect genus
+  mutate(Genus = case_when(str_detect(ITS2, "A") ~ "Symbiodinium",
+                           str_detect(ITS2, "C") ~ "Cladocopium",
+                           str_detect(ITS2, "D") ~ "Durusdinium",
+                           str_detect(ITS2, "G") ~ "Gerakladium",
+                           .default = NA)) |> 
+  drop_na()
+```
+
+Get most abundant seqs.
+
+```{r}
+C.1_ITS2Top <- 
+  C.1_ITS2_3 |>
+  ungroup() |> 
+  group_by(ITS2) |>
+  summarise(TotalCount = sum(Count)) |> 
+  ungroup() |> 
+  mutate(RelativeAbundance = round(TotalCount/sum(TotalCount),4)) |> 
+  arrange(desc(RelativeAbundance)) |> 
+  filter(RelativeAbundance > 0.01) |> # get its2 seqs with >1% relative abundance
+  pull(ITS2)
+```
+
+Square root-transform.
+
+```{r}
+C.1_ITS2_4 <- 
+  C.1_ITS2_3 |> 
+  mutate(Count = sqrt(Count)) |> 
+  filter(ITS2 %in% C.1_ITS2Top) |> 
+  ungroup() |> 
+  left_join(B.1_ITS2_4, by = c("CorrectID", "region"))  |> 
+  arrange(region, order_within_region) |> 
+  mutate(
+    CorrectID = as.character(CorrectID),
+    CorrectID = factor(CorrectID, levels = unique(CorrectID))
+  )
+```
+
+Plot.
+
+```{r}
+C.2_ITS2 <- 
+  C.1_ITS2_4 |> 
+  ggplot(aes(x = CorrectID, y = ITS2, fill = Count)) +
+  geom_raster() +
+  scale_fill_viridis(option = "mako", name = "sqrt(count)") +
+  facet_grid(vars(region),
+             rows = vars(fct_relevel(Genus,
+                                     c("Symbiodinium",
+                                       "Cladocopium",
+                                       "Durusdinium"))),
+             scales = "free",
+             space = "free") +
+  scale_y_discrete(expand = c(0,0)) +
+  scale_x_discrete(expand = c(0,0)) +
+  theme_minimal() +
+  theme(axis.text.x = element_blank(),
+        panel.spacing = unit(0.1,'lines'),
+        panel.grid = element_blank(),
+        axis.text.y = element_text(size = 6, margin = margin(r = -1)),
+        strip.text.y = element_blank())
+```
+
+Save.
+
+```{r}
+(C.2_ITS2 +
+    theme(legend.position = "none",
+          axis.text = element_blank())) |> 
+  ggsave(filename = "Heatmap - ITS2 - Region - No legend.svg", 
+         dpi = 900,
+         width = 15.7, 
+         height = 3.75,
+         unit = "cm")
+
+C.2_ITS2 |> 
+  ggsave(filename = "Heatmap - ITS2 - Region.svg", 
+         dpi = 900,
+         width = 17.5, 
+         height = 20,
+         unit = "cm")
+```
+
+## DA
+
+Make ANCOMBC2-readable. Make a phyloseq table.
+
+```{r}
+C.1_ITS2ANCOMTable <- 
+  C.1_ITS2 |> 
+  select(!c(1,3,4)) |> # pivot longer
+  pivot_longer(!CorrectID,
+              names_to = "ITS2",
+              values_to = "Count") |>  # pivot wider
+  pivot_wider(names_from = CorrectID,
+              values_from = Count) |> 
+  column_to_rownames("ITS2") |> 
+  as.matrix() |> 
+  otu_table(taxa_are_rows = T)
+```
+
+Phyloseq taxonomy mapping.
+
+```{r}
+C.1_ITS2ANCOMTaxa <-
+  C.1_ITS2 |> 
+  select(!c(1,3,4)) |> # pivot longer
+  pivot_longer(!CorrectID,
+              names_to = "ITS2",
+              values_to = "Count") |>  # pivot wider
+  pivot_wider(names_from = CorrectID,
+              values_from = Count) |> 
+  mutate(Phylum = ITS2,
+         Class = NA,
+         Order = NA,
+         Family = NA,
+         Genus = NA,
+         Species = NA) |> 
+  select(1, Phylum:Species) |> 
+  column_to_rownames('ITS2') |> 
+  as.matrix() |> 
+  tax_table()
+```
+
+Phyloseq metadata.
+
+```{r}
+C.1_ITS2ANCOMMeta <- 
+  A.1_Metadata_1 |> 
+  filter(CorrectID %in% (A.1_ITS2_2 |> 
+                           pull(CorrectID))) |> 
+  select(!sample_name) |> 
+  column_to_rownames("CorrectID") |> 
+  as.data.frame() |> 
+  sample_data()
+```
+
+Phyloseq merge.
+
+```{r}
+C.1_ITS2ANCOMMerge <- 
+  phyloseq(C.1_ITS2ANCOMTable,
+           C.1_ITS2ANCOMTaxa)
+
+C.1_ITS2ANCOMMerge_1 <- 
+  merge_phyloseq(C.1_ITS2ANCOMMerge,
+                 C.1_ITS2ANCOMMeta)
+```
+
+ANCOMBC2 among regions.
+
+```{r}
+C.1_ITS2ANCOMRun <- ANCOMBC::ancombc2(
+  data = C.1_ITS2ANCOMMerge_1,
+  fix_formula = "region",
+  rand_formula = NULL,
+  group = "region",
+  global = TRUE,
+  pairwise = TRUE,
+  tax_level = "Phylum",
+  p_adj_method = "BH",
+  lib_cut = 1000,
+  prv_cut = 0.10,
+  alpha = 0.05,
+  verbose = TRUE
+)
+```
+
+Tidy.
+
+```{r}
+C.1_ITS2ANCOMRunRes <- 
+  C.1_ITS2ANCOMRun$res
+
+C.1_ITS2ANCOMRunGlobal <- 
+  C.1_ITS2ANCOMRun$res_global
+
+C.1_ITS2ANCOMRunPairwise <- 
+  C.1_ITS2ANCOMRun$res_pair
+
+C.1_ITS2ANCOMRunPairwise_Z <- 
+  C.1_ITS2ANCOMRunPairwise |> 
+  pivot_longer(
+    cols = -taxon,
+    names_to = c("parameter", "group"),
+    names_pattern = "(.+?)_(region.+)",
+    values_to = "value")  |> 
+  pivot_wider(
+    names_from = parameter,
+    values_from = value) |> 
+  separate(group, sep = "_", into = c("Group1", "Group2")) |> 
+  mutate(Group2.5 = if_else(is.na(Group2), str_sub(Group1, 7, -1), NA),
+         Group1 = if_else(is.na(Group2), "Alaminos", Group1),
+         Group2 = if_else(is.na(Group2), Group2.5, Group2)) |> 
+  mutate(Group1 = str_remove_all(Group1, "region"),
+         Group2 = str_remove_all(Group2, "region")) |> 
+  select(-last_col())
+
+# Save
+C.1_ITS2ANCOMRunPairwise_Z |> 
+  writexl::write_xlsx(path = "ST - ANCOMBC2 - Region.xlsx")
+```
+
+Tidy.
+
+```{r}
+C.1_ITS2ANCOMRunGlobal_1 <- 
+  C.1_ITS2ANCOMRunGlobal |> 
+  filter(diff_abn == TRUE & passed_ss == TRUE)
+
+C.1_ITS2ANCOMRunPairwise_1 <- # diff abundant
+  C.1_ITS2ANCOMRunPairwise |> 
+  filter(taxon %in% (C.1_ITS2ANCOMRunGlobal_1 |> 
+                       pull(taxon))) |> 
+  select(taxon, starts_with("diff_")) |> 
+  pivot_longer(!taxon,
+               names_to = "Comparison",
+               values_to = "DiffAbun") |> 
+  mutate(Comparison = str_remove(Comparison, "diff_"))
+
+C.1_ITS2ANCOMRunPairwise_2 <- # lfc 
+  C.1_ITS2ANCOMRunPairwise |> 
+  filter(taxon %in% (C.1_ITS2ANCOMRunGlobal_1 |> 
+                       pull(taxon))) |> 
+  select(taxon, starts_with("lfc_")) |> 
+  pivot_longer(!taxon,
+               names_to = "Comparison",
+               values_to = "LFC") |> 
+  mutate(Comparison = str_remove(Comparison, "lfc_"))
+
+C.1_ITS2ANCOMRunPairwise_3 <- # merge
+  C.1_ITS2ANCOMRunPairwise_2 |> 
+  left_join(C.1_ITS2ANCOMRunPairwise_1)
+
+C.1_ITS2ANCOMRunPairwise_4 <- # last tidy
+  C.1_ITS2ANCOMRunPairwise_3 |> 
+  mutate(Comparison = if_else(str_detect(Comparison, "_"), 
+                              str_remove_all(Comparison, "region"),
+                              str_replace_all(Comparison, "region", "Alaminos_"))) |> 
+  separate(col = Comparison,       # replace with your column name
+           into = c("Species1", "Species2"),
+           sep = "_") |> 
+  mutate(Species1 = str_remove_all(str_sub(Species1, 1,8), ". "),
+         Species2 = str_remove_all(str_sub(Species2, 1,8), ". ")) |> 
+  unite(col = "Comparison", Species1, Species2, sep = "-\n")
+
+C.1_ITS2ANCOMRunPairwise_5 <- # filter
+  C.1_ITS2ANCOMRunPairwise_4 |> 
+  filter(DiffAbun == TRUE)
+
+C.1_ITS2ANCOMRunPairwise_6 <- 
+  C.1_ITS2ANCOMRunPairwise_5 |> 
+  complete(taxon = unique(taxon), 
+           Comparison = unique(Comparison), 
+           fill = list(LFC = 0, DiffAbun = FALSE))
+```
+
+No differentially abundant sequences.
+
+# ITS2 type profile
+
+Load data.
+
+```{r}
+D.1_ITS2TypeProf <- 
+  read_tsv("../raw_data/20250829T091611/its2_type_profiles/4_first_analysis_20250829T091611.profiles.absolute.abund_and_meta.txt")
+
+D.1_ITS2TypeProf_1 <- # tidy
+  D.1_ITS2TypeProf |> 
+  slice(-(1:5)) %>% # Remove first 5 rows (unnecessary rows)
+  row_to_names(1) |>  # Move first row to column header
+  rename(sample_name = 2) |>  # Name 2nd column
+  select(-1) |>  # Remove first column (unneeded)
+  drop_na() |> 
+  type_convert() 
+
+D.1_ITS2TypeProf_2 <- # merge with metadata, remove unneeded
+  D.1_ITS2TypeProf_1 |> 
+  left_join(A.1_Metadata_1) |> 
+  filter(sample_name %in% (A.1_ITS2_1 |> pull(sample_name)))
+
+D.1_ITS2TypeProf_3 <- # pivot longer
+  D.1_ITS2TypeProf_2 |> 
+  pivot_longer(!c(sample_name, CorrectID, Species, region),
+               names_to = "ITS2TypeProf",
+               values_to = "Count")
+
+D.1_ITS2TypeProf_4 <- # convert counts to 0 or 1
+  D.1_ITS2TypeProf_3 |> 
+  mutate(Presence = if_else(Count > 0, 1, 0))
+
+D.1_ITS2TypeProf_5 <- # number of ITS2TypeProf per sample
+  D.1_ITS2TypeProf_4 |> 
+  group_by(CorrectID, region) |> 
+  summarise(NoITS2TypeProf = sum(Presence))
+
+D.1_ITS2TypeProf_6 <- # arrange based on clusters
+  D.1_ITS2TypeProf_5 |> 
+  left_join(B.1_ITS2_4, by = c("CorrectID", "region")) |> 
+  ungroup() |> 
+  arrange(region, order_within_region) |> 
+  mutate(
+    CorrectID = as.character(CorrectID),
+    CorrectID = factor(CorrectID, levels = unique(CorrectID))
+  )
+```
+
+Plot.
+
+```{r}
+D.2_ITS2TypeProf <- 
+  D.1_ITS2TypeProf_6 |> 
+  ggplot(aes(x = CorrectID, y = NoITS2TypeProf)) +
+  geom_col(width = 1.15,
+           fill = "black") +
+  scale_y_continuous(expand = c(0, 0),
+                     limits = c(0,6),
+                     breaks = seq(0,6, by = 2)) +
+  facet_grid(cols = vars(region),
+             scales = "free",
+             space = "free") +
+  theme_minimal() +
+  theme(axis.ticks.y = element_line(color = "black"),
+        panel.grid = element_blank(),
+        axis.line.y = element_line(color = "black"),
+        axis.text.x = element_blank(),
+        panel.spacing = unit(0.1,'lines'),
+        axis.text.y = element_text(size = 6),
+        axis.title = element_blank())
+
+# Save
+D.2_ITS2TypeProf |> 
+  ggsave(filename = "Barplots - Number of ITS2 type profiles - Region.svg", 
+         dpi = 900,
+         width = 15, 
+         height = 2.25,
+         unit = "cm")
+```
+
+## Diversity
+
+```{r}
+D.1_ITS2TypeProfAlpha <- 
+  D.1_ITS2TypeProf_4 |> 
+  group_by(CorrectID) |> 
+  summarise(Shannon = diversity(Count, index = "shannon"),
+            Richness = specnumber(Count)) |> 
+  ungroup() |> 
+  left_join((A.1_Metadata_1 |> 
+               select(c(CorrectID, region))))
+```
+
+Plot.
+
+```{r}
+D.2_ITS2TypeProfAlpha <- 
+  D.1_ITS2TypeProfAlpha |> 
+  ggplot(aes(x = region,
+             y = Richness)) +
+  geom_violin(trim = F,
+              fill = "lightgray",
+              color = NA,
+              alpha = 0.75) +
+  geom_boxplot(fill = '#555555',
+               width = 0.05,
+               outlier.shape = NA,
+               color = '#555555') +
+  scale_y_continuous(expand = c(0,0),
+                     limits = c(0,5)) +
+  stat_summary(fun = "median", 
+               fill = 'white',
+               color = 'black',
+               size = 2.5,
+               geom = 'point',
+               shape = 21,
+               stroke = 1) +
+  coord_cartesian(clip = "off") +
+  theme_minimal() +
+  theme(panel.grid = element_blank(),
+        axis.line.y = element_line(),
+        axis.ticks.y = element_line(),
+        axis.title.x = element_blank(),
+        axis.text.x = element_text(angle = 45, hjust = 1))
+
+D.2_ITS2TypeProfAlpha_1 <- 
+  D.1_ITS2TypeProfAlpha |> 
+  ggplot(aes(x = region,
+             y = Shannon)) +
+  geom_violin(trim = F,
+              fill = "lightgray",
+              color = NA,
+              alpha = 0.75) +
+  geom_boxplot(fill = '#555555',
+               width = 0.05,
+               outlier.shape = NA,
+               color = '#555555') +
+  scale_y_continuous(expand = c(0,0),
+                     limits = c(0,1)) +
+  stat_summary(fun = "median", 
+               fill = 'white',
+               color = 'black',
+               size = 2.5,
+               geom = 'point',
+               shape = 21,
+               stroke = 1) +
+  coord_cartesian(clip = "off") +
+  theme_minimal() +
+  theme(panel.grid = element_blank(),
+        axis.line.y = element_line(),
+        axis.ticks.y = element_line(),
+        axis.title.x = element_blank(),
+        axis.text.x = element_text(angle = 45, hjust = 1))
+
+D.2_ITS2TypeProfAlpha_2 <- 
+  plot_grid(D.2_ITS2TypeProfAlpha,
+            D.2_ITS2TypeProfAlpha_1,
+            ncol = 2)
+```
+
+Save.
+
+```{r}
+D.2_ITS2TypeProfAlpha_2 |> 
+  ggsave(filename = "Alpha.svg", 
+         dpi = 900,
+         width = 17, 
+         height = 5,
+         unit = "cm")
+```
+
+## Upset
+
+Tidy.
+
+```{r}
+D.1_ITS2TypeProfUpset <- 
+  D.1_ITS2TypeProf_4 |> 
+  group_by(ITS2TypeProf,
+           region) |> 
+  summarise(TotalCount = sum(Count)) |> 
+  ungroup() |> 
+  pivot_wider(names_from = ITS2TypeProf,
+              values_from = TotalCount) |>  
+  mutate_if(is.numeric, as.logical) |> 
+  pivot_longer(!region,
+               names_to = 'ITS2TypeProf',
+               values_to = 'Logic') |> 
+  filter(Logic) %>% 
+  select(-Logic) %>% 
+  group_by(ITS2TypeProf)%>% 
+  summarize(region = list(region))
+```
+
+Plot.
+
+```{r}
+D.2_ITS2TypeProfUpset <-
+  D.1_ITS2TypeProfUpset |> 
+  ggplot(aes(x = region)) +
+  geom_bar() +
+  scale_x_upset() +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.1),
+                                        add = 0))  +
+  geom_text(aes(label=after_stat(count)),
+            stat='Count',
+            vjust=-1,
+            size = 2.5) +
+  theme_classic() +
+  theme(panel.grid = element_blank(),
+        axis.title = element_blank(),
+        plot.margin = margin(0.5,0,0,1,
+                             unit ='cm'),
+        axis.line.x = element_blank(),
+        axis.ticks.x = element_blank())
+```
+
+Save.
+
+```{r}
+D.2_ITS2TypeProfUpset |> 
+  ggsave(filename = "Upset.svg", 
+         dpi = 900,
+         width = 17, 
+         height = 8,
+         unit = "cm")
+```
+
+Stats.
+
+```{r}
+# Richness
+D.2_ITS2TypeProfAlphaKWRichness <- 
+  D.1_ITS2TypeProfAlpha |> 
+  kruskal_test(Richness ~ region)
+
+# Shannon
+D.2_ITS2TypeProfAlphaKWShannon <- 
+  D.1_ITS2TypeProfAlpha |> 
+  kruskal_test(Shannon ~ region)
+```
+
+# Species labels
+
+Tidy.
+
+```{r}
+E.1_Metadata <- # filter metadata to include samples with ITS2 seqs
+  A.1_Metadata_1 |> 
+  filter(CorrectID %in% (A.1_ITS2_2 |> 
+                           pull(CorrectID)))
+
+E.1_Metadata_1 <- # add counts which will be used to do barplots/labels
+  E.1_Metadata |> 
+  mutate(Count = 1)
+
+E.1_Metadata_2 <- # arrange
+  E.1_Metadata_1 |> 
+  left_join(B.1_ITS2_4, by = c("CorrectID", "region")) |> 
+  arrange(region, order_within_region) |> 
+  mutate(
+    CorrectID = as.character(CorrectID),
+    CorrectID = factor(CorrectID, levels = unique(CorrectID))
+  )
+```
+
+Plot.
+
+```{r}
+E.2_Region <- 
+  E.1_Metadata_2 |> 
+  ggplot(aes(x = CorrectID,
+             y = Count,
+             fill = Species)) +
+  geom_col(width = 1.15) +
+  facet_grid(cols = vars(fct_relevel(region,
+                                     c("Alaminos",
+                                       "Antique",
+                                       "ARNP",
+                                       "Batangas",
+                                       "Bohol",
+                                       "Bolinao",
+                                       "Calaguas",
+                                       "Camiguin",
+                                       "Palawan",
+                                       "Samar",
+                                       "Zambales"))),
+             space = "free",
+             scales = "free_x") +
+  scale_y_continuous(expand = c(0,0)) +
+  scale_x_discrete(expand = c(0,0)) +
+  scale_fill_manual(values = c("H. hippopus"="darkred",
+                         "H. porcellanus"="#cf202e",
+                         "T. crocea"="#f78822",
+                         "T. squamosa"="#f6db35",
+                         "T. noae"="#6dc067",
+                         "T. maxima"="#4185be",
+                         "T. derasa"="#8f499c",
+                         "T. gigas"="#201146")) +
+  theme_minimal() +
+  theme(panel.grid = element_blank(),
+        axis.text = element_blank(),
+        panel.spacing = unit(0.1,'lines'),
+        axis.title = element_blank(),
+        legend.text = element_text(face = "italic"),
+        legend.position = "top") +
+  guides(fill = guide_legend(nrow = 1))
+```
+
+Save.
+
+```{r}
+(E.2_Region +
+    theme(legend.position = "none",
+          axis.text = element_blank()))  |> 
+  ggsave(filename = "Labels - Species - No legend.svg", 
+         dpi = 900,
+         width = 17.5, 
+         height = 4,
+         unit = "cm")
+
+E.2_Region |> 
+  ggsave(filename = "Labels - Species.svg", 
+         dpi = 900,
+         width = 25, 
+         height = 4,
+         unit = "cm")
+```
