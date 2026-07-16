@@ -1,0 +1,222 @@
+sampleID	SequencingBatch	Sequencing run	fastq_fwd_file_name	fastq_rev_file_name	Site	Region	Latitude	Longitude	ApproximateShellLength	Age	CohortYear	TransplantationYear	TransplantationAge	YearsSpentAtTransplantationSite	AdditionalSiteInfo	AdditionalComments
+HH01	Y2	HN00122531	SEM-Hh-1_1.fastq.gz	SEM-Hh-1_2.fastq.gz	Semirara	Antique	12.08708129	121.3460231								
+HH02	Y2	HN00125113	APO-B-Hh-1_1.fastq.gz	APO-B-Hh-1_2.fastq.gz	Binanggaan	ARNP	12.6618	120.4357333								
+HH03	Y2	HN00125113	APO-B-Hh-4_1.fastq.gz	APO-B-Hh-4_2.fastq.gz	Binanggaan	ARNP	12.6618	120.4357333								
+HH05	Y2	HN00125113	APO-B-Hp-4_1.fastq.gz	APO-B-Hp-4_2.fastq.gz	Binanggaan	ARNP	12.6618	120.4357333								
+HH06	Y2	HN00125113	SEM-Hh-2_1.fastq.gz	SEM-Hh-2_2.fastq.gz	Semirara	Antique	12.08708129	121.3460231								
+HH07	Y2	HN00125113	SEM-Hh-4_1.fastq.gz	SEM-Hh-4_2.fastq.gz	Semirara	Antique	12.08708129	121.3460231								
+HH08	Y3	HN00138609	Bohol_Hh_1_1.fastq.gz	Bohol_Hh_1_2.fastq.gz	Bohol	Bohol	9.6287333	123.8048167								
+HH09	Y3	HN00138609	Bohol_Hh_2_1.fastq.gz	Bohol_Hh_2_2.fastq.gz	Bohol	Bohol	9.6287333	123.8048167								
+HH10	Y3	HN00138609	Bohol_Hh_3_1.fastq.gz	Bohol_Hh_3_2.fastq.gz	Bohol	Bohol	9.6287333	123.8048167								
+HH11	Y3	HN00138609	Camiguin_Hh_1_1.fastq.gz	Camiguin_Hh_1_2.fastq.gz	Camiguin	Camiguin	9.107413439	124.8032036								
+HH12	Y3	HN00138609	Camiguin_Hh_2_1.fastq.gz	Camiguin_Hh_2_2.fastq.gz	Camiguin	Camiguin	9.107413439	124.8032036								
+HH13	Y3	HN00138609	Camiguin_Hh_3_1.fastq.gz	Camiguin_Hh_3_2.fastq.gz	Camiguin	Camiguin	9.107413439	124.8032036								
+HH14	Y3	HN00138609	Samar_Hh_1_1.fastq.gz	Samar_Hh_1_2.fastq.gz	Guiuan	Samar	11.0583	125.6537								
+HH15	Y3	HN00138609	Samar_Hh_3_1.fastq.gz	Samar_Hh_3_2.fastq.gz	Guiuan	Samar	11.0583	125.6537								
+HH16	Y3	HN00138609	Samar_Hh_4_1.fastq.gz	Samar_Hh_4_2.fastq.gz	Guiuan	Samar	11.0583	125.6537								
+HH17	Y3	HN00147512	SIL_Hh_1_1.fastq.gz	SIL_Hh_1_2.fastq.gz	Silaqui	Bolinao	16.44411667	119.9215333								
+HH18	Y3	HN00147512	SIL_Hh_2_1.fastq.gz	SIL_Hh_2_2.fastq.gz	Silaqui	Bolinao	16.44411667	119.9215333								
+HH19	Y3	HN00147512	SIL_Hh_3_1.fastq.gz	SIL_Hh_3_2.fastq.gz	Silaqui	Bolinao	16.44411667	119.9215333								
+HH20	Y2	HN00125113	APO-B-Hp-1_1.fastq.gz	APO-B-Hp-1_2.fastq.gz	Binanggaan	ARNP	12.6618	120.4357333								
+HP01	Y2	HN00122531	SEM-Hp-1_1.fastq.gz	SEM-Hp-1_2.fastq.gz	Semirara	Antique	12.08708129	121.3460231								
+HP02	Y2	HN00122531	SEM-Hp-2_1.fastq.gz	SEM-Hp-2_2.fastq.gz	Semirara	Antique	12.08708129	121.3460231								
+HP04	Y2	HN00125113	APO-B-Hp-6_1.fastq.gz	APO-B-Hp-6_2.fastq.gz	Binanggaan	ARNP	12.6618	120.4357333								
+HP05	Y2	HN00125113	SEM-Hp-4_1.fastq.gz	SEM-Hp-4_2.fastq.gz	Semirara	Antique	12.08708129	121.3460231								
+TC01	Y1	HN00102818	SEMIRARA-Tc-10_1.fastq.gz	SEMIRARA-Tc-10_2.fastq.gz	Semirara	Antique	12.08708129	121.3460231								
+TC02	Y1	HN00102818	SEMIRARA-Tc-7_1.fastq.gz	SEMIRARA-Tc-7_2.fastq.gz	Semirara	Antique	12.08708129	121.3460231								
+TC03	Y1	HN00102818	SEMIRARA-Tc-8_1.fastq.gz	SEMIRARA-Tc-8_2.fastq.gz	Semirara	Antique	12.08708129	121.3460231								
+TC04	Y1	HN00102818	SEMIRARA-Tm-3_1.fastq.gz	SEMIRARA-Tm-3_2.fastq.gz	Semirara	Antique	12.08708129	121.3460231								
+TC05	Y1	HN00102818	SEMIRARA-Tm-5_1.fastq.gz	SEMIRARA-Tm-5_2.fastq.gz	Semirara	Antique	12.08708129	121.3460231								
+TC06	Y2	HN00122531	APO-SA-Tc-3_1.fastq.gz	APO-SA-Tc-3_2.fastq.gz	South Atoll	ARNP	12.63956667	120.4516167								
+TC07	Y2	HN00122531	APO-SA-Tc-5_1.fastq.gz	APO-SA-Tc-5_2.fastq.gz	South Atoll	ARNP	12.63956667	120.4516167								
+TC08	Y2	HN00122531	MAS-Tc-2_1.fastq.gz	MAS-Tc-2_2.fastq.gz	Masinloc	Zambales	15.5298667	119.9248167								
+TC09	Y2	HN00122531	MAS-Tc-3_1.fastq.gz	MAS-Tc-3_2.fastq.gz	Masinloc	Zambales	15.5298667	119.9248167								
+TC10	Y2	HN00122531	MAS-Tc-4_1.fastq.gz	MAS-Tc-4_2.fastq.gz	Masinloc	Zambales	15.5298667	119.9248167								
+TC11	Y2	HN00122531	MAS-Tm-1_1.fastq.gz	MAS-Tm-1_2.fastq.gz	Masinloc	Zambales	15.5298667	119.9248167								
+TC12	Y2	HN00122531	MAS-Tm-2_1.fastq.gz	MAS-Tm-2_2.fastq.gz	Masinloc	Zambales	15.5298667	119.9248167								
+TC13	Y2	HN00122531	MAS-Tm-3_1.fastq.gz	MAS-Tm-3_2.fastq.gz	Masinloc	Zambales	15.5298667	119.9248167								
+TC14	Y2	HN00125113	APO-A-Tc-3_1.fastq.gz	APO-A-Tc-3_2.fastq.gz	Aladin	ARNP	12.66161667	120.4167833								
+TC15	Y2	HN00125113	APO-A-Tc-5_1.fastq.gz	APO-A-Tc-5_2.fastq.gz	Aladin	ARNP	12.66161667	120.4167833								
+TC16	Y2	HN00125113	APO-A-Tc-6_1.fastq.gz	APO-A-Tc-6_2.fastq.gz	Aladin	ARNP	12.66161667	120.4167833								
+TC17	Y2	HN00125113	APO-A-Tm-1_1.fastq.gz	APO-A-Tm-1_2.fastq.gz	Aladin	ARNP	12.66161667	120.4167833								
+TC18	Y3	HN00138609	Bohol_Tc_2_1.fastq.gz	Bohol_Tc_2_2.fastq.gz	Bohol	Bohol	9.6287333	123.8048167								
+TC19	Y3	HN00138609	Bohol_Tc_4_1.fastq.gz	Bohol_Tc_4_2.fastq.gz	Bohol	Bohol	9.6287333	123.8048167								
+TC20	Y3	HN00138609	Bohol_Tc_5_1.fastq.gz	Bohol_Tc_5_2.fastq.gz	Bohol	Bohol	9.6287333	123.8048167								
+TC21	Y3	HN00138609	Camiguin_Tc_1_1.fastq.gz	Camiguin_Tc_1_2.fastq.gz	Camiguin	Camiguin	9.107413439	124.8032036								
+TC22	Y3	HN00138609	Camiguin_Tc_2_1.fastq.gz	Camiguin_Tc_2_2.fastq.gz	Camiguin	Camiguin	9.107413439	124.8032036								
+TC23	Y3	HN00138609	Camiguin_Tc_3_1.fastq.gz	Camiguin_Tc_3_2.fastq.gz	Camiguin	Camiguin	9.107413439	124.8032036								
+TC24	Y3	HN00138609	Samar_Tc_1_1.fastq.gz	Samar_Tc_1_2.fastq.gz	Guiuan	Samar	11.0583	125.6537								
+TC25	Y3	HN00138609	Samar_Tc_3_1.fastq.gz	Samar_Tc_3_2.fastq.gz	Guiuan	Samar	11.0583	125.6537								
+TC26	Y3	HN00138609	Samar_Tc_4_1.fastq.gz	Samar_Tc_4_2.fastq.gz	Guiuan	Samar	11.0583	125.6537								
+TC27	Y3	HN00147512	ALA_Tc_1_1.fastq.gz	ALA_Tc_1_2.fastq.gz	HINP	Alaminos	16.2218333	120.0484167								
+TC28	Y3	HN00147512	ALA_Tc_3_1.fastq.gz	ALA_Tc_3_2.fastq.gz	HINP	Alaminos	16.2218333	120.0484167								
+TC29	Y3	HN00147512	ALA_Tc_5_1.fastq.gz	ALA_Tc_5_2.fastq.gz	HINP	Alaminos	16.2218333	120.0484167								
+TC30	Y2	HN00125113	APO-B-Hh-6_1.fastq.gz	APO-B-Hh-6_2.fastq.gz	Binanggaan	ARNP	12.6618	120.4357333								
+TD01	Y1	HN00102818	SEMIRARA-Td-13_1.fastq.gz	SEMIRARA-Td-13_2.fastq.gz	Semirara	Antique	12.08708129	121.3460231								
+TD02	Y1	HN00102818	SEMIRARA-Td-21_1.fastq.gz	SEMIRARA-Td-21_2.fastq.gz	Semirara	Antique	12.08708129	121.3460231								
+TD03	Y1	HN00102818	SEMIRARA-Td-22_1.fastq.gz	SEMIRARA-Td-22_2.fastq.gz	Semirara	Antique	12.08708129	121.3460231								
+TD04	Y1	HN00102818	SILAQUI-Td-1_1.fastq.gz	SILAQUI-Td-1_2.fastq.gz	Silaqui	Bolinao	16.44411667	119.9215333								
+TD05	Y1	HN00102818	SILAQUI-Td-2_1.fastq.gz	SILAQUI-Td-2_2.fastq.gz	Silaqui	Bolinao	16.44411667	119.9215333								
+TD06	Y1	HN00102818	SILAQUI-Td-3_1.fastq.gz	SILAQUI-Td-3_2.fastq.gz	Silaqui	Bolinao	16.44411667	119.9215333								
+TD07	Y2	HN00122531	APO-B-Td-2_1.fastq.gz	APO-B-Td-2_2.fastq.gz	Binanggaan	ARNP	12.6618	120.4357333								
+TD08	Y2	HN00122531	PAL-Td-1_1.fastq.gz	PAL-Td-1_2.fastq.gz	Palawan	Palawan	9.914205334	118.877206								
+TD09	Y2	HN00125113	APO-B-Td-1_1.fastq.gz	APO-B-Td-1_2.fastq.gz	Binanggaan	ARNP	12.6618	120.4357333								
+TD10	Y3	HN00138609	Camiguin_Td_1_1.fastq.gz	Camiguin_Td_1_2.fastq.gz	Camiguin	Camiguin	9.107413439	124.8032036								
+TD11	Y3	HN00138609	Camiguin_Td_2_1.fastq.gz	Camiguin_Td_2_2.fastq.gz	Camiguin	Camiguin	9.107413439	124.8032036								
+TD12	Y3	HN00138609	Camiguin_Td_3_1.fastq.gz	Camiguin_Td_3_2.fastq.gz	Camiguin	Camiguin	9.107413439	124.8032036								
+TD13	Y3	HN00138609	Samar_Td_2_1.fastq.gz	Samar_Td_2_2.fastq.gz	Guiuan	Samar	11.0583	125.6537								
+TD14	Y3	HN00138609	Samar_Td_3_1.fastq.gz	Samar_Td_3_2.fastq.gz	Guiuan	Samar	11.0583	125.6537								
+TD15	Y3	HN00138609	Samar_Td_4_1.fastq.gz	Samar_Td_4_2.fastq.gz	Guiuan	Samar	11.0583	125.6537								
+TD16	Y3	HN00147512	SIl_Td_1_1.fastq.gz	SIl_Td_1_2.fastq.gz	Silaqui	Bolinao	16.44411667	119.9215333								
+TD17	Y3	HN00147512	SIL_Td_2_1.fastq.gz	SIL_Td_2_2.fastq.gz	Silaqui	Bolinao	16.44411667	119.9215333								
+TD18	Y3	HN00147512	SIL_Td_3_1.fastq.gz	SIL_Td_3_2.fastq.gz	Silaqui	Bolinao	16.44411667	119.9215333								
+TG01	Y1	HN00102818	ALAMINOS-Tg-2_1.fastq.gz	ALAMINOS-Tg-2_2.fastq.gz	HINP	Alaminos	16.2218333	120.0484167	80	23	1995	1998	20	3	HINP	
+TG02	Y1	HN00102818	ALAMINOS-Tg-3_1.fastq.gz	ALAMINOS-Tg-3_2.fastq.gz	HINP	Alaminos	16.2218333	120.0484167	71	23	1995	1998	20	3	HINP	
+TG03	Y1	HN00102818	ALAMINOS-Tg-5_1.fastq.gz	ALAMINOS-Tg-5_2.fastq.gz	HINP	Alaminos	16.2218333	120.0484167	90	23	1995	1998	20	3	HINP	
+TG04	Y1	HN00102818	ALAMINOS-Tg-6_1.fastq.gz	ALAMINOS-Tg-6_2.fastq.gz	HINP	Alaminos	16.2218333	120.0484167	71	23	1995	1998	20	3	HINP	
+TG05	Y1	HN00102818	MABINI-Tg-1_1.fastq.gz	MABINI-Tg-1_2.fastq.gz	Mabini	Batangas	13.68765	120.8898	64	28	1990	1996	22	6	Twin Rocks	
+TG06	Y1	HN00102818	MABINI-Tg-4_1.fastq.gz	MABINI-Tg-4_2.fastq.gz	Mabini	Batangas	13.68765	120.8898	71	28	1990	1996	22	6	Twin Rocks	
+TG07	Y1	HN00102818	MABINI-Tg-5_1.fastq.gz	MABINI-Tg-5_2.fastq.gz	Mabini	Batangas	13.68765	120.8898	89	28	1990	1996	22	6	Twin Rocks	
+TG08	Y1	HN00102818	MASINLOC-Tg-2_1.fastq.gz	MASINLOC-Tg-2_2.fastq.gz	Masinloc	Zambales	15.5298667	119.9248167	61	16	2002	2007	11	5	"Zambales, Masinloc, San Salvador Island, Libaba"	
+TG09	Y1	HN00102818	MASINLOC-Tg-3_1.fastq.gz	MASINLOC-Tg-3_2.fastq.gz	Masinloc	Zambales	15.5298667	119.9248167	65	16	2002	2007	11	5	"Zambales, Masinloc, San Salvador Island, Libaba"	
+TG10	Y1	HN00102818	MASINLOC-Tg-4_1.fastq.gz	MASINLOC-Tg-4_2.fastq.gz	Masinloc	Zambales	15.5298667	119.9248167	69	16	2002	2007	11	5	"Zambales, Masinloc, San Salvador Island, Libaba"	
+TG11	Y1	HN00102818	SEMIRARA-Tg-10_1.fastq.gz	SEMIRARA-Tg-10_2.fastq.gz	Semirara	Antique	12.08708129	121.3460231	68	16	2002	2009	9	7	Antique - Semirara Island - west	
+TG12	Y1	HN00102818	SEMIRARA-Tg-7_1.fastq.gz	SEMIRARA-Tg-7_2.fastq.gz	Semirara	Antique	12.08708129	121.3460231	58	16	2002	2009	9	7	Antique - Semirara Island - west	
+TG13	Y1	HN00102818	SEMIRARA-Tg-9_1.fastq.gz	SEMIRARA-Tg-9_2.fastq.gz	Semirara	Antique	12.08708129	121.3460231	69	16	2002	2009	9	7	Antique - Semirara Island - west	
+TG14	Y1	HN00102818	SILAQUI-Tg-1_1.fastq.gz	SILAQUI-Tg-1_2.fastq.gz	Silaqui	Bolinao	16.44411667	119.9215333	48	9	2009	Origin	0	9		
+TG15	Y1	HN00102818	SILAQUI-Tg-4_1.fastq.gz	SILAQUI-Tg-4_2.fastq.gz	Silaqui	Bolinao	16.44411667	119.9215333	49	9	2009	Origin	0	9		
+TG16	Y1	HN00102818	SILAQUI-Tg-5_1.fastq.gz	SILAQUI-Tg-5_2.fastq.gz	Silaqui	Bolinao	16.44411667	119.9215333	44	9	2009	Origin	0	9		
+TG17	Y1	HN00102818	Tg-1998-1_1.fastq.gz	Tg-1998-1_2.fastq.gz	Silaqui	Bolinao	16.44411667	119.9215333	68	20	1998	Origin	0	20		
+TG18	Y1	HN00102818	Tg-1998-2_1.fastq.gz	Tg-1998-2_2.fastq.gz	Silaqui	Bolinao	16.44411667	119.9215333	69	20	1998	Origin	0	20		
+TG19	Y1	HN00102818	Tg-1998-5_1.fastq.gz	Tg-1998-5_2.fastq.gz	Silaqui	Bolinao	16.44411667	119.9215333	72	20	1998	Origin	0	20		
+TG20	Y1	HN00102818	Tg-1yr-1_1.fastq.gz	Tg-1yr-1_2.fastq.gz	Silaqui	Bolinao	16.44411667	119.9215333	9	1	2017	Origin	0	1		
+TG21	Y1	HN00102818	Tg-1yr-2_1.fastq.gz	Tg-1yr-2_2.fastq.gz	Silaqui	Bolinao	16.44411667	119.9215333	10	1	2017	Origin	0	1		
+TG22	Y1	HN00102818	Tg-1yr-3_1.fastq.gz	Tg-1yr-3_2.fastq.gz	Silaqui	Bolinao	16.44411667	119.9215333	12	1	2017	Origin	0	1		
+TG23	Y1	HN00102818	Tg-2000-1_1.fastq.gz	Tg-2000-1_2.fastq.gz	Silaqui	Bolinao	16.44411667	119.9215333	69	18	2000	Origin	0	18		
+TG24	Y1	HN00102818	Tg-2000-2_1.fastq.gz	Tg-2000-2_2.fastq.gz	Silaqui	Bolinao	16.44411667	119.9215333	65	18	2000	Origin	0	18		
+TG25	Y1	HN00102818	Tg-2000-3_1.fastq.gz	Tg-2000-3_2.fastq.gz	Silaqui	Bolinao	16.44411667	119.9215333	70	18	2000	Origin	0	18		
+TG26	Y1	HN00102818	Tg-2002-3_1.fastq.gz	Tg-2002-3_2.fastq.gz	Silaqui	Bolinao	16.44411667	119.9215333	54	16	2002	Origin	0	16		
+TG27	Y1	HN00102818	Tg-2002-4_1.fastq.gz	Tg-2002-4_2.fastq.gz	Silaqui	Bolinao	16.44411667	119.9215333	60	16	2002	Origin	0	16		
+TG28	Y1	HN00102818	Tg-2002-5_1.fastq.gz	Tg-2002-5_2.fastq.gz	Silaqui	Bolinao	16.44411667	119.9215333	63	16	2002	Origin	0	16		
+TG29	Y1	HN00102818	Tg-2004-1_1.fastq.gz	Tg-2004-1_2.fastq.gz	Silaqui	Bolinao	16.44411667	119.9215333	57	14	2004	Origin	0	14		
+TG30	Y1	HN00102818	Tg-2004-2_1.fastq.gz	Tg-2004-2_2.fastq.gz	Silaqui	Bolinao	16.44411667	119.9215333	61	14	2004	Origin	0	14		
+TG31	Y1	HN00102818	Tg-2004-3_1.fastq.gz	Tg-2004-3_2.fastq.gz	Silaqui	Bolinao	16.44411667	119.9215333	57	14	2004	Origin	0	14		
+TG32	Y1	HN00102818	Tg-3yr-1_1.fastq.gz	Tg-3yr-1_2.fastq.gz	Silaqui	Bolinao	16.44411667	119.9215333	34	3	2015	Origin	0	3		
+TG33	Y1	HN00102818	Tg-3yr-2_1.fastq.gz	Tg-3yr-2_2.fastq.gz	Silaqui	Bolinao	16.44411667	119.9215333	29	3	2015	Origin	0	3		
+TG34	Y1	HN00102818	Tg-3yr-3_1.fastq.gz	Tg-3yr-3_2.fastq.gz	Silaqui	Bolinao	16.44411667	119.9215333	32	3	2015	Origin	0	3		
+TG35	Y2	HN00122531	ALA-Tg-3_1.fastq.gz	ALA-Tg-3_2.fastq.gz	HINP	Alaminos	16.2218333	120.0484167	71	23	1995	1998	20	3	HINP	
+TG36	Y2	HN00122531	ALA-Tg-4_1.fastq.gz	ALA-Tg-4_2.fastq.gz	HINP	Alaminos	16.2218333	120.0484167	81	23	1995	1998	20	3	HINP	
+TG37	Y2	HN00122531	ALA-Tg-5_1.fastq.gz	ALA-Tg-5_2.fastq.gz	HINP	Alaminos	16.2218333	120.0484167	90	23	1995	1998	20	3	HINP	
+TG38	Y2	HN00122531	BAU-Tg-1_1.fastq.gz	BAU-Tg-1_2.fastq.gz	Bauan	Batangas	13.80308333	120.9117833	52	23	1995	1996	22	1	Dive and Trek	
+TG39	Y2	HN00122531	BAU-Tg-2_1.fastq.gz	BAU-Tg-2_2.fastq.gz	Bauan	Batangas	13.80308333	120.9117833	76	23	1995	1996	22	1	Dive and Trek	
+TG40	Y2	HN00122531	BAU-Tg-3_1.fastq.gz	BAU-Tg-3_2.fastq.gz	Bauan	Batangas	13.80308333	120.9117833	51	23	1995	1996	22	1	Dive and Trek	
+TG41	Y2	HN00122531	MAB-Tg-1_1.fastq.gz	MAB-Tg-1_2.fastq.gz	Mabini	Batangas	13.68765	120.8898	64	28	1990	1996	22	6	Twin Rocks	
+TG42	Y2	HN00122531	MAB-Tg-3_1.fastq.gz	MAB-Tg-3_2.fastq.gz	Mabini	Batangas	13.68765	120.8898	71	28	1990	1996	22	6	Twin Rocks	
+TG43	Y2	HN00122531	MAB-Tg-4_1.fastq.gz	MAB-Tg-4_2.fastq.gz	Mabini	Batangas	13.68765	120.8898	89	28	1990	1996	22	6	Twin Rocks	
+TG44	Y2	HN00122531	MAS-Tg-1_1.fastq.gz	MAS-Tg-1_2.fastq.gz	Masinloc	Zambales	15.5298667	119.9248167	55	20	1998	2002	16	4	"Zambales, Masinloc, San Salvador Island, Libaba"	Pew
+TG45	Y2	HN00122531	MAS-Tg-4_1.fastq.gz	MAS-Tg-4_2.fastq.gz	Masinloc	Zambales	15.5298667	119.9248167	69	20	1998	2002	16	4	"Zambales, Masinloc, San Salvador Island, Libaba"	Pew
+TG46	Y2	HN00122531	MAS-Tg-5_1.fastq.gz	MAS-Tg-5_2.fastq.gz	Masinloc	Zambales	15.5298667	119.9248167	67	20	1998	2002	16	4	"Zambales, Masinloc, San Salvador Island, Libaba"	Pew
+TG47	Y2	HN00122531	PAL-Tg-2_1.fastq.gz	PAL-Tg-2_2.fastq.gz	Palawan	Palawan	9.914205334	118.877206	73	16	2002	2007	11	5	"Puerto Princesa, Palawan"	
+TG48	Y2	HN00122531	PAL-Tg-3_1.fastq.gz	PAL-Tg-3_2.fastq.gz	Palawan	Palawan	9.914205334	118.877206	93	16	2002	2007	11	5	"Puerto Princesa, Palawan"	
+TG49	Y2	HN00122531	PAL-Tg-4_1.fastq.gz	PAL-Tg-4_2.fastq.gz	Palawan	Palawan	9.914205334	118.877206	78	16	2002	2007	11	5	"Puerto Princesa, Palawan"	
+TG50	Y2	HN00122531	SEM-Tg-10_1.fastq.gz	SEM-Tg-10_2.fastq.gz	Semirara	Antique	12.08708129	121.3460231	68	16	2002	2009	9	7	Antique - Semirara Island - west	most recent restock; largest cohort
+TG51	Y2	HN00122531	SEM-Tg-7_1.fastq.gz	SEM-Tg-7_2.fastq.gz	Semirara	Antique	12.08708129	121.3460231	58	16	2002	2009	9	7	Antique - Semirara Island - west	most recent restock; largest cohort
+TG52	Y2	HN00122531	SEM-Tg-9_1.fastq.gz	SEM-Tg-9_2.fastq.gz	Semirara	Antique	12.08708129	121.3460231	59	16	2002	2009	9	7	Antique - Semirara Island - west	most recent restock; largest cohort
+TG53	Y2	HN00122531	SIL-Tg-2_1.fastq.gz	SIL-Tg-2_2.fastq.gz	Silaqui	Bolinao	16.44411667	119.9215333	47	9	2009	Origin	0	9		
+TG54	Y2	HN00122531	SIL-Tg-3_1.fastq.gz	SIL-Tg-3_2.fastq.gz	Silaqui	Bolinao	16.44411667	119.9215333	52	9	2009	Origin	0	9		
+TG55	Y2	HN00122531	SIL-Tg-5_1.fastq.gz	SIL-Tg-5_2.fastq.gz	Silaqui	Bolinao	16.44411667	119.9215333	44	9	2009	Origin	0	9		
+TG56	Y3	HN00138609	Bohol_Tg_1_1.fastq.gz	Bohol_Tg_1_2.fastq.gz	Bohol	Bohol	9.6287333	123.8048167	67	14	2004	2013	5	9	Bohol Province	most recent restock; largest cohort
+TG57	Y3	HN00138609	Bohol_Tg_2_1.fastq.gz	Bohol_Tg_2_2.fastq.gz	Bohol	Bohol	9.6287333	123.8048167	67	14	2004	2013	5	9	Bohol Province	most recent restock; largest cohort
+TG58	Y3	HN00138609	Bohol_Tg_3_1.fastq.gz	Bohol_Tg_3_2.fastq.gz	Bohol	Bohol	9.6287333	123.8048167	67	14	2004	2013	5	9	Bohol Province	most recent restock; largest cohort
+TG59	Y3	HN00138609	Camiguin_Tg_1_1.fastq.gz	Camiguin_Tg_1_2.fastq.gz	Camiguin	Camiguin	9.107413439	124.8032036	97	20	1998	2001	17	3	Camiguin	
+TG60	Y3	HN00138609	Camiguin_Tg_2_1.fastq.gz	Camiguin_Tg_2_2.fastq.gz	Camiguin	Camiguin	9.107413439	124.8032036	89	20	1998	2001	17	3	Camiguin	
+TG61	Y3	HN00138609	Camiguin_Tg_3_1.fastq.gz	Camiguin_Tg_3_2.fastq.gz	Camiguin	Camiguin	9.107413439	124.8032036	89	20	1998	2001	17	3	Camiguin	
+TG62	Y3	HN00138609	Camiguin_Tg_r_2_1.fastq.gz	Camiguin_Tg_r_2_2.fastq.gz	Camiguin	Camiguin	9.107413439	124.8032036	36	3	2017 approx	2020	0	3	Camiguin	
+TG63	Y3	HN00138609	Camiguin_Tg_r_4_1.fastq.gz	Camiguin_Tg_r_4_2.fastq.gz	Camiguin	Camiguin	9.107413439	124.8032036	36	3	2017 approx	2020	0	3	Camiguin	
+TG64	Y3	HN00138609	Camiguin_Tg_r_5_1.fastq.gz	Camiguin_Tg_r_5_2.fastq.gz	Camiguin	Camiguin	9.107413439	124.8032036	33	3	2017 approx	2020	0	3	Camiguin	
+TG65	Y3	HN00138609	Samar_Tg_1_1.fastq.gz	Samar_Tg_1_2.fastq.gz	Guiuan	Samar	11.0583	125.6537	82	17	2001	2002	16	1	Guiuan via UPV Tacloban	Pew
+TG66	Y3	HN00138609	Samar_Tg_2_1.fastq.gz	Samar_Tg_2_2.fastq.gz	Guiuan	Samar	11.0583	125.6537	70	17	2001	2002	16	1	Guiuan via UPV Tacloban	Pew
+TG67	Y3	HN00138609	Samar_Tg_3_1.fastq.gz	Samar_Tg_3_2.fastq.gz	Guiuan	Samar	11.0583	125.6537	63	17	2001	2002	16	1	Guiuan via UPV Tacloban	Pew
+TM01	Y2	HN00122531	APO-A-Tm-5_1.fastq.gz	APO-A-Tm-5_2.fastq.gz	Aladin	ARNP	12.66161667	120.4167833								
+TM02	Y2	HN00122531	APO-SA-Tc-4_1.fastq.gz	APO-SA-Tc-4_2.fastq.gz	South Atoll	ARNP	12.63956667	120.4516167								
+TM03	Y2	HN00122531	APO-SA-Tm-1_1.fastq.gz	APO-SA-Tm-1_2.fastq.gz	South Atoll	ARNP	12.63956667	120.4516167								
+TM04	Y2	HN00122531	APO-SA-Tm-4_1.fastq.gz	APO-SA-Tm-4_2.fastq.gz	South Atoll	ARNP	12.63956667	120.4516167								
+TM05	Y2	HN00122531	APO-SA-Tm-5_1.fastq.gz	APO-SA-Tm-5_2.fastq.gz	South Atoll	ARNP	12.63956667	120.4516167								
+TM06	Y2	HN00122531	BAU-Tm-1_1.fastq.gz	BAU-Tm-1_2.fastq.gz	Bauan	Batangas	13.80308333	120.9117833								
+TM07	Y2	HN00122531	BAU-Tm-3_1.fastq.gz	BAU-Tm-3_2.fastq.gz	Bauan	Batangas	13.80308333	120.9117833								
+TM08	Y2	HN00122531	BAU-Ts-2_1.fastq.gz	BAU-Ts-2_2.fastq.gz	Bauan	Batangas	13.80308333	120.9117833								
+TM09	Y2	HN00122531	BAU-Ts-5_1.fastq.gz	BAU-Ts-5_2.fastq.gz	Bauan	Batangas	13.80308333	120.9117833								
+TM10	Y2	HN00122531	CAL-M-Tm-2_1.fastq.gz	CAL-M-Tm-2_2.fastq.gz	Mangkawayan	Calaguas	14.46246667	122.9573								
+TM11	Y2	HN00122531	CAL-M-Tm-3_1.fastq.gz	CAL-M-Tm-3_2.fastq.gz	Mangkawayan	Calaguas	14.46246667	122.9573								
+TM12	Y2	HN00122531	CAL-M-Tm-4_1.fastq.gz	CAL-M-Tm-4_2.fastq.gz	Mangkawayan	Calaguas	14.46246667	122.9573								
+TM13	Y2	HN00122531	CAL-P-Tm-1_1.fastq.gz	CAL-P-Tm-1_2.fastq.gz	Pinagtigasan	Calaguas	14.4397167	122.9147167								
+TM14	Y2	HN00122531	CAL-P-Tm-2_1.fastq.gz	CAL-P-Tm-2_2.fastq.gz	Pinagtigasan	Calaguas	14.4397167	122.9147167								
+TM15	Y2	HN00122531	CAL-P-Tm-4_1.fastq.gz	CAL-P-Tm-4_2.fastq.gz	Pinagtigasan	Calaguas	14.4397167	122.9147167								
+TM16	Y2	HN00125113	APO-A-Tm-3_1.fastq.gz	APO-A-Tm-3_2.fastq.gz	Aladin	ARNP	12.66161667	120.4167833								
+TM17	Y3	HN00138609	Bohol_Tm_1_1.fastq.gz	Bohol_Tm_1_2.fastq.gz	Bohol	Bohol	9.6287333	123.8048167								
+TM18	Y3	HN00138609	Bohol_Tm_2_1.fastq.gz	Bohol_Tm_2_2.fastq.gz	Bohol	Bohol	9.6287333	123.8048167								
+TM19	Y3	HN00138609	Bohol_Tm_3_1.fastq.gz	Bohol_Tm_3_2.fastq.gz	Bohol	Bohol	9.6287333	123.8048167								
+TM20	Y3	HN00138609	Camiguin_Tm_1_1.fastq.gz	Camiguin_Tm_1_2.fastq.gz	Camiguin	Camiguin	9.107413439	124.8032036								
+TM21	Y3	HN00138609	Camiguin_Tm_2_1.fastq.gz	Camiguin_Tm_2_2.fastq.gz	Camiguin	Camiguin	9.107413439	124.8032036								
+TM22	Y3	HN00138609	Camiguin_Tm_4_1.fastq.gz	Camiguin_Tm_4_2.fastq.gz	Camiguin	Camiguin	9.107413439	124.8032036								
+TM23	Y3	HN00138609	Samar_Tm_1_1.fastq.gz	Samar_Tm_1_2.fastq.gz	Guiuan	Samar	11.0583	125.6537								
+TM24	Y3	HN00138609	Samar_Tm_3_1.fastq.gz	Samar_Tm_3_2.fastq.gz	Guiuan	Samar	11.0583	125.6537								
+TM25	Y3	HN00138609	Samar_Tm_4_1.fastq.gz	Samar_Tm_4_2.fastq.gz	Guiuan	Samar	11.0583	125.6537								
+TM26	Y3	HN00147512	SEM_Tm_7_1.fastq.gz	SEM_Tm_7_2.fastq.gz	Semirara	Antique	12.08708129	121.3460231								
+TM27	Y3	HN00147512	SEM_Tm_8_1.fastq.gz	SEM_Tm_8_2.fastq.gz	Semirara	Antique	12.08708129	121.3460231								
+TM28	Y3	HN00147512	SEM_Tm_9_1.fastq.gz	SEM_Tm_9_2.fastq.gz	Semirara	Antique	12.08708129	121.3460231								
+TN01	Y1	HN00102818	SEMIRARA-Tm-4_1.fastq.gz	SEMIRARA-Tm-4_2.fastq.gz	Semirara	Antique	12.08708129	121.3460231								
+TN02	Y1	HN00102818	SEMIRARA-Tn-1_1.fastq.gz	SEMIRARA-Tn-1_2.fastq.gz	Semirara	Antique	12.08708129	121.3460231								
+TN03	Y1	HN00102818	SEMIRARA-Tn-3_1.fastq.gz	SEMIRARA-Tn-3_2.fastq.gz	Semirara	Antique	12.08708129	121.3460231								
+TN04	Y1	HN00102818	SEMIRARA-Tn-4_1.fastq.gz	SEMIRARA-Tn-4_2.fastq.gz	Semirara	Antique	12.08708129	121.3460231								
+TN05	Y2	HN00122531	BAU-Tn-1_1.fastq.gz	BAU-Tn-1_2.fastq.gz	Bauan	Batangas	13.80308333	120.9117833								
+TN06	Y2	HN00122531	BAU-Tn-2_1.fastq.gz	BAU-Tn-2_2.fastq.gz	Bauan	Batangas	13.80308333	120.9117833								
+TN07	Y2	HN00122531	CAL-C-Tn-1_1.fastq.gz	CAL-C-Tn-1_2.fastq.gz	Cagbalisay	Calaguas	14.4559	122.9732167								
+TN08	Y2	HN00122531	CAL-C-Tn-2_1.fastq.gz	CAL-C-Tn-2_2.fastq.gz	Cagbalisay	Calaguas	14.4559	122.9732167								
+TN09	Y2	HN00122531	CAL-C-Tn-3_1.fastq.gz	CAL-C-Tn-3_2.fastq.gz	Cagbalisay	Calaguas	14.4559	122.9732167								
+TN10	Y2	HN00122531	CAL-M-Tn-1_1.fastq.gz	CAL-M-Tn-1_2.fastq.gz	Mangkawayan	Calaguas	14.46246667	122.9573								
+TN11	Y2	HN00122531	CAL-M-Tn-2_1.fastq.gz	CAL-M-Tn-2_2.fastq.gz	Mangkawayan	Calaguas	14.46246667	122.9573								
+TN12	Y2	HN00122531	CAL-M-Tn-3_1.fastq.gz	CAL-M-Tn-3_2.fastq.gz	Mangkawayan	Calaguas	14.46246667	122.9573								
+TN13	Y2	HN00122531	CAL-Q-Tn-1_1.fastq.gz	CAL-Q-Tn-1_2.fastq.gz	Quinamanucan	Calaguas	14.2009667	122.9506667								
+TN14	Y2	HN00122531	CAL-Q-Tn-2_1.fastq.gz	CAL-Q-Tn-2_2.fastq.gz	Quinamanucan	Calaguas	14.2009667	122.9506667								
+TN15	Y2	HN00122531	CAL-S-Tn-1_1.fastq.gz	CAL-S-Tn-1_2.fastq.gz	Siapa	Calaguas	14.45175	122.98565								
+TN16	Y2	HN00122531	CAL-S-Tn-4_1.fastq.gz	CAL-S-Tn-4_2.fastq.gz	Siapa	Calaguas	14.45175	122.98565								
+TN17	Y2	HN00122531	CAL-S-Tn-5_1.fastq.gz	CAL-S-Tn-5_2.fastq.gz	Siapa	Calaguas	14.45175	122.98565								
+TS01	Y1	HN00102818	SEMIRARA-Ts-12_1.fastq.gz	SEMIRARA-Ts-12_2.fastq.gz	Semirara	Antique	12.08708129	121.3460231								
+TS02	Y1	HN00102818	SEMIRARA-Ts-14_1.fastq.gz	SEMIRARA-Ts-14_2.fastq.gz	Semirara	Antique	12.08708129	121.3460231								
+TS03	Y1	HN00102818	SEMIRARA-Ts-15_1.fastq.gz	SEMIRARA-Ts-15_2.fastq.gz	Semirara	Antique	12.08708129	121.3460231								
+TS04	Y1	HN00102818	SILAQUI-Ts-1_1.fastq.gz	SILAQUI-Ts-1_2.fastq.gz	Silaqui	Bolinao	16.44411667	119.9215333								
+TS05	Y1	HN00102818	SILAQUI-Ts-2_1.fastq.gz	SILAQUI-Ts-2_2.fastq.gz	Silaqui	Bolinao	16.44411667	119.9215333								
+TS06	Y1	HN00102818	SILAQUI-Ts-3_1.fastq.gz	SILAQUI-Ts-3_2.fastq.gz	Silaqui	Bolinao	16.44411667	119.9215333								
+TS07	Y2	HN00122531	BAU-Tm-2_1.fastq.gz	BAU-Tm-2_2.fastq.gz	Bauan	Batangas	13.80308333	120.9117833								
+TS08	Y2	HN00122531	BAU-Ts-1_1.fastq.gz	BAU-Ts-1_2.fastq.gz	Bauan	Batangas	13.80308333	120.9117833								
+TS09	Y2	HN00122531	CAL-M-Ts-3_1.fastq.gz	CAL-M-Ts-3_2.fastq.gz	Mangkawayan	Calaguas	14.46246667	122.9573								
+TS10	Y2	HN00122531	CAL-M-Ts-4_1.fastq.gz	CAL-M-Ts-4_2.fastq.gz	Mangkawayan	Calaguas	14.46246667	122.9573								
+TS11	Y2	HN00122531	CAL-M-Ts-5_1.fastq.gz	CAL-M-Ts-5_2.fastq.gz	Mangkawayan	Calaguas	14.46246667	122.9573								
+TS12	Y2	HN00122531	CAL-P-Ts-1_1.fastq.gz	CAL-P-Ts-1_2.fastq.gz	Pinagtigasan	Calaguas	14.4397167	122.9147167								
+TS13	Y2	HN00122531	CAL-P-Ts-2_1.fastq.gz	CAL-P-Ts-2_2.fastq.gz	Pinagtigasan	Calaguas	14.4397167	122.9147167								
+TS14	Y2	HN00122531	CAL-P-Ts-3_1.fastq.gz	CAL-P-Ts-3_2.fastq.gz	Pinagtigasan	Calaguas	14.4397167	122.9147167								
+TS15	Y2	HN00122531	MAS-Ts-1_1.fastq.gz	MAS-Ts-1_2.fastq.gz	Masinloc	Zambales	15.5298667	119.9248167								
+TS16	Y2	HN00122531	MAS-Ts-3_1.fastq.gz	MAS-Ts-3_2.fastq.gz	Masinloc	Zambales	15.5298667	119.9248167								
+TS17	Y2	HN00122531	MAS-Ts-4_1.fastq.gz	MAS-Ts-4_2.fastq.gz	Masinloc	Zambales	15.5298667	119.9248167								
+TS18	Y2	HN00122531	PAL-Ts-1_1.fastq.gz	PAL-Ts-1_2.fastq.gz	Palawan	Palawan	9.914205334	118.877206								
+TS19	Y2	HN00122531	PAL-Ts-2_1.fastq.gz	PAL-Ts-2_2.fastq.gz	Palawan	Palawan	9.914205334	118.877206								
+TS20	Y2	HN00122531	PAL-Ts-3_1.fastq.gz	PAL-Ts-3_2.fastq.gz	Palawan	Palawan	9.914205334	118.877206								
+TS21	Y3	HN00138609	Bohol_Ts_1_1.fastq.gz	Bohol_Ts_1_2.fastq.gz	Bohol	Bohol	9.6287333	123.8048167								
+TS22	Y3	HN00138609	Bohol_Ts_2_1.fastq.gz	Bohol_Ts_2_2.fastq.gz	Bohol	Bohol	9.6287333	123.8048167								
+TS23	Y3	HN00138609	Bohol_Ts_3_1.fastq.gz	Bohol_Ts_3_2.fastq.gz	Bohol	Bohol	9.6287333	123.8048167								
+TS24	Y3	HN00138609	Camiguin_Ts_1_1.fastq.gz	Camiguin_Ts_1_2.fastq.gz	Camiguin	Camiguin	9.107413439	124.8032036								
+TS25	Y3	HN00138609	Camiguin_Ts_3_1.fastq.gz	Camiguin_Ts_3_2.fastq.gz	Camiguin	Camiguin	9.107413439	124.8032036								
+TS26	Y3	HN00138609	Camiguin_Ts_4_1.fastq.gz	Camiguin_Ts_4_2.fastq.gz	Camiguin	Camiguin	9.107413439	124.8032036								
+TS27	Y3	HN00138609	Samar_Ts_2_1.fastq.gz	Samar_Ts_2_2.fastq.gz	Guiuan	Samar	11.0583	125.6537								
+TS28	Y3	HN00138609	Samar_Ts_3_1.fastq.gz	Samar_Ts_3_2.fastq.gz	Guiuan	Samar	11.0583	125.6537								
+TS29	Y3	HN00138609	Samar_Ts_5_1.fastq.gz	Samar_Ts_5_2.fastq.gz	Guiuan	Samar	11.0583	125.6537								
+TS30	Y3	HN00147512	SIL_Ts_1_1.fastq.gz	SIL_Ts_1_2.fastq.gz	Silaqui	Bolinao	16.44411667	119.9215333								
+TS31	Y3	HN00147512	SIL_Ts_2_1.fastq.gz	SIL_Ts_2_2.fastq.gz	Silaqui	Bolinao	16.44411667	119.9215333								
+TS32	Y3	HN00147512	SIL_Ts_3_1.fastq.gz	SIL_Ts_3_2.fastq.gz	Silaqui	Bolinao	16.44411667	119.9215333								
+TS33	Y2025	HN00248414	SEM-Ts8_1.fastq.gz	SEM-Ts8_2.fastq.gz	Semirara	Antique	12.08708129	121.3460231								
+TS34	Y2025	HN00248414	SEM-Ts9_1.fastq.gz	SEM-Ts9_2.fastq.gz	Semirara	Antique	12.08708129	121.3460231								
+TS35	Y2025	HN00248414	SEM-Ts11_1.fastq.gz	SEM-Ts11_2.fastq.gz	Semirara	Antique	12.08708129	121.3460231								
+TD19	Y2025	HN00248414	SEM-Td2_1.fastq.gz	SEM-Td2_2.fastq.gz	Semirara	Antique	12.08708129	121.3460231								
+TD20	Y2025	HN00248414	SEM-Td3_1.fastq.gz	SEM-Td3_2.fastq.gz	Semirara	Antique	12.08708129	121.3460231								
+TD21	Y2025	HN00248414	SEM-Td5_1.fastq.gz	SEM-Td5_2.fastq.gz	Semirara	Antique	12.08708129	121.3460231								

@@ -1,0 +1,243 @@
+---
+title: "Species distribution per site"
+format: html
+theme: 
+  light: zephyr
+  dark: cyborg
+toc: true
+page-layout: full
+number-sections: true
+number-depth: 3
+editor: visual
+self-contained: true
+---
+
+# Notes
+
+A naming convention for dataframes was made.
+
+1.  Objects were named with a prefix per section arranged alphabetically.
+2.  A 2nd prefix was added to arrange all the data accordingly:
+    -   Dataframes: .**1**
+    -   Plots: .**2**
+    -   Stats: .**3** (those in dataframe format)
+    -   Others:
+        -   Vectors: .**vec**
+        -   Trees: .**tre**
+        -   Distances: .**dis**
+        -   Functions: .**fun**
+3.  If a dataframe will be used multiple times in case a raw dataframe is needed and an edited one should not supersede the raw one, add a suffix at the end (i.e., **\_1** for first edit, **\_2** for second....).
+4.  Limit 3rd prefix names to three letters and if 2 prefixes are needed, separate with "**.**".
+5.  If an object is just an auxiliary object, put a **Z** prefix.
+
+# Load pkgs
+
+```{r}
+pacman::p_load(tidyverse,
+               vegan)
+```
+
+# Load data
+
+```{r}
+A.1_Metadata <- 
+  readxl::read_xlsx("metadata_20251021.xlsx", sheet = "Sheet1")
+```
+
+# Bars
+
+Tidy.
+
+```{r}
+A.1_Metadata_1 <- 
+  A.1_Metadata |> 
+  select(2, 3, 12)
+```
+
+Count.
+
+```{r}
+A.1_Metadata_2 <- 
+  A.1_Metadata_1 |> 
+  group_by(region) |> 
+  count(Species)
+```
+
+Plot.
+
+```{r}
+A.2_Metadata_2 <- 
+  A.1_Metadata_2 |> 
+  ggplot(aes(y = region, x = n, fill = Species)) +
+  geom_col() +
+  theme_classic()
+```
+
+# Clustering
+
+Tidy.
+
+```{r}
+B.1_Metadata <- 
+  A.1_Metadata_2 |> 
+  ungroup() |> 
+  pivot_wider(names_from = Species,
+              values_from = n,
+              values_fill = 0) 
+
+B.1_Matrix <- 
+  B.1_Metadata |> 
+  column_to_rownames("region")
+
+B.1_Matrix_1 <- # Hellinger transform
+  B.1_Matrix |> 
+  decostand(method = "hellinger")
+
+B.1_Matrix_2 <- # BC
+  B.1_Matrix_1 |> 
+  vegdist(method = "bray")
+
+B.tre_WardD2 <-
+  B.1_Matrix_2 |> 
+  hclust(method = "ward.D2")
+
+B.vec_RegionOrder <- 
+  B.tre_WardD2$labels[B.tre_WardD2$order]
+```
+
+# Bars 2
+
+```{r}
+C.2_Metadata <- 
+  A.1_Metadata_2 |> 
+  ggplot(aes(y = fct_relevel(region, B.vec_RegionOrder), x = n, fill = Species)) +
+  geom_col() +
+  theme_classic()
+```
+
+# Bars 3
+
+Load ITS2 data.
+
+```{r}
+C.2_ITS2 <- 
+  read_tsv('../raw_data/20250829T091611/post_med_seqs/4_first_analysis_20250829T091611.seqs.absolute.abund_and_meta.txt')
+```
+
+Tidy.
+
+```{r}
+C.2_ITS2_1 <- 
+  C.2_ITS2 |> 
+  filter(sample_uid != "seq_accession")
+
+C.2_ITS2_2 <- # correct ids
+  C.2_ITS2_1 |> 
+  left_join((A.1_Metadata |> select(1,2) |> 
+               rename(sample_name = 1))) |> 
+  select(!sample_name) |> 
+  relocate(CorrectID)
+
+C.2_ITS2_3 <- # filter samples with ITS2 seqs
+  C.2_ITS2_2 |> 
+  filter(post_med_absolute != 0)
+
+C.vec_ITS2 <- 
+  C.2_ITS2_3 |> 
+  pull(CorrectID)
+```
+
+Recluster.
+
+```{r}
+D.1_Metadata_1 <- 
+  A.1_Metadata_1 |> 
+  filter(CorrectID %in% C.vec_ITS2) |> 
+  group_by(region) |> 
+  count(Species) 
+
+D.1_Metadata_2 <- 
+  D.1_Metadata_1 |>
+  ungroup() |> 
+  pivot_wider(names_from = Species,
+              values_from = n,
+              values_fill = 0) 
+
+D.1_Matrix <- 
+  D.1_Metadata_2 |> 
+  column_to_rownames("region")
+
+D.1_Matrix_1 <- # Hellinger transform
+  D.1_Matrix |> 
+  decostand(method = "hellinger")
+
+D.1_Matrix_2 <- # D.
+  D.1_Matrix_1 |> 
+  vegdist(method = "bray")
+
+D.tre_WardD2 <-
+  D.1_Matrix_2 |> 
+  hclust(method = "ward.D2")
+
+D.vec_RegionOrder <- 
+  D.tre_WardD2$labels[D.tre_WardD2$order]
+```
+
+Reviz.
+
+```{r}
+D.vec_Species <- 
+  c("H. hippopus",
+    "H. porcellanus",
+    "T. crocea",
+    "T. squamosa",
+    "T. noae",
+    "T. maxima",
+    "T. derasa",
+    "T. gigas")
+
+D.vec_SpeciesColors <- 
+  c("H. hippopus" = "darkred",
+    "H. porcellanus" = "#cf202e",
+    "T. crocea" = "#f78822",
+    "T. squamosa" = "#f6db35",
+    "T. noae" = "#6dc067",
+    "T. maxima" = "#4185be",
+    "T. derasa" = "#8f499c",
+    "T. gigas" = "#201146")
+
+D.2_Metadata <- 
+  D.1_Metadata_1 |> 
+  ggplot(aes(y = fct_relevel(region, D.vec_RegionOrder),
+             x = n, 
+             fill = fct_relevel(Species, D.vec_Species))) +
+  scale_fill_manual(values = D.vec_SpeciesColors) +
+  geom_col() +
+  scale_x_continuous(expand = c(0,0),
+                     limits = c(0,25)) +
+  theme_classic() +
+  theme(legend.text = element_text(face = "italic"),
+        axis.title.y = element_blank(),
+        axis.line.y = element_blank(),
+        axis.ticks.y = element_blank()) +
+  labs(x = "Number of colonies",
+       y = "Sampling region",
+       fill = "Giant clam species")
+
+# Save with legend
+D.2_Metadata |> 
+  ggsave(filename = "Species distribution.svg", 
+         dpi = 900,
+         width = 8,
+         height = 6, 
+         units = "cm")
+
+# Save without legend
+(D.2_Metadata +
+  theme(legend.position = "none")) |> 
+  ggsave(filename = "Species distribution_1.svg", 
+         dpi = 900,
+         width = 5.5,
+         height = 6, 
+         units = "cm")
+```
