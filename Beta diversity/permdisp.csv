@@ -1,0 +1,16 @@
+PERMDISP,,,,,
+Species,Df,Sum Sq,Mean Sq,F value,Pr(>F)
+Groups,7,1.1462,0.16374,4.0825,0.0003829
+Residuals,157,6.297,0.040108,,
+,,,,,
+Region,Df,Sum Sq,Mean Sq,F value,Pr(>F)
+Groups,10,0.5664,0.056636,1.4078,0.1815
+Residuals,154,6.1956,0.040231,,
+,,,,,
+Biogeography,Df,Sum Sq,Mean Sq,F value,Pr(>F)
+Groups,4,0.779,0.19476,7.4317,1.63E-05
+Residuals,160,4.1931,0.026207,,
+,,,,,
+Thermal,Df,Sum Sq,Mean Sq,F value,Pr(>F)
+Groups,2,0.51394,0.256971,18.805,4.53E-08
+Residuals,162,2.21369,0.013665,,

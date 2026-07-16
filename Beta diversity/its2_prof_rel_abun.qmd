@@ -1,0 +1,299 @@
+---
+title: "ITS2 type profile relative abundance"
+format: html
+theme: 
+  light: zephyr
+  dark: cyborg
+toc: true
+page-layout: full
+number-sections: true
+number-depth: 3
+editor: visual
+self-contained: true
+---
+
+# Load pkgs
+
+```{r}
+pacman::p_load(tidyverse,
+               cowplot,
+               janitor)
+```
+
+# Load data
+
+```{r}
+# ITS2 type profile
+its2_prof <- 
+  read_tsv("../raw_data/20250829T091611/its2_type_profiles/4_first_analysis_20250829T091611.profiles.absolute.abund_and_meta.txt")
+
+its2_prof_1 <- # tidy
+  its2_prof |> 
+  slice(-(1:5)) %>% # Remove first 5 rows (unnecessary rows)
+  row_to_names(1) |>  # Move first row to column header
+  rename(sample_name = 2) |>  # Name 2nd column
+  select(-1) |>  # Remove first column (unneeded)
+  drop_na() |> 
+  type_convert() 
+
+its2_prof_2 <- 
+  its2_prof_1 |> 
+  rowwise() |> 
+  mutate(total = sum(c_across(A3:`1510`), na.rm = TRUE)) |> 
+  filter(total != 0)
+
+sample_clean <- # samples with ITS2
+  its2_prof_2 |> 
+  pull(sample_name)
+
+# Metadata
+metadata <- 
+  read_csv("metadata_all_clean.csv")
+
+metadata_1 <- # clean meatdata
+  metadata |> 
+  filter(sample_name %in% sample_clean)
+
+# Get manually renamed ITS2 type profiles
+its2_rename <- 
+  read_csv("../raw_data/Edited ITS2 type profile naming.csv") |> 
+  rename(its2_prof = 1)
+
+its2_arrangement <- 
+  read_tsv("../its2prof_arrangement.txt",col_names = F) |> 
+  pull(1)
+```
+
+Tidy.
+
+```{r}
+its2_prof_3 <- 
+  its2_prof_2 |> 
+  select(!total) |> 
+  pivot_longer(!1,
+               names_to = "its2_prof",
+               values_to = "count") |> 
+  left_join(metadata_1) |> 
+  left_join(its2_rename) |> 
+  select(!its2_prof) |> 
+  rename(its2_prof = Edited) |>
+  mutate(genus = str_extract(its2_prof, "[A-Za-z]+")) |> 
+  group_by(corrected_id) |> 
+  mutate(rel_abun = count/sum(count))
+```
+
+Plot.
+
+```{r}
+its2_prof_p <- 
+  its2_prof_3 |> 
+  ggplot(aes(x = corrected_id,
+             y = rel_abun,
+             fill = fct_reorder(its2_prof, genus))) +
+  geom_bar(stat = "identity",
+           position = "fill",
+           width = 1) +
+  facet_grid(cols = vars(species),
+             scale = "free",
+             space = "free") +
+  scale_y_continuous(expand = c(0,0)) +
+  scale_x_discrete(expand = c(0,0)) + 
+  theme_bw() +
+  theme(legend.position = "bottom",
+        axis.ticks.x = element_blank(),
+        axis.text.x = element_blank(),
+        strip.background = element_blank(),
+        axis.title.x = element_blank())
+
+# Manual coloring (A - 5, C - 17, D - 11)
+its2_prof_A <- 
+  colorRampPalette(c("#433F79", "#746FB4", "#D2D0E6"))(5)
+
+its2_prof_C <- 
+  colorRampPalette(c("#1C576E", "#267798", "#62B6D8", "#15654C", "#209E77", "#96EAD0"))(17)
+
+its2_prof_D <- 
+  colorRampPalette(c("#8C3306", "#E4530A", "#F9A073", "#A87D04", "#E7AB06", "#FCDE88"))(11)
+
+its2_prof_colors <- 
+  c(its2_prof_A, its2_prof_C, its2_prof_D)
+
+its2_prof_p <- 
+  its2_prof_3 |> 
+  ggplot(aes(x = corrected_id,
+             y = rel_abun,
+             fill = fct_reorder(its2_prof, genus))) +
+  geom_col(width = 1.1) +
+  facet_grid(cols = vars(fct_relevel(species,
+                                     c("Hpor", "Hhip", "Tgig", "Tder", "Tmax",
+                                       "Tnoa", "Tsqu", "Tcro"))),
+             rows = vars(genus),
+             scale = "free_x",
+             space = "free") +
+  scale_y_continuous(expand = c(0,0)) +
+  scale_x_discrete(expand = c(0,0)) + 
+  theme_bw() +
+  theme(legend.position = "bottom",
+        axis.ticks = element_blank(),
+        axis.text = element_blank(),
+        strip.background = element_blank(),
+        axis.title = element_blank(),
+        legend.title = element_blank(),
+        panel.grid = element_blank(),
+        legend.text = element_text(size = 6),
+        strip.text = element_text(size = 6),
+        legend.key.size = unit(0.35, "cm"),
+        legend.key.spacing.y = unit(0.05, "cm"),
+        panel.spacing = unit(0.5, "pt"),
+        panel.background = element_rect(fill = "#BEBEBE"),
+        panel.border = element_blank()) +
+  scale_fill_manual(values = its2_prof_colors) +
+  guides(fill = guide_legend(nrow = 5))
+
+its2_prof_p |> 
+  ggsave(filename = "its2_prof_rel_abun_v2.svg", 
+         dpi = 900,
+         width = 17.75, 
+         height = 8,
+         unit = "cm")
+```
+
+Legend.
+
+```{r}
+its2_prof_4 <- 
+  its2_prof_3 |> 
+  distinct(corrected_id,.keep_all = T) |> 
+  mutate(N = 1)
+
+# Sampling sites
+its2_prof_sites_p <- 
+  its2_prof_4 |>
+  ggplot(aes(x = corrected_id,
+             y = 1,
+             fill = region)) +
+  geom_raster() +
+  facet_grid(cols = vars(fct_relevel(species,
+                                     c("Hpor", "Hhip", "Tgig", "Tder", "Tmax",
+                                       "Tnoa", "Tsqu", "Tcro"))),
+             scale = "free_x",
+             space = "free") +
+  scale_y_continuous(expand = c(0,0)) +
+  scale_x_discrete(expand = c(0,0)) + 
+  theme_bw() +
+  theme(legend.position = "none",
+        axis.ticks = element_blank(),
+        axis.text = element_blank(),
+        strip.background = element_blank(),
+        axis.title = element_blank(),
+        legend.title = element_blank(),
+        panel.grid = element_blank(),
+        legend.text = element_text(size = 6),
+        strip.text = element_text(size = 6),
+        legend.key.size = unit(0.35, "cm"),
+        legend.key.spacing.y = unit(0.05, "cm"),
+        panel.spacing = unit(0.5, "pt"),
+        panel.background = element_rect(fill = "#BEBEBE"),
+        panel.border = element_blank()) +
+  scale_fill_manual(values = 
+                       c("Ala"="#E41A1C",
+                               "Ant"="#377EB8",
+                               "ARN"="#4DAF4A",
+                               "Bat"="#984EA3",
+                               "Boh"="#FF7F00",
+                               "Bol"="#FFFF33",
+                               "Cal"="#A65628",
+                               "Cam"="#F781BF",
+                               "Pal"="#999999",
+                               "Sam"="#66C2A5",
+                               "Zam"="#FC8D62"))
+
+its2_prof_sites_p |> 
+  ggsave(filename = "its2_prof_rel_abun_v2_samplingsites.svg", 
+         dpi = 900,
+         width = 17.75, 
+         height = 3,
+         unit = "cm")
+
+# Biogeographic regions
+its2_prof_bioregion_p <- 
+  its2_prof_4 |>
+  ggplot(aes(x = corrected_id,
+             y = 1,
+             fill = bio_region)) +
+  geom_raster() +
+  facet_grid(cols = vars(fct_relevel(species,
+                                     c("Hpor", "Hhip", "Tgig", "Tder", "Tmax",
+                                       "Tnoa", "Tsqu", "Tcro"))),
+             scale = "free_x",
+             space = "free") +
+  scale_y_continuous(expand = c(0,0)) +
+  scale_x_discrete(expand = c(0,0)) + 
+  theme_bw() +
+  theme(legend.position = "none",
+        axis.ticks = element_blank(),
+        axis.text = element_blank(),
+        strip.background = element_blank(),
+        axis.title = element_blank(),
+        legend.title = element_blank(),
+        panel.grid = element_blank(),
+        legend.text = element_text(size = 6),
+        strip.text = element_text(size = 6),
+        legend.key.size = unit(0.35, "cm"),
+        legend.key.spacing.y = unit(0.05, "cm"),
+        panel.spacing = unit(0.5, "pt"),
+        panel.background = element_rect(fill = "#BEBEBE"),
+        panel.border = element_blank()) +
+  scale_fill_manual(values = c("WPS"="#FDE725",
+                               "SS"="#7AD151",
+                               "VS"="#440154",
+                               "NPS"="#414487",
+                               "SPS"="#2A788E"))
+
+its2_prof_bioregion_p |> 
+  ggsave(filename = "its2_prof_rel_abun_v2_bioregion.svg", 
+         dpi = 900,
+         width = 17.75, 
+         height = 3,
+         unit = "cm")
+
+# Biogeographic regions
+its2_prof_thermal_p <- 
+  its2_prof_4 |>
+  ggplot(aes(x = corrected_id,
+             y = 1,
+             fill = thermal_cluster)) +
+  geom_raster() +
+  facet_grid(cols = vars(fct_relevel(species,
+                                     c("Hpor", "Hhip", "Tgig", "Tder", "Tmax",
+                                       "Tnoa", "Tsqu", "Tcro"))),
+             scale = "free_x",
+             space = "free") +
+  scale_y_continuous(expand = c(0,0)) +
+  scale_x_discrete(expand = c(0,0)) + 
+  theme_bw() +
+  theme(legend.position = "none",
+        axis.ticks = element_blank(),
+        axis.text = element_blank(),
+        strip.background = element_blank(),
+        axis.title = element_blank(),
+        legend.title = element_blank(),
+        panel.grid = element_blank(),
+        legend.text = element_text(size = 6),
+        strip.text = element_text(size = 6),
+        legend.key.size = unit(0.35, "cm"),
+        legend.key.spacing.y = unit(0.05, "cm"),
+        panel.spacing = unit(0.5, "pt"),
+        panel.background = element_rect(fill = "#BEBEBE"),
+        panel.border = element_blank()) +
+  scale_fill_manual(values = c("D"="#fdd081",
+                               "E"="#f99858",
+                               "F"="#e34d34"))
+
+its2_prof_thermal_p |> 
+  ggsave(filename = "its2_prof_rel_abun_v2_thermclust.svg", 
+         dpi = 900,
+         width = 17.75, 
+         height = 3,
+         unit = "cm")
+```

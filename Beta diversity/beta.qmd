@@ -1,0 +1,684 @@
+---
+title: "beta_diversity"
+format: html
+theme: 
+  light: zephyr
+  dark: cyborg
+toc: true
+page-layout: full
+number-sections: true
+number-depth: 3
+editor: visual
+self-contained: true
+---
+
+# Load pkgs
+
+```{r}
+pacman::p_load(tidyverse,
+               janitor,
+               vegan,
+               cowplot,
+               rstatix,
+               multcompView,
+               pairwiseAdonis)
+```
+
+# Load data
+
+```{r}
+its2 <- 
+  read_tsv("../raw_data/20250829T091611/post_med_seqs/4_first_analysis_20250829T091611.seqs.absolute.abund_and_meta.txt")
+
+its2_1 <- 
+  its2 |> 
+  drop_na()  |> 
+  filter(post_med_unique != 0) |> 
+  select(!c(1, 3:39))
+
+sample_clean <- # samples with ITS2
+  its2_1 |> 
+  pull(sample_name)
+
+its2_2 <-
+  its2_1 |>
+  arrange(sample_name) |> 
+  column_to_rownames("sample_name") |> 
+  as.matrix() |> 
+  sqrt()
+
+# Metadata
+metadata <- 
+  read_csv("metadata_all_clean.csv")
+
+metadata_1 <- # clean meatdata
+  metadata |> 
+  filter(sample_name %in% sample_clean) |> 
+  arrange(sample_name)
+```
+
+# Bray-Curtis
+
+```{r}
+bray_curtis <- 
+  its2_2 |> 
+  vegdist()
+```
+
+# NMDS
+
+```{r}
+bray_curtis_nmds <- 
+  bray_curtis |> 
+  metaMDS(k = 2)
+
+bray_curtis_nmds_1 <- # tidy NMDS data
+  as.data.frame(scores(bray_curtis_nmds)) |> 
+  rownames_to_column("sample_name")
+
+bray_curtis_nmds_2 <- # add metadata
+  bray_curtis_nmds_1 |> 
+  left_join(metadata_1)
+```
+
+# Plot
+
+Among species
+
+```{r}
+nmds_species <- 
+  bray_curtis_nmds_2 |> 
+  ggplot(aes(x = NMDS1, y = NMDS2)) +
+  stat_ellipse(aes(color = fct_relevel(species,
+                                       c("Hpor",
+                               "Hhip",
+                               "Tgig",
+                               "Tder",
+                               "Tmax",
+                               "Tnoa",
+                               "Tsqu",
+                               "Tcro")),
+                   group = species),
+               level = 0.5) +
+  geom_hline(yintercept = 0,
+             color = 'darkgray',
+             linetype = 'dashed',
+             linewidth = 0.25) +
+  geom_vline(xintercept = 0,
+             color = 'darkgray',
+             linetype = 'dashed',
+             linewidth = 0.25) +
+  geom_point(aes(color = fct_relevel(species,
+                                    c("Hpor",
+                               "Hhip",
+                               "Tgig",
+                               "Tder",
+                               "Tmax",
+                               "Tnoa",
+                               "Tsqu",
+                               "Tcro"))),
+             size = 2) +
+  labs(x = "NMDS1",
+       y = "NMDS2",
+       color = "GC species") +
+  scale_color_manual(values = 
+                       c("Hhip"="darkred",
+                         "Hpor"="#cf202e",
+                         "Tcro"="#f78822",
+                         "Tsqu"="#f6db35",
+                         "Tnoa"="#6dc067",
+                         "Tmax"="#4185be",
+                         "Tder"="#8f499c",
+                         "Tgig"="#201146")) +
+  theme_minimal() +
+  theme(panel.grid = element_blank(),
+        strip.background = element_blank(),
+        axis.ticks = element_blank(),
+        axis.text = element_blank(),
+        axis.line = element_line(),panel.background    = element_rect(fill = "transparent", colour = NA),
+        plot.background     = element_rect(fill = "transparent", colour = NA),
+        legend.background   = element_rect(fill = "transparent", colour = NA),
+        legend.box.background = element_rect(fill = "transparent", colour = NA),
+        legend.text = element_text(size = 7),
+        legend.position = "none",
+        axis.title = element_text(size = 8),
+        legend.title = element_blank())
+```
+
+Across regions.
+
+```{r}
+nmds_region <- 
+  bray_curtis_nmds_2 |> 
+  ggplot(aes(x = NMDS1, y = NMDS2)) +
+  stat_ellipse(aes(color = fct_relevel(region,
+                                       c("Cal",
+                               "Sam",
+                               "Ant",
+                               "Pal",
+                               "Ala",
+                               "ARN",
+                               "Bat",
+                               "Bol",
+                               "Zam",
+                               "Cam",
+                               "Boh")),
+                   group = region),
+               level = 0.5) +
+  geom_hline(yintercept = 0,
+             color = 'darkgray',
+             linetype = 'dashed',
+             linewidth = 0.25) +
+  geom_vline(xintercept = 0,
+             color = 'darkgray',
+             linetype = 'dashed',
+             linewidth = 0.25) +
+  geom_point(aes(color = fct_relevel(region,
+                                    c("Cal",
+                               "Sam",
+                               "Ant",
+                               "Pal",
+                               "Ala",
+                               "ARN",
+                               "Bat",
+                               "Bol",
+                               "Zam",
+                               "Cam",
+                               "Boh"))),
+             size = 2) +
+  labs(x = "NMDS1",
+       y = "NMDS2",
+       color = "GC species") +
+  scale_color_manual(values = 
+                       c("Ala"="#E41A1C",
+                               "Ant"="#377EB8",
+                               "ARN"="#4DAF4A",
+                               "Bat"="#984EA3",
+                               "Boh"="#FF7F00",
+                               "Bol"="#FFFF33",
+                               "Cal"="#A65628",
+                               "Cam"="#F781BF",
+                               "Pal"="#999999",
+                               "Sam"="#66C2A5",
+                               "Zam"="#FC8D62")) +
+  theme_minimal() +
+  theme(panel.grid = element_blank(),
+        strip.background = element_blank(),
+        axis.ticks = element_blank(),
+        axis.text = element_blank(),
+        axis.line = element_line(),panel.background    = element_rect(fill = "transparent", colour = NA),
+        plot.background     = element_rect(fill = "transparent", colour = NA),
+        legend.background   = element_rect(fill = "transparent", colour = NA),
+        legend.box.background = element_rect(fill = "transparent", colour = NA),
+        legend.text = element_text(size = 7),
+        legend.position = "none",
+        axis.title = element_text(size = 8),
+        legend.title = element_blank())
+```
+
+Across biogeographic regions.
+
+```{r}
+nmds_bioreg <- 
+  bray_curtis_nmds_2 |> 
+  ggplot(aes(x = NMDS1, y = NMDS2)) +
+  stat_ellipse(aes(color = bio_region,
+                   group = bio_region),
+               level = 0.5) +
+  geom_hline(yintercept = 0,
+             color = 'darkgray',
+             linetype = 'dashed',
+             linewidth = 0.25) +
+  geom_vline(xintercept = 0,
+             color = 'darkgray',
+             linetype = 'dashed',
+             linewidth = 0.25) +
+  geom_point(aes(color = bio_region),
+             size = 2) +
+  labs(x = "NMDS1",
+       y = "NMDS2",
+       color = "GC species") +
+  scale_color_manual(values = c("WPS"="#FDE725",
+                               "SS"="#7AD151",
+                               "VS"="#440154",
+                               "NPS"="#414487",
+                               "SPS"="#2A788E")) +
+  theme_minimal() +
+  theme(panel.grid = element_blank(),
+        strip.background = element_blank(),
+        axis.ticks = element_blank(),
+        axis.text = element_blank(),
+        axis.line = element_line(),panel.background    = element_rect(fill = "transparent", colour = NA),
+        plot.background     = element_rect(fill = "transparent", colour = NA),
+        legend.background   = element_rect(fill = "transparent", colour = NA),
+        legend.box.background = element_rect(fill = "transparent", colour = NA),
+        legend.text = element_text(size = 7),
+        legend.position = "none",
+        axis.title = element_text(size = 8),
+        legend.title = element_blank())
+```
+
+Among thermal regimes.
+
+```{r}
+nmds_thermal <- 
+  bray_curtis_nmds_2 |> 
+  ggplot(aes(x = NMDS1, y = NMDS2)) +
+  stat_ellipse(aes(color = thermal_cluster,
+                   group = thermal_cluster),
+               level = 0.5) +
+  geom_hline(yintercept = 0,
+             color = 'darkgray',
+             linetype = 'dashed',
+             linewidth = 0.25) +
+  geom_vline(xintercept = 0,
+             color = 'darkgray',
+             linetype = 'dashed',
+             linewidth = 0.25) +
+  geom_point(aes(color = thermal_cluster),
+             size = 2) +
+  labs(x = "NMDS1",
+       y = "NMDS2",
+       color = "GC species") +
+  scale_color_manual(values = c("D"="#fdd081",
+                               "E"="#f99858",
+                               "F"="#e34d34")) +
+  theme_minimal() +
+  theme(panel.grid = element_blank(),
+        strip.background = element_blank(),
+        axis.ticks = element_blank(),
+        axis.text = element_blank(),
+        axis.line = element_line(),panel.background    = element_rect(fill = "transparent", colour = NA),
+        plot.background     = element_rect(fill = "transparent", colour = NA),
+        legend.background   = element_rect(fill = "transparent", colour = NA),
+        legend.box.background = element_rect(fill = "transparent", colour = NA),
+        legend.text = element_text(size = 7),
+        legend.position = "none",
+        axis.title = element_text(size = 8),
+        legend.title = element_blank())
+```
+
+Merge.
+
+```{r}
+merged_plots <- 
+  plot_grid(nmds_species,
+            nmds_region,
+            nmds_bioreg,
+            nmds_thermal)
+
+merged_plots |> 
+  ggsave(filename = "nmds_all.svg", 
+         dpi = 900,
+         width = 14, 
+         height = 12,
+         unit = "cm")
+```
+
+# Stats
+
+## Global
+
+PERMANOVA.
+
+```{r}
+permanova_species <- 
+  adonis2(bray_curtis ~ get("species"), 
+          data = (metadata_1 |> 
+                    filter(sample_name %in% (its2_1 |>
+                                             pull(sample_name))) |>
+                    arrange(sample_name)))
+
+permanova_region <- 
+  adonis2(bray_curtis ~ get("region"), 
+          data = (metadata_1 |> 
+                    filter(sample_name %in% (its2_1 |>
+                                             pull(sample_name))) |>
+                    arrange(sample_name)))
+
+permanova_bioreg <- 
+  adonis2(bray_curtis ~ get("bio_region"), 
+          data = (metadata_1 |> 
+                    filter(sample_name %in% (its2_1 |>
+                                             pull(sample_name))) |>
+                    arrange(sample_name)))
+
+permanova_thermal <- 
+  adonis2(bray_curtis ~ get("thermal_cluster"), 
+          data = (metadata_1 |> 
+                    filter(sample_name %in% (its2_1 |>
+                                             pull(sample_name))) |>
+                    arrange(sample_name)))
+```
+
+PERMDISP
+
+```{r}
+permdisp_species <- 
+  betadisper(bray_curtis, 
+             group = (metadata_1 |>
+                        filter(sample_name %in% (its2_1 |>
+                                                 pull(sample_name))))[["species"]]) |> 
+  anova()
+
+permdisp_region <- 
+  betadisper(bray_curtis, 
+             group = (metadata_1 |>
+                        filter(sample_name %in% (its2_1 |>
+                                                 pull(sample_name))))[["region"]]) |> 
+  anova()
+
+permdisp_bioreg <- 
+  betadisper(bray_curtis, 
+             group = (metadata_1 |>
+                        filter(sample_name %in% (its2_1 |>
+                                                 pull(sample_name))))[["bio_region"]]) |> 
+  anova()
+
+permdisp_thermal <- 
+  betadisper(bray_curtis, 
+             group = (metadata_1 |>
+                        filter(sample_name %in% (its2_1 |>
+                                                 pull(sample_name))))[["thermal_cluster"]]) |> 
+  anova()
+```
+
+## Pairwise
+
+Pairwise PERMANOVA species.
+
+```{r}
+permanova_pairwise_species <- # Pairwise PERMANOVA
+  pairwise.adonis2(bray_curtis ~ species,
+                   data = (metadata_1 |>
+                             filter(sample_name %in% (its2_1 |>
+                                                      pull(sample_name))) |>
+                      arrange(sample_name)),
+                   nperm = 9999)
+
+# Pairwise PERMANOVA tidy function
+permanova_pairwise_cleaner <- 
+  function(pmanova_res){
+    a <- 
+      pmanova_res[-1] |> 
+      bind_rows(.id = 'groups') |> 
+      drop_na() %>%
+      .$`Pr(>F)` |> 
+      p.adjust(method = 'BH') 
+    
+    b <- 
+      unique(pmanova_res[-1] |> 
+               bind_rows(.id = 'groups'))$groups |> 
+      unique()
+      
+    d <- 
+       a %>% 
+        data.frame(b,.) |> 
+        rename('groups' = 1,
+               `P-adjusted` = 2) %>% 
+        left_join(pmanova_res[-1] |> 
+                    bind_rows(.id = 'groups'), 
+                  ., 
+                  by = 'groups') |> 
+        mutate(`P-adjusted` = case_when(is.na(`Pr(>F)`) ~ NA,
+                                        .default = `P-adjusted`)) |> 
+        mutate(Parameter = rep(c('Species', 'Residual', 'Total'), length.out = n())) |> 
+        relocate(last_col(), .after = 1)
+    
+    return(d)
+  }
+
+permanova_pairwise_species_1 <- 
+  permanova_pairwise_species |> 
+  permanova_pairwise_cleaner() |> 
+  drop_na() |> 
+  mutate(groups = str_replace(groups, "_vs_", "-")) |> 
+  select(groups, `P-adjusted`, R2) |> 
+  as.data.frame() |> 
+  separate(groups, into = c("group_1", "group_2"))
+
+permanova_pairwise_species_2 <- 
+  permanova_pairwise_species_1 %>%
+  bind_rows(
+    permanova_pairwise_species_1 %>%
+      rename(group_1 = group_2,
+             group_2 = group_1)
+  ) %>%
+  mutate(sig = case_when(
+    `P-adjusted` < 0.001 ~ "***",
+    `P-adjusted` < 0.01 ~ "**",
+    `P-adjusted` < 0.05 ~ "*",
+    TRUE ~ ""
+  ))
+
+permanova_pairwise_species_2$group_1 <- factor(permanova_pairwise_species_2$group_1,
+                            levels = unique(permanova_pairwise_species_2$group_1))
+
+permanova_pairwise_species_2$group_2 <- factor(permanova_pairwise_species_2$group_2,
+                            levels = unique(permanova_pairwise_species_2$group_1))
+
+permanova_pairwise_species_plot <- 
+  ggplot(permanova_pairwise_species_2, aes(group_1, group_2, fill = R2)) +
+  geom_raster() +
+  geom_text(aes(label = sig), size = 4, color = "white") +
+  scale_fill_viridis_c(name = expression(R^2), option = "cividis") +
+  theme_minimal() +
+  coord_fixed() +
+  theme(panel.grid = element_blank(),
+        axis.text = element_text(size = 7),
+        axis.title = element_blank(),
+        legend.position = "bottom",
+        legend.title = element_blank(),
+        legend.text = element_text(size = 7))
+```
+
+Pairwise PERMANOVA sampling regions.
+
+```{r}
+region_arrangement <- 
+  c("Cal",
+                               "Sam",
+                               "Ant",
+                               "Pal",
+                               "Ala",
+                               "ARN",
+                               "Bat",
+                               "Bol",
+                               "Zam",
+                               "Cam",
+                               "Boh")
+
+permanova_pairwise_region <- # Pairwise PERMANOVA
+  pairwise.adonis2(bray_curtis ~ region,
+                   data = (metadata_1 |>
+                             filter(sample_name %in% (its2_1 |>
+                                                      pull(sample_name))) |>
+                      arrange(sample_name)),
+                   nperm = 9999)
+
+permanova_pairwise_region_1 <- 
+  permanova_pairwise_region |> 
+  permanova_pairwise_cleaner() |> 
+  drop_na() |> 
+  mutate(groups = str_replace(groups, "_vs_", "-")) |> 
+  select(groups, `P-adjusted`, R2) |> 
+  as.data.frame() |> 
+  separate(groups, into = c("group_1", "group_2"))
+
+permanova_pairwise_region_2 <- 
+  permanova_pairwise_region_1 %>%
+  bind_rows(
+    permanova_pairwise_region_1 %>%
+      rename(group_1 = group_2,
+             group_2 = group_1)
+  ) %>%
+  mutate(sig = case_when(
+    `P-adjusted` < 0.001 ~ "***",
+    `P-adjusted` < 0.01 ~ "**",
+    `P-adjusted` < 0.05 ~ "*",
+    TRUE ~ ""
+  ))
+
+permanova_pairwise_region_2$group_1 <- factor(permanova_pairwise_region_2$group_1,
+                            levels = unique(region_arrangement))
+
+permanova_pairwise_region_2$group_2 <- factor(permanova_pairwise_region_2$group_2,
+                            levels = unique(region_arrangement))
+
+permanova_pairwise_region_plot <- 
+  ggplot(permanova_pairwise_region_2, aes(group_1, group_2, fill = R2)) +
+  geom_raster() +
+  geom_text(aes(label = sig), size = 4, color = "white") +
+  scale_fill_viridis_c(name = expression(R^2), option = "cividis") +
+  theme_minimal() +
+  coord_fixed() +
+  theme(panel.grid = element_blank(),
+        axis.text = element_text(size = 7),
+        axis.title = element_blank(),
+        legend.position = "bottom",
+        legend.title = element_blank(),
+        legend.text = element_text(size = 7))
+```
+
+Pairwise PERMANOVA biogeographic regions.
+
+```{r}
+bio_region_arrangement <- 
+  c("NPS",
+    "SPS",
+    "SS",
+    "WPS",
+    "VS")
+
+permanova_pairwise_bio_region <- # Pairwise PERMANOVA
+  pairwise.adonis2(bray_curtis ~ bio_region,
+                   data = (metadata_1 |>
+                             filter(sample_name %in% (its2_1 |>
+                                                      pull(sample_name))) |>
+                      arrange(sample_name)),
+                   nperm = 9999)
+
+permanova_pairwise_bio_region_1 <- 
+  permanova_pairwise_bio_region |> 
+  permanova_pairwise_cleaner() |> 
+  drop_na() |> 
+  mutate(groups = str_replace(groups, "_vs_", "-")) |> 
+  select(groups, `P-adjusted`, R2) |> 
+  as.data.frame() |> 
+  separate(groups, into = c("group_1", "group_2"))
+
+permanova_pairwise_bio_region_2 <- 
+  permanova_pairwise_bio_region_1 %>%
+  bind_rows(
+    permanova_pairwise_bio_region_1 %>%
+      rename(group_1 = group_2,
+             group_2 = group_1)
+  ) %>%
+  mutate(sig = case_when(
+    `P-adjusted` < 0.001 ~ "***",
+    `P-adjusted` < 0.01 ~ "**",
+    `P-adjusted` < 0.05 ~ "*",
+    TRUE ~ ""
+  ))
+
+permanova_pairwise_bio_region_2$group_1 <- factor(permanova_pairwise_bio_region_2$group_1,
+                            levels = unique(bio_region_arrangement))
+
+permanova_pairwise_bio_region_2$group_2 <- factor(permanova_pairwise_bio_region_2$group_2,
+                            levels = unique(bio_region_arrangement))
+
+permanova_pairwise_bio_region_plot <- 
+  ggplot(permanova_pairwise_bio_region_2, aes(group_1, group_2, fill = R2)) +
+  geom_raster() +
+  geom_text(aes(label = sig), size = 4, color = "white") +
+  scale_fill_viridis_c(name = expression(R^2), option = "cividis") +
+  theme_minimal() +
+  coord_fixed() +
+  theme(panel.grid = element_blank(),
+        axis.text = element_text(size = 7),
+        axis.title = element_blank(),
+        legend.position = "bottom",
+        legend.title = element_blank(),
+        legend.text = element_text(size = 7))
+```
+
+Pairwise PERMANOVA thermal regimes.
+
+```{r}
+thermal_cluster_arrangement <- 
+  c("D",
+    "E",
+    "F")
+
+permanova_pairwise_thermal_cluster <- # Pairwise PERMANOVA
+  pairwise.adonis2(bray_curtis ~ thermal_cluster,
+                   data = (metadata_1 |>
+                             filter(sample_name %in% (its2_1 |>
+                                                      pull(sample_name))) |>
+                      arrange(sample_name)),
+                   nperm = 9999)
+
+permanova_pairwise_thermal_cluster_1 <- 
+  permanova_pairwise_thermal_cluster |> 
+  permanova_pairwise_cleaner() |> 
+  drop_na() |> 
+  mutate(groups = str_replace(groups, "_vs_", "-")) |> 
+  select(groups, `P-adjusted`, R2) |> 
+  as.data.frame() |> 
+  separate(groups, into = c("group_1", "group_2"))
+
+permanova_pairwise_thermal_cluster_2 <- 
+  permanova_pairwise_thermal_cluster_1 %>%
+  bind_rows(
+    permanova_pairwise_thermal_cluster_1 %>%
+      rename(group_1 = group_2,
+             group_2 = group_1)
+  ) %>%
+  mutate(sig = case_when(
+    `P-adjusted` < 0.001 ~ "***",
+    `P-adjusted` < 0.01 ~ "**",
+    `P-adjusted` < 0.05 ~ "*",
+    TRUE ~ ""
+  ))
+
+permanova_pairwise_thermal_cluster_2$group_1 <- factor(permanova_pairwise_thermal_cluster_2$group_1,
+                            levels = unique(thermal_cluster_arrangement))
+
+permanova_pairwise_thermal_cluster_2$group_2 <- factor(permanova_pairwise_thermal_cluster_2$group_2,
+                            levels = unique(thermal_cluster_arrangement))
+
+permanova_pairwise_thermal_cluster_plot <- 
+  ggplot(permanova_pairwise_thermal_cluster_2, aes(group_1, group_2, fill = R2)) +
+  geom_raster() +
+  geom_text(aes(label = sig), size = 4, color = "white") +
+  scale_fill_viridis_c(name = expression(R^2), option = "cividis") +
+  theme_minimal() +
+  coord_fixed() +
+  theme(panel.grid = element_blank(),
+        axis.text = element_text(size = 7),
+        axis.title = element_blank(),
+        legend.position = "bottom",
+        legend.title = element_blank(),
+        legend.text = element_text(size = 7))
+```
+
+Merge.
+
+```{r}
+permanova_pairwise_merged <- 
+  plot_grid(permanova_pairwise_species_plot,
+            permanova_pairwise_region_plot,
+            permanova_pairwise_bio_region_plot,
+            permanova_pairwise_thermal_cluster_plot)
+```
+
+Save.
+
+```{r}
+permanova_pairwise_merged |> 
+  ggsave(filename = "pairwise_permanova_all.svg", 
+         dpi = 900,
+         width = 18, 
+         height = 18,
+         unit = "cm")
+```

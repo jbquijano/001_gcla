@@ -1,0 +1,222 @@
+---
+title: "its2prof_heatmap"
+format: html
+theme: 
+  light: zephyr
+  dark: cyborg
+toc: true
+page-layout: full
+number-sections: true
+number-depth: 3
+editor: visual
+self-contained: true
+---
+
+# Load pkgs
+
+```{r}
+pacman::p_load(tidyverse,
+               cowplot,
+               janitor)
+```
+
+# Load data
+
+```{r}
+# ITS2 type profile
+its2_prof <- 
+  read_tsv("../raw_data/20250829T091611/its2_type_profiles/4_first_analysis_20250829T091611.profiles.absolute.abund_and_meta.txt")
+
+its2_prof_1 <- # tidy
+  its2_prof |> 
+  slice(-(1:5)) %>% # Remove first 5 rows (unnecessary rows)
+  row_to_names(1) |>  # Move first row to column header
+  rename(sample_name = 2) |>  # Name 2nd column
+  select(-1) |>  # Remove first column (unneeded)
+  drop_na() |> 
+  type_convert() 
+
+its2_prof_2 <- 
+  its2_prof_1 |> 
+  rowwise() |> 
+  mutate(total = sum(c_across(A3:`1510`), na.rm = TRUE)) |> 
+  filter(total != 0)
+
+sample_clean <- # samples with ITS2
+  its2_prof_2 |> 
+  pull(sample_name)
+
+# Metadata
+metadata <- 
+  read_csv("metadata_all_clean.csv")
+
+metadata_1 <- # clean meatdata
+  metadata |> 
+  filter(sample_name %in% sample_clean)
+
+# Get manually renamed ITS2 type profiles
+its2_rename <- 
+  read_csv("../raw_data/Edited ITS2 type profile naming.csv") |> 
+  rename(its2_prof = 1)
+
+its2_arrangement <- 
+  read_tsv("../its2prof_arrangement.txt",col_names = F) |> 
+  pull(1)
+```
+
+# Tidy
+
+```{r}
+its2_prof_3 <- 
+  its2_prof_2 |> 
+  select(!total) |> 
+  pivot_longer(!1,
+               names_to = "its2_prof",
+               values_to = "count") |> 
+  left_join(metadata_1) |> 
+  left_join(its2_rename) |> 
+  select(!its2_prof) |> 
+  rename(its2_prof = Edited) |>
+  mutate(genus = str_extract(its2_prof, "[A-Za-z]+")) |> 
+  group_by(corrected_id) |> 
+  mutate(rel_abun = sqrt(count/sum(count)))
+
+# All
+its2_prof_plot <- 
+  its2_prof_3 |> 
+  ggplot(aes(x = fct_reorder(corrected_id, region),
+             y = fct_relevel(its2_prof, rev(its2_arrangement)),
+             fill = rel_abun)) +
+  geom_raster() +
+  facet_grid(cols = vars(fct_relevel(species, c("Hpor",
+                               "Hhip",
+                               "Tgig",
+                               "Tder",
+                               "Tmax",
+                               "Tnoa",
+                               "Tsqu",
+                               "Tcro"))),
+             rows = vars(genus),
+             space = "free",
+             scale = "free") +
+  scale_y_discrete(expand = c(0,0)) +
+  scale_x_discrete(expand = c(0,0)) +
+  theme_minimal() +
+  theme(legend.title = element_blank(),
+        strip.background = element_blank(),
+        panel.spacing = unit(0.05,'lines'),
+        axis.text.x = element_blank(),
+        axis.text.y = element_text(size = 6, hjust = 0),
+        axis.title = element_blank(),
+        panel.grid = element_blank(),
+        legend.position = "bottom") +
+  viridis::scale_fill_viridis(option = "cividis")
+
+its2_prof_plot |> 
+  ggsave(filename = "its2_prof_heatmap.svg", 
+         dpi = 900,
+         width = 15, 
+         height = 10,
+         unit = "cm")
+
+# Region labels
+its2_prof_plot_region_lab <- 
+  its2_prof_3 |> 
+  ggplot(aes(x = fct_reorder(corrected_id, region),
+             y = 1,
+             fill = region)) + 
+  geom_raster() +
+  facet_grid(cols = vars(fct_relevel(species, c("Hpor",
+                               "Hhip",
+                               "Tgig",
+                               "Tder",
+                               "Tmax",
+                               "Tnoa",
+                               "Tsqu",
+                               "Tcro"))),
+             space = "free",
+             scale = "free") +
+  scale_fill_manual(values = 
+                       c("Ala"="#E41A1C",
+                               "Ant"="#377EB8",
+                               "ARN"="#4DAF4A",
+                               "Bat"="#984EA3",
+                               "Boh"="#FF7F00",
+                               "Bol"="#FFFF33",
+                               "Cal"="#A65628",
+                               "Cam"="#F781BF",
+                               "Pal"="#999999",
+                               "Sam"="#66C2A5",
+                               "Zam"="#FC8D62")) +
+  theme_void() +
+  theme(legend.position = "bottom")
+
+its2_prof_plot_region_lab |> 
+  ggsave(filename = "its2_prof_heatmap_region_labels.svg", 
+         dpi = 900,
+         width = 15, 
+         height = 5,
+         unit = "cm")
+
+# Biogeographic region labels
+its2_prof_plot_bio_region_lab <- 
+  its2_prof_3 |> 
+  ggplot(aes(x = fct_reorder(corrected_id, region),
+             y = 1,
+             fill = bio_region)) + 
+  geom_raster() +
+  facet_grid(cols = vars(fct_relevel(species, c("Hpor",
+                               "Hhip",
+                               "Tgig",
+                               "Tder",
+                               "Tmax",
+                               "Tnoa",
+                               "Tsqu",
+                               "Tcro"))),
+             space = "free",
+             scale = "free") +
+  scale_fill_manual(values = c("WPS"="#FDE725",
+                               "SS"="#7AD151",
+                               "VS"="#440154",
+                               "NPS"="#414487",
+                               "SPS"="#2A788E")) +
+  theme_void() +
+  theme(legend.position = "bottom")
+
+its2_prof_plot_bio_region_lab |> 
+  ggsave(filename = "its2_prof_heatmap_bio_region_labels.svg", 
+         dpi = 900,
+         width = 15, 
+         height = 5,
+         unit = "cm")
+
+# Thermal regime labels
+its2_prof_plot_thermal_cluster_lab <- 
+  its2_prof_3 |> 
+  ggplot(aes(x = fct_reorder(corrected_id, region),
+             y = 1,
+             fill = thermal_cluster)) + 
+  geom_raster() +
+  facet_grid(cols = vars(fct_relevel(species, c("Hpor",
+                               "Hhip",
+                               "Tgig",
+                               "Tder",
+                               "Tmax",
+                               "Tnoa",
+                               "Tsqu",
+                               "Tcro"))),
+             space = "free",
+             scale = "free") +
+  scale_fill_manual(values = c("D"="#fdd081",
+                               "E"="#f99858",
+                               "F"="#e34d34")) +
+  theme_void() +
+  theme(legend.position = "bottom")
+
+its2_prof_plot_thermal_cluster_lab |> 
+  ggsave(filename = "its2_prof_heatmap_thermal_cluster_labels.svg", 
+         dpi = 900,
+         width = 15, 
+         height = 5,
+         unit = "cm")
+```

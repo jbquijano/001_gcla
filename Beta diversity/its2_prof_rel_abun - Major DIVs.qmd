@@ -1,0 +1,349 @@
+---
+title: "ITS2 type profile relative abundance"
+format: html
+theme: 
+  light: zephyr
+  dark: cyborg
+toc: true
+page-layout: full
+number-sections: true
+number-depth: 3
+editor: visual
+self-contained: true
+---
+
+# Load pkgs
+
+```{r}
+pacman::p_load(tidyverse,
+               cowplot,
+               janitor)
+```
+
+# Load data
+
+```{r}
+# ITS2 data
+its2 <- 
+  read_tsv("../raw_data/20250829T091611/post_med_seqs/4_first_analysis_20250829T091611.seqs.absolute.abund_and_meta.txt")
+
+its2_1 <- 
+  its2 |> 
+  drop_na()  |> 
+  filter(post_med_unique != 0) |> 
+  select(!c(1, 3:39))
+
+sample_clean <- # samples with ITS2
+  its2_1 |> 
+  pull(sample_name)
+
+# Metadata
+metadata <- 
+  read_csv("metadata_all_clean.csv")
+
+metadata_1 <- # clean meatdata
+  metadata |> 
+  filter(sample_name %in% sample_clean) |> 
+  arrange(sample_name)
+
+# Get major DIVs
+major_divs <- 
+  read_tsv("../MajorDIVs.txt")
+
+its2_2 <- 
+  its2_1 |> 
+  left_join(metadata_1) |> 
+  pivot_longer(!c(1,463:last_col())) |> 
+  filter(name %in% pull(major_divs, 1))
+
+# Species
+its2_species <- 
+  its2_2 |> 
+  group_by(species, name, corrected_id) |> 
+  summarise(Total = sum(value)) |> 
+  ungroup() |> 
+  group_by(corrected_id) |> 
+  mutate(RelAbun = Total/sum(Total)) |>
+  ungroup() |> 
+  mutate(RelAbun = if_else(is.na(RelAbun), 0, RelAbun)) |> 
+  mutate(genus = str_extract(name, "[A-Za-z]+")) 
+
+its2_species_p <- 
+  its2_species |> 
+  ggplot(aes(x = RelAbun,
+             y = fct_reorder(name, RelAbun),
+             fill = genus,
+             color = genus)) +
+  stat_summary(fun.data = mean_se,
+               geom = "linerange") +
+  stat_summary(fun = mean, 
+               geom = "bar",
+               alpha = 0.75,
+               linewidth = NA,
+               width = 0.8) +
+  facet_grid(cols = vars(fct_relevel(species, 
+                                     c("Hpor", "Hhip", "Tgig", "Tder",
+                                       "Tmax", "Tnoa", "Tsqu", "Tcro"))),
+             rows = vars(genus),
+             scales = "free_y",
+             space = "free_y") +
+  scale_x_continuous(limits = c(0,1),breaks = c(0,1)) +
+  theme_bw() +
+  theme(strip.background = element_blank(),
+        panel.grid = element_blank(),
+        panel.spacing = unit(0.1, "cm"),
+        axis.text = element_text(size = 8),
+        legend.position = "none") +
+  scale_fill_manual(values = c("A" = "#746FB4",
+                               "C" = "#209E77",
+                               "D" = "#E7AB06")) +
+  scale_color_manual(values = c("A" = "#746FB4",
+                               "C" = "#209E77",
+                               "D" = "#E7AB06"))
+
+# Sampling sites
+its2_sites <- 
+  its2_2 |> 
+  group_by(region, name, corrected_id) |> 
+  summarise(Total = sum(value)) |> 
+  ungroup() |> 
+  group_by(corrected_id) |> 
+  mutate(RelAbun = Total/sum(Total)) |>
+  ungroup() |> 
+  mutate(RelAbun = if_else(is.na(RelAbun), 0, RelAbun)) |> 
+  mutate(genus = str_extract(name, "[A-Za-z]+")) 
+
+its2_sites_p <- 
+  its2_sites |> 
+  ggplot(aes(x = RelAbun,
+             y = fct_reorder(name, RelAbun),
+             fill = genus,
+             color = genus)) +
+  stat_summary(fun.data = mean_se,
+               geom = "linerange") +
+  stat_summary(fun = mean, 
+               geom = "bar",
+               alpha = 0.75,
+               linewidth = NA,
+               width = 0.8) +
+  facet_grid(cols = vars(region),
+             rows = vars(genus),
+             scales = "free_y",
+             space = "free_y") +
+  scale_x_continuous(limits = c(0,1),breaks = c(0,1)) +
+  theme_bw() +
+  theme(strip.background = element_blank(),
+        panel.grid = element_blank(),
+        panel.spacing = unit(0.1, "cm"),
+        axis.text = element_text(size = 8),
+        legend.position = "none") +
+  scale_fill_manual(values = c("A" = "#746FB4",
+                               "C" = "#209E77",
+                               "D" = "#E7AB06")) +
+  scale_color_manual(values = c("A" = "#746FB4",
+                               "C" = "#209E77",
+                               "D" = "#E7AB06"))
+
+# bio_region
+its2_bio_region <- 
+  its2_2 |> 
+  group_by(bio_region, name, corrected_id) |> 
+  summarise(Total = sum(value)) |> 
+  ungroup() |> 
+  group_by(corrected_id) |> 
+  mutate(RelAbun = Total/sum(Total)) |>
+  ungroup() |> 
+  mutate(RelAbun = if_else(is.na(RelAbun), 0, RelAbun)) |> 
+  mutate(genus = str_extract(name, "[A-Za-z]+")) 
+
+its2_bio_region_p <- 
+  its2_bio_region |> 
+  ggplot(aes(x = RelAbun,
+             y = fct_reorder(name, RelAbun),
+             fill = genus,
+             color = genus)) +
+  stat_summary(fun.data = mean_se,
+               geom = "linerange") +
+  stat_summary(fun = mean, 
+               geom = "bar",
+               alpha = 0.75,
+               linewidth = NA,
+               width = 0.8) +
+  facet_grid(cols = vars(bio_region),
+             rows = vars(genus),
+             scales = "free_y",
+             space = "free_y") +
+  scale_x_continuous(limits = c(0,1),breaks = c(0,1)) +
+  theme_bw() +
+  theme(strip.background = element_blank(),
+        panel.grid = element_blank(),
+        panel.spacing = unit(0.1, "cm"),
+        axis.text = element_text(size = 8),
+        legend.position = "none") +
+  scale_fill_manual(values = c("A" = "#746FB4",
+                               "C" = "#209E77",
+                               "D" = "#E7AB06")) +
+  scale_color_manual(values = c("A" = "#746FB4",
+                               "C" = "#209E77",
+                               "D" = "#E7AB06"))
+
+# thermal_cluster
+its2_thermal_cluster <- 
+  its2_2 |> 
+  group_by(thermal_cluster, name, corrected_id) |> 
+  summarise(Total = sum(value)) |> 
+  ungroup() |> 
+  group_by(corrected_id) |> 
+  mutate(RelAbun = Total/sum(Total)) |>
+  ungroup() |> 
+  mutate(RelAbun = if_else(is.na(RelAbun), 0, RelAbun)) |> 
+  mutate(genus = str_extract(name, "[A-Za-z]+")) 
+
+its2_thermal_cluster_p <- 
+  its2_thermal_cluster |> 
+  ggplot(aes(x = RelAbun,
+             y = fct_reorder(name, RelAbun),
+             fill = genus,
+             color = genus)) +
+  stat_summary(fun.data = mean_se,
+               geom = "linerange") +
+  stat_summary(fun = mean, 
+               geom = "bar",
+               alpha = 0.75,
+               linewidth = NA,
+               width = 0.8) +
+  facet_grid(cols = vars(thermal_cluster),
+             rows = vars(genus),
+             scales = "free_y",
+             space = "free_y") +
+  scale_x_continuous(limits = c(0,1),breaks = c(0,1)) +
+  theme_bw() +
+  theme(strip.background = element_blank(),
+        panel.grid = element_blank(),
+        panel.spacing = unit(0.1, "cm"),
+        axis.text = element_text(size = 8),
+        legend.position = "none") +
+  scale_fill_manual(values = c("A" = "#746FB4",
+                               "C" = "#209E77",
+                               "D" = "#E7AB06")) +
+  scale_color_manual(values = c("A" = "#746FB4",
+                               "C" = "#209E77",
+                               "D" = "#E7AB06"))
+```
+
+Merge.
+
+```{r}
+its2_merged <- 
+  plot_grid(ncol = 1,
+            its2_species_p,
+            its2_sites_p,
+            plot_grid(ncol = 2,
+                      its2_bio_region_p,
+                      its2_thermal_cluster_p,
+                      align = "hv",
+                      axis = "t",
+                      rel_widths = c(3,2)),
+            align = "h",
+            axis = "l")
+
+its2_merged |> 
+  ggsave(filename = "major_divs_rel_abun.svg", 
+         dpi = 900,
+         width = 17.75, 
+         height = 20,
+         unit = "cm")
+```
+
+Tidy.
+
+```{r}
+its2_prof_3 <- 
+  its2_prof_2 |> 
+  select(!total) |> 
+  pivot_longer(!1,
+               names_to = "its2_prof",
+               values_to = "count") |> 
+  left_join(metadata_1) |> 
+  left_join(its2_rename) |> 
+  select(!its2_prof) |> 
+  rename(its2_prof = Edited) |>
+  mutate(genus = str_extract(its2_prof, "[A-Za-z]+")) |> 
+  group_by(corrected_id) |> 
+  mutate(rel_abun = count/sum(count))
+```
+
+Plot.
+
+```{r}
+its2_prof_p <- 
+  its2_prof_3 |> 
+  ggplot(aes(x = corrected_id,
+             y = rel_abun,
+             fill = fct_reorder(its2_prof, genus))) +
+  geom_bar(stat = "identity",
+           position = "fill",
+           width = 1) +
+  facet_grid(cols = vars(species),
+             scale = "free",
+             space = "free") +
+  scale_y_continuous(expand = c(0,0)) +
+  scale_x_discrete(expand = c(0,0)) + 
+  theme_bw() +
+  theme(legend.position = "bottom",
+        axis.ticks.x = element_blank(),
+        axis.text.x = element_blank(),
+        strip.background = element_blank(),
+        axis.title.x = element_blank())
+
+# Manual coloring (A - 5, C - 17, D - 11)
+its2_prof_A <- 
+  colorRampPalette(c("#433F79", "#746FB4", "#D2D0E6"))(5)
+
+its2_prof_C <- 
+  colorRampPalette(c("#1C576E", "#267798", "#62B6D8", "#15654C", "#209E77", "#96EAD0"))(17)
+
+its2_prof_D <- 
+  colorRampPalette(c("#8C3306", "#E4530A", "#F9A073", "#A87D04", "#E7AB06", "#FCDE88"))(11)
+
+its2_prof_colors <- 
+  c(its2_prof_A, its2_prof_C, its2_prof_D)
+
+its2_prof_p <- 
+  its2_prof_3 |> 
+  ggplot(aes(x = corrected_id,
+             y = rel_abun,
+             fill = fct_reorder(its2_prof, genus))) +
+  geom_col(width = 1.1) +
+  facet_grid(cols = vars(fct_relevel(species,
+                                     c("Hpor", "Hhip", "Tgig", "Tder", "Tmax",
+                                       "Tnoa", "Tsqu", "Tcro"))),
+             rows = vars(genus),
+             scale = "free_x",
+             space = "free") +
+  scale_y_continuous(expand = c(0,0)) +
+  scale_x_discrete(expand = c(0,0)) + 
+  theme_bw() +
+  theme(legend.position = "bottom",
+        axis.ticks.x = element_blank(),
+        axis.text.x = element_blank(),
+        strip.background = element_blank(),
+        axis.title.x = element_blank(),
+        legend.title = element_blank(),
+        panel.grid = element_blank(),
+        legend.text = element_text(size = 6),
+        strip.text = element_text(size = 6),
+        legend.key.size = unit(0.35, "cm"),
+        axis.text.y = element_text(size = 6),
+        legend.key.spacing.y = unit(0.05, "cm"),
+        panel.spacing = unit(0.1, "cm")) +
+  scale_fill_manual(values = its2_prof_colors) +
+  guides(fill = guide_legend(nrow = 5))
+
+its2_prof_p |> 
+  ggsave(filename = "its2_prof_rel_abun.svg", 
+         dpi = 900,
+         width = 17.75, 
+         height = 6,
+         unit = "cm")
+```

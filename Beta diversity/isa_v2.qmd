@@ -1,0 +1,426 @@
+---
+title: "indicspecies"
+format: html
+theme: 
+  light: zephyr
+  dark: cyborg
+toc: true
+page-layout: full
+number-sections: true
+number-depth: 3
+editor: visual
+self-contained: true
+---
+
+# Load pkgs
+
+```{r}
+pacman::p_load("tidyverse",
+               "indicspecies",
+               "vegan",
+               "compositions",
+               "janitor",
+               cowplot)
+```
+
+# Load data
+
+```{r}
+# DIVs
+divs <- 
+  read_tsv("../DIVs.txt",col_names = T) |> 
+  pull(div)
+
+# ITS2 sequences
+its2 <- 
+  read_tsv("../raw_data/20250829T091611/post_med_seqs/4_first_analysis_20250829T091611.seqs.absolute.abund_and_meta.txt")
+
+its2_1 <- 
+  its2 |> 
+  drop_na()  |> 
+  filter(post_med_unique != 0) |> 
+  select(!c(1, 3:39))
+
+sample_clean <- # samples with ITS2
+  its2_1 |> 
+  pull(sample_name)
+
+its2_2 <-
+  its2_1 |>
+  pivot_longer(!sample_name,
+               names_to = "its2",
+               values_to = "count") |> 
+  filter(its2 %in% divs)
+
+# Metadata
+metadata <- 
+  read_csv("metadata_all_clean.csv")
+
+metadata_1 <- # clean meatdata
+  metadata |> 
+  filter(sample_name %in% sample_clean) |> 
+  arrange(sample_name)
+
+its2_3 <- 
+  its2_2 |> 
+  left_join(metadata_1)
+```
+
+# ISA
+
+Species.
+
+```{r}
+its2_isa <- 
+  its2_2 |> 
+  pivot_wider(names_from = "its2",
+              values_from = "count") |> 
+  arrange(sample_name) |> 
+  column_to_rownames("sample_name")
+
+its2_isa_species_meta <- 
+  metadata_1 |> 
+  arrange(sample_name) |> 
+  pull(species) |> 
+  factor()
+
+# Run ISA
+its2_isa_species <- 
+  multipatt(its2_isa, its2_isa_species_meta, 
+                    control = how(nperm=999),
+            duleg = TRUE)
+
+its2_isa_species_sum <- 
+  its2_isa_species$sign |> 
+  filter(p.value <= 0.05 & stat >= 0.5) |> 
+  rownames_to_column("its2") |> 
+  pivot_longer(!c(its2, p.value, index, stat),
+               names_to = "species",
+               values_to = "count") |> 
+  filter(count != 0)
+
+summary(its2_isa_species, indvalcomp = TRUE)
+
+# Indicator ITS2
+its2_indicator_species <- 
+  its2_isa_species_sum |> 
+  pull(its2)
+```
+
+Region.
+
+```{r}
+its2_isa_region_meta <- 
+  metadata_1 |> 
+  arrange(sample_name) |> 
+  pull(region) |> 
+  factor()
+
+# Run ISA
+its2_isa_region <- 
+  multipatt(its2_isa, its2_isa_region_meta, 
+                    control = how(nperm=999),
+            duleg = TRUE)
+
+its2_isa_region_sum <- 
+  its2_isa_region$sign |> 
+  filter(p.value <= 0.05 & stat >= 0.5) |> 
+  rownames_to_column("its2") |> 
+  pivot_longer(!c(its2, p.value, index, stat),
+               names_to = "region",
+               values_to = "count") |> 
+  filter(count != 0)
+
+summary(its2_isa_region, indvalcomp = TRUE)
+
+# Indicator ITS2
+its2_indicator_region <- 
+  its2_isa_region_sum |> 
+  pull(its2)
+```
+
+Biogeographic region.
+
+```{r}
+its2_isa_bio_region_meta <- 
+  metadata_1 |> 
+  arrange(sample_name) |> 
+  pull(bio_region) |> 
+  factor()
+
+# Run ISA
+its2_isa_bio_region <- 
+  multipatt(its2_isa, its2_isa_bio_region_meta, 
+                    control = how(nperm=999),
+            duleg = TRUE)
+
+its2_isa_bio_region_sum <- 
+  its2_isa_bio_region$sign |> 
+  filter(p.value <= 0.05 & stat >= 0.5) |> 
+  rownames_to_column("its2") |> 
+  pivot_longer(!c(its2, p.value, index, stat),
+               names_to = "bio_region",
+               values_to = "count") |> 
+  filter(count != 0)
+
+summary(its2_isa_bio_region, indvalcomp = TRUE)
+
+# Indicator ITS2
+its2_indicator_bio_region <- 
+  its2_isa_bio_region_sum |> 
+  pull(its2)
+```
+
+Thermal regime.
+
+```{r}
+its2_isa_thermal_cluster_meta <- 
+  metadata_1 |> 
+  arrange(sample_name) |> 
+  pull(thermal_cluster) |> 
+  factor()
+
+# Run ISA
+its2_isa_thermal_cluster <- 
+  multipatt(its2_isa, its2_isa_thermal_cluster_meta, 
+                    control = how(nperm=999),
+            duleg = TRUE)
+
+its2_isa_thermal_cluster_sum <- 
+  its2_isa_thermal_cluster$sign |> 
+  filter(p.value <= 0.05 & stat >= 0.5) |> 
+  rownames_to_column("its2") |> 
+  pivot_longer(!c(its2, p.value, index, stat),
+               names_to = "thermal_cluster",
+               values_to = "count") |> 
+  filter(count != 0)
+
+summary(its2_isa_thermal_cluster, indvalcomp = TRUE)
+
+# Indicator ITS2
+its2_indicator_thermal_cluster <- 
+  its2_isa_thermal_cluster_sum |> 
+  pull(its2)
+```
+
+# Bubble plot
+
+## Tidy & plot
+
+Species.
+
+```{r}
+its2_species <- 
+  its2_3 |> 
+  filter(its2 %in% its2_indicator_species) |> 
+  group_by(corrected_id) |> 
+  mutate(rel_abun = count/sum(count)) |> 
+  ungroup() |> 
+  group_by(species, its2) |> 
+  summarise(ave_rel_abun = mean(rel_abun)) |> 
+  ungroup() |> 
+  mutate(genus = str_extract(its2, "[A-Za-z]+")) |> 
+  mutate(ave_rel_abun = if_else(ave_rel_abun == 0, NA, ave_rel_abun)) |> 
+  left_join((its2_isa_species_sum |> 
+               mutate(species = str_remove(species, "s.")))) |> 
+  mutate(significant = if_else(!is.na(p.value), "Yes", "No"))
+  
+  
+its2_species_plot <- 
+  its2_species |> 
+  ggplot(aes(x = fct_relevel(species,
+                             c("Hpor",
+                               "Hhip",
+                               "Tgig",
+                               "Tder",
+                               "Tmax",
+                               "Tnoa",
+                               "Tsqu",
+                               "Tcro")),
+             y = its2, 
+             size = ave_rel_abun,
+             color = significant)) +
+  geom_point() +
+  scale_size_continuous(limits = c(0,1),
+                        breaks = c(0.01, 0.25,0.5,0.75),
+                        range = c(1,10)) +
+  theme_bw() +
+  theme(strip.background = element_blank(),
+        axis.title = element_blank(),
+        axis.text = element_text(size = 7),
+        panel.spacing = unit(0.1, "lines"),
+        legend.position = "bottom",
+        legend.text.position = "bottom") +
+  facet_grid(rows = vars(genus),
+             scales = "free",
+             space = "free") +
+  scale_color_manual(values = c("Yes" = "#559853",
+                                "No" = "#D3D5D3")) +
+  guides(color = "none")
+```
+
+Region.
+
+```{r}
+its2_region <- 
+  its2_3 |> 
+  filter(its2 %in% its2_indicator_region) |> 
+  group_by(corrected_id) |> 
+  mutate(rel_abun = count/sum(count)) |> 
+  ungroup() |> 
+  drop_na() |> 
+  group_by(region, its2) |> 
+  summarise(ave_rel_abun = mean(rel_abun)) |> 
+  ungroup() |> 
+  mutate(genus = str_extract(its2, "[A-Za-z]+")) |> 
+  mutate(ave_rel_abun = if_else(ave_rel_abun == 0, NA, ave_rel_abun)) |> 
+  left_join((its2_isa_region_sum |> 
+               mutate(region = str_remove(region, "s.")))) |> 
+  mutate(significant = if_else(!is.na(p.value), "Yes", "No"))
+
+its2_region_plot <- 
+  its2_region |> 
+  ggplot(aes(x = fct_relevel(region,
+                             c("Cal",
+                               "Sam",
+                               "Ant",
+                               "Pal",
+                               "Ala",
+                               "ARN",
+                               "Bat",
+                               "Bol",
+                               "Zam",
+                               "Cam",
+                               "Boh")),
+             y = its2, 
+             size = ave_rel_abun,
+             color = significant)) +
+  geom_point() +
+  scale_size_continuous(limits = c(0,1),
+                        breaks = c(0.01, 0.25,0.5,0.75),
+                        range = c(1,10)) +
+  theme_bw() +
+  theme(strip.background = element_blank(),
+        axis.title = element_blank(),
+        axis.text = element_text(size = 7),
+        panel.spacing = unit(0.1, "lines"),
+        legend.position = "bottom",
+        legend.text.position = "bottom") +
+  facet_grid(rows = vars(genus),
+             scales = "free",
+             space = "free") +
+  scale_color_manual(values = c("Yes" = "#559853",
+                                "No" = "#D3D5D3")) +
+  guides(color = "none")
+```
+
+Biogeographic region.
+
+```{r}
+its2_bio_region <- 
+  its2_3 |> 
+  filter(its2 %in% its2_indicator_bio_region) |> 
+  group_by(corrected_id) |> 
+  mutate(rel_abun = count/sum(count)) |> 
+  ungroup() |> 
+  drop_na() |> 
+  group_by(bio_region, its2) |> 
+  summarise(ave_rel_abun = mean(rel_abun)) |> 
+  ungroup() |> 
+  mutate(genus = str_extract(its2, "[A-Za-z]+")) |> 
+  mutate(ave_rel_abun = if_else(ave_rel_abun == 0, NA, ave_rel_abun)) |> 
+  left_join((its2_isa_bio_region_sum |> 
+               mutate(bio_region = str_remove(bio_region, "s.")))) |> 
+  mutate(significant = if_else(!is.na(p.value), "Yes", "No"))
+
+its2_bio_region_plot <- 
+  its2_bio_region |> 
+  ggplot(aes(x = bio_region,
+             y = its2, 
+             size = ave_rel_abun,
+             color = significant)) +
+  geom_point() +
+  scale_size_continuous(limits = c(0,1),
+                        breaks = c(0.01, 0.25,0.5,0.75),
+                        range = c(1,10)) +
+  theme_bw() +
+  theme(strip.background = element_blank(),
+        axis.title = element_blank(),
+        axis.text = element_text(size = 7),
+        panel.spacing = unit(0.1, "lines"),
+        legend.position = "bottom",
+        legend.text.position = "bottom") +
+  facet_grid(rows = vars(genus),
+             scales = "free",
+             space = "free") +
+  scale_color_manual(values = c("Yes" = "#559853",
+                                "No" = "#D3D5D3")) +
+  guides(color = "none")
+```
+
+Thermal regime.
+
+```{r}
+its2_thermal_cluster <- 
+  its2_3 |> 
+  filter(its2 %in% its2_indicator_thermal_cluster) |> 
+  group_by(sample_name) |> 
+  mutate(rel_abun = count/sum(count)) |> 
+  ungroup() |> 
+  drop_na() |> 
+  group_by(thermal_cluster, its2) |> 
+  summarise(ave_rel_abun = mean(rel_abun)) |> 
+  ungroup() |> 
+  mutate(genus = str_extract(its2, "[A-Za-z]+")) |> 
+  mutate(ave_rel_abun = if_else(ave_rel_abun == 0, NA, ave_rel_abun)) |> 
+  left_join((its2_isa_thermal_cluster_sum |> 
+               mutate(thermal_cluster = str_remove(thermal_cluster, "s.")))) |> 
+  mutate(significant = if_else(!is.na(p.value), "Yes", "No"))
+
+its2_thermal_cluster_plot <- 
+  its2_thermal_cluster |> 
+  ggplot(aes(x = thermal_cluster,
+             y = its2, 
+             size = ave_rel_abun,
+             color = significant)) +
+  geom_point() +
+  scale_size_continuous(limits = c(0,1),
+                        breaks = c(0.01, 0.25,0.5,0.75),
+                        range = c(1,10)) +
+  theme_bw() +
+  theme(strip.background = element_blank(),
+        axis.title = element_blank(),
+        axis.text = element_text(size = 7),
+        panel.spacing = unit(0.1, "lines"),
+        legend.position = "bottom",
+        legend.text.position = "bottom") +
+  facet_grid(rows = vars(genus),
+             scales = "free",
+             space = "free")+
+  scale_color_manual(values = c("Yes" = "#559853",
+                                "No" = "#D3D5D3")) +
+  guides(color = "none")
+```
+
+Merge.
+
+```{r}
+its2_isa_plot_merged <- 
+  plot_grid(its2_species_plot,
+            its2_region_plot,
+            its2_bio_region_plot,
+            its2_thermal_cluster_plot,
+            axis = "tblr", 
+            align = "hv")
+```
+
+Save.
+
+```{r}
+its2_isa_plot_merged |> 
+  ggsave(filename = "isa_all_v2.svg", 
+         dpi = 900,
+         width = 18, 
+         height = 20,
+         unit = "cm")
+```

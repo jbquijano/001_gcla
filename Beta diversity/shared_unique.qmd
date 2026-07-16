@@ -1,0 +1,315 @@
+---
+title: "shared_unique"
+format: html
+theme: 
+  light: zephyr
+  dark: cyborg
+toc: true
+page-layout: full
+number-sections: true
+number-depth: 3
+editor: visual
+self-contained: true
+---
+
+# Load pkgs
+
+```{r}
+pacman::p_load(tidyverse,
+               ggupset,
+               janitor,
+               cowplot)
+```
+
+# Load data
+
+```{r}
+# ITS2 type profile
+its2_prof <- 
+  read_tsv("../raw_data/20250829T091611/its2_type_profiles/4_first_analysis_20250829T091611.profiles.absolute.abund_and_meta.txt")
+
+its2_prof_1 <- # tidy
+  its2_prof |> 
+  slice(-(1:5)) %>% # Remove first 5 rows (unnecessary rows)
+  row_to_names(1) |>  # Move first row to column header
+  rename(sample_name = 2) |>  # Name 2nd column
+  select(-1) |>  # Remove first column (unneeded)
+  drop_na() |> 
+  type_convert() 
+
+its2_prof_2 <- 
+  its2_prof_1 |> 
+  rowwise() |> 
+  mutate(total = sum(c_across(A3:`1510`), na.rm = TRUE)) |> 
+  filter(total != 0)
+
+sample_clean <- # samples with ITS2
+  its2_prof_2 |> 
+  pull(sample_name)
+
+# Metadata
+metadata <- 
+  read_csv("metadata_all_clean.csv")
+
+metadata_1 <- # clean meatdata
+  metadata |> 
+  filter(sample_name %in% sample_clean)
+
+# Get manually renamed ITS2 type profiles
+its2_rename <- 
+  read_csv("../Alpha diversity/edited_its2prof_naming.csv")
+```
+
+# Tidy
+
+Species
+
+```{r}
+its2_prof_upset_species <- 
+  its2_prof_2 |> 
+  select(!total) |> 
+  pivot_longer(!sample_name,
+               names_to = "its2_prof",
+               values_to = "count") |> 
+  left_join(its2_rename) |> 
+  select(!its2_prof) |> 
+  rename(its2_prof = edited) |> 
+  left_join(metadata_1) |> 
+  group_by(its2_prof,
+           species) |> 
+  summarise(total = sum(count)) |> 
+  ungroup() |> 
+  pivot_wider(names_from = its2_prof,
+              values_from = total) |>  
+  mutate_if(is.numeric, as.logical) |> 
+  pivot_longer(!species,
+               names_to = 'its2_prof',
+               values_to = 'logic') |> 
+  filter(logic) %>% 
+  select(-logic) |> 
+  group_by(its2_prof) |> 
+  summarize(species = list(species))
+```
+
+Region.
+
+```{r}
+its2_prof_upset_region <- 
+  its2_prof_2 |> 
+  select(!total) |> 
+  pivot_longer(!sample_name,
+               names_to = "its2_prof",
+               values_to = "count") |> 
+  left_join(its2_rename) |> 
+  select(!its2_prof) |> 
+  rename(its2_prof = edited) |> 
+  left_join(metadata_1) |> 
+  group_by(its2_prof,
+           region) |> 
+  summarise(total = sum(count)) |> 
+  ungroup() |> 
+  pivot_wider(names_from = its2_prof,
+              values_from = total) |>  
+  mutate_if(is.numeric, as.logical) |> 
+  pivot_longer(!region,
+               names_to = 'its2_prof',
+               values_to = 'logic') |> 
+  filter(logic) %>% 
+  select(-logic) |> 
+  group_by(its2_prof) |> 
+  summarize(region = list(region))
+```
+
+Biogeographic region.
+
+```{r}
+its2_prof_upset_bio_region <- 
+  its2_prof_2 |> 
+  select(!total) |> 
+  pivot_longer(!sample_name,
+               names_to = "its2_prof",
+               values_to = "count") |> 
+  left_join(its2_rename) |> 
+  select(!its2_prof) |> 
+  rename(its2_prof = edited) |> 
+  left_join(metadata_1) |> 
+  group_by(its2_prof,
+           bio_region) |> 
+  summarise(total = sum(count)) |> 
+  ungroup() |> 
+  pivot_wider(names_from = its2_prof,
+              values_from = total) |>  
+  mutate_if(is.numeric, as.logical) |> 
+  pivot_longer(!bio_region,
+               names_to = 'its2_prof',
+               values_to = 'logic') |> 
+  filter(logic) %>% 
+  select(-logic) |> 
+  group_by(its2_prof) |> 
+  summarize(bio_region = list(bio_region))
+```
+
+Thermal regimes.
+
+```{r}
+its2_prof_upset_thermal_cluster <- 
+  its2_prof_2 |> 
+  select(!total) |> 
+  pivot_longer(!sample_name,
+               names_to = "its2_prof",
+               values_to = "count") |> 
+  left_join(its2_rename) |> 
+  select(!its2_prof) |> 
+  rename(its2_prof = edited) |> 
+  left_join(metadata_1) |> 
+  group_by(its2_prof,
+           thermal_cluster) |> 
+  summarise(total = sum(count)) |> 
+  ungroup() |> 
+  pivot_wider(names_from = its2_prof,
+              values_from = total) |>  
+  mutate_if(is.numeric, as.logical) |> 
+  pivot_longer(!thermal_cluster,
+               names_to = 'its2_prof',
+               values_to = 'logic') |> 
+  filter(logic) %>% 
+  select(-logic) |> 
+  group_by(its2_prof) |> 
+  summarize(thermal_cluster = list(thermal_cluster))
+```
+
+# Plot
+
+Species.
+
+```{r}
+its2_prof_upset_species_plot <-
+  its2_prof_upset_species |> 
+  ggplot(aes(x = species)) +
+  geom_bar() +
+  scale_x_upset() +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.1),
+                                        add = 0))  +
+  geom_text(
+    aes(label=after_stat(count)),
+    stat='Count',
+    vjust=-1,
+    size = 2) +
+  theme_classic() +
+  theme(panel.grid = element_blank(),
+        axis.title = element_blank(),
+        plot.margin = margin(0.5,0,0,1,
+                             unit ='cm'),
+        axis.line.x = element_blank(),
+        axis.ticks.x = element_blank(),
+        axis.text.x = element_text(size = 7),
+        axis.text.y = element_text(size = 7)) +
+  theme_combmatrix(combmatrix.panel.point.size = 1.5,
+                   combmatrix.panel.line.size = 0.5)
+```
+
+Region.
+
+```{r}
+its2_prof_upset_region_plot <-
+  its2_prof_upset_region |> 
+  ggplot(aes(x = region)) +
+  geom_bar() +
+  scale_x_upset() +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.1),
+                                        add = 0))  +
+  geom_text(
+    aes(label=after_stat(count)),
+    stat='Count',
+    vjust=-1,
+    size = 2) +
+  theme_classic() +
+  theme(panel.grid = element_blank(),
+        axis.title = element_blank(),
+        plot.margin = margin(0.5,0,0,1,
+                             unit ='cm'),
+        axis.line.x = element_blank(),
+        axis.ticks.x = element_blank(),
+        axis.text.x = element_text(size = 7),
+        axis.text.y = element_text(size = 7)) +
+  theme_combmatrix(combmatrix.panel.point.size = 1.5,
+                   combmatrix.panel.line.size = 0.5)
+```
+
+Biogeographic region.
+
+```{r}
+its2_prof_upset_bio_region_plot <-
+  its2_prof_upset_bio_region |> 
+  ggplot(aes(x = bio_region)) +
+  geom_bar() +
+  scale_x_upset() +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.1),
+                                        add = 0))  +
+  geom_text(
+    aes(label=after_stat(count)),
+    stat='Count',
+    vjust=-1,
+    size = 2) +
+  theme_classic() +
+  theme(panel.grid = element_blank(),
+        axis.title = element_blank(),
+        plot.margin = margin(0.5,0,0,1,
+                             unit ='cm'),
+        axis.line.x = element_blank(),
+        axis.ticks.x = element_blank(),
+        axis.text.x = element_text(size = 7),
+        axis.text.y = element_text(size = 7)) +
+  theme_combmatrix(combmatrix.panel.point.size = 1.5,
+                   combmatrix.panel.line.size = 0.5)
+```
+
+Thermal regimes.
+
+```{r}
+its2_prof_upset_thermal_cluster_plot <-
+  its2_prof_upset_thermal_cluster |> 
+  ggplot(aes(x = thermal_cluster)) +
+  geom_bar() +
+  scale_x_upset() +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.1),
+                                        add = 0))  +
+  geom_text(
+    aes(label=after_stat(count)),
+    stat='Count',
+    vjust=-1,
+    size = 2) +
+  theme_classic() +
+  theme(panel.grid = element_blank(),
+        axis.title = element_blank(),
+        plot.margin = margin(0.5,0,0,1,
+                             unit ='cm'),
+        axis.line.x = element_blank(),
+        axis.ticks.x = element_blank(),
+        axis.text.x = element_text(size = 7),
+        axis.text.y = element_text(size = 7)) +
+  theme_combmatrix(combmatrix.panel.point.size = 1.5,
+                   combmatrix.panel.line.size = 0.5)
+```
+
+Merge.
+
+```{r}
+its2_prof_upset_merged_plot <- 
+  plot_grid(its2_prof_upset_species_plot,
+          its2_prof_upset_region_plot,
+          its2_prof_upset_bio_region_plot,
+          its2_prof_upset_thermal_cluster_plot,
+          rel_heights = c(1.75, 1))
+```
+
+Save.
+
+```{r}
+its2_prof_upset_merged_plot |> 
+  ggsave(filename = "upset_all.svg", 
+         dpi = 900,
+         width = 18, 
+         height = 13,
+         unit = "cm")
+```
