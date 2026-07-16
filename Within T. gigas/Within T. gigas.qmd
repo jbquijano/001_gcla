@@ -1,0 +1,544 @@
+---
+title: "Within T. gigas"
+format: html
+theme: 
+  light: zephyr
+  dark: cyborg
+toc: true
+page-layout: full
+number-sections: true
+number-depth: 3
+editor: visual
+self-contained: true
+---
+
+# Notes
+
+A naming convention for dataframes was made.
+
+1.  Objects were named with a prefix per section arranged alphabetically.
+2.  A 2nd prefix was added to arrange all the data accordingly:
+    -   Dataframes: .**1**
+    -   Plots: .**2**
+    -   Stats: .**3** (those in dataframe format)
+    -   Others:
+        -   Vectors: .**vec**
+        -   Trees: .**tre**
+        -   Distances: .**dis**
+        -   Functions: .**fun**
+3.  If a dataframe will be used multiple times in case a raw dataframe is needed and an edited one should not supersede the raw one, add a suffix at the end (i.e., **\_1** for first edit, **\_2** for second....).
+4.  Limit 3rd prefix names to three letters and if 2 prefixes are needed, separate with "**.**".
+5.  If an object is just an auxiliary object, put a **Z** prefix.
+
+# Load pkgs
+
+```{r}
+pacman::p_load(vegan,
+               tidyverse,
+               janitor,
+               rstatix,
+               ggh4x,
+               pairwiseAdonis,
+               viridis,
+               tidytext,
+               ggthemes,
+               ggtree,
+               ape)
+```
+
+# Community
+
+Load data.
+
+```{r}
+# ITS2 community
+A.1_ITS2 <- read_tsv("../raw_data/20250829T091611/post_med_seqs/4_first_analysis_20250829T091611.seqs.absolute.abund_and_meta.txt")
+
+A.1_ITS2_1 <- 
+  A.1_ITS2 |> 
+  drop_na()  |> 
+  filter(post_med_unique != 0) |> 
+  select(!c(1, 3:39))
+
+# Metadata
+A.1_Metadata <- 
+  readxl::read_xlsx("../metadata/metadata_20251021.xlsx")
+
+A.1_Metadata_1 <- 
+  A.1_Metadata |> 
+  rename(sample_name = SymportalID)
+
+A.1_Metadata_2 <- # full metadata
+  A.1_Metadata_1 |> 
+  filter(sample_name %in% (A.1_ITS2_1 |> pull(sample_name))) |> 
+  arrange(CorrectID)
+
+A.1_Metadata_3 <- # for filtering
+  A.1_Metadata_2 |> 
+  filter(sample_name %in% (A.1_ITS2_1 |> pull(sample_name))) |> 
+  select(sample_name, CorrectID, Species, region) |> 
+  arrange(CorrectID)
+
+A.1_Metadata_4 <- # for filtering dbRDA
+  A.1_Metadata_2 |> 
+  filter(sample_name %in% (A.1_ITS2_1 |> pull(sample_name))) |> 
+  filter(Species == "T. gigas")
+
+# Merge
+A.1_ITS2_2 <- 
+  A.1_Metadata_3 |> 
+  left_join(A.1_ITS2_1) |> 
+  filter(Species == "T. gigas")
+```
+
+NMDS.
+
+```{r}
+B.1_ITS2 <- 
+  A.1_ITS2_2 |> 
+  select(!c(1,3,4)) |> 
+  arrange(CorrectID)
+
+B.1_ITS2_1 <- # turn into a matrix
+  B.1_ITS2 |> 
+  column_to_rownames("CorrectID") |> 
+  sqrt()
+
+B.1_ITS2_2 <- # turn into a distance
+  B.1_ITS2_1 |> 
+  vegdist(method = "bray")
+
+## Do NMDS
+B.1_ITS2NMDS <- 
+  B.1_ITS2_2 |> 
+  metaMDS(k = 2)
+
+B.1_ITS2NMDS_1 <- # tidy NMDS data
+  as.data.frame(scores(B.1_ITS2NMDS)) |> 
+  rownames_to_column("CorrectID")
+
+B.1_ITS2NMDS_2 <- # add metadata
+  A.1_Metadata_3 |> 
+  left_join(B.1_ITS2NMDS_1) |> 
+  drop_na()
+```
+
+Plot.
+
+```{r}
+B.2_ITS2NMDS <- 
+  B.1_ITS2NMDS_2 |> 
+  ggplot(aes(x = NMDS1, y = NMDS2)) +
+  geom_hline(yintercept = 0,
+             color = 'darkgray',
+             linetype = 'dashed',
+             linewidth = 0.25) +
+  geom_vline(xintercept = 0,
+             color = 'darkgray',
+             linetype = 'dashed',
+             linewidth = 0.25) +
+  geom_point(aes(color = region),
+             size = 3) +
+  labs(x = "NMDS1",
+       y = "NMDS2",
+       color = "Region") +
+  scale_color_manual(values = 
+                       c("Alaminos"="#E41A1C",
+                         "Antique"="#377EB8",
+                         "ARNP"="#4DAF4A",
+                         "Batangas"="#984EA3",
+                         "Bohol"="#FF7F00",
+                         "Bolinao"="#FFFF33",
+                         "Calaguas"="#A65628",
+                         "Camiguin"="#F781BF",
+                         "Palawan"="#999999",
+                         "Samar"="#66C2A5",
+                         "Zambales"="#FC8D62")) +
+  theme_bw() +
+  theme(panel.grid = element_blank(),
+        strip.background = element_blank(),
+        axis.ticks = element_blank(),
+        axis.text = element_blank(),
+        axis.line = element_line(),panel.background    = element_rect(fill = "transparent", colour = NA),
+        plot.background     = element_rect(fill = "transparent", colour = NA),
+        legend.background   = element_rect(fill = "transparent", colour = NA),
+        legend.box.background = element_rect(fill = "transparent", colour = NA),
+        legend.position = "right",
+        strip.text = element_text(face = "italic")) +
+  coord_equal()
+
+# Save
+B.2_ITS2NMDS |> 
+  ggsave(filename = "NMDS - Within Tgig - With Legend.svg", 
+         dpi = 900,
+         width = 17, 
+         height = 8,
+         unit = "cm")
+```
+
+PERMANOVA.
+
+```{r}
+B.3_PERMANOVA <- 
+  adonis2(B.1_ITS2_2 ~ region, 
+          A.1_Metadata_4,
+          permutations = 9999)
+
+B.3_PERMANOVAPwise <- # Pairwise PERMANOVA
+  pairwise.adonis2(B.1_ITS2_2 ~ region,
+                   data = A.1_Metadata_4,
+                   nperm = 9999)
+
+# Script to tidy PERMANOVA results
+Z.fun_PPERMANOVACleaner <- 
+  function(pmanova_res){
+    a <- 
+      pmanova_res[-1] |> 
+      bind_rows(.id = 'groups') |> 
+      drop_na() %>%
+      .$`Pr(>F)` |> 
+      p.adjust(method = 'BH') 
+    
+    b <- 
+      unique(pmanova_res[-1] |> 
+               bind_rows(.id = 'groups'))$groups |> 
+      unique()
+      
+    d <- 
+       a %>% 
+        data.frame(b,.) |> 
+        rename('groups' = 1,
+               `P-adjusted` = 2) %>% 
+        left_join(pmanova_res[-1] |> 
+                    bind_rows(.id = 'groups'), 
+                  ., 
+                  by = 'groups') |> 
+        mutate(`P-adjusted` = case_when(is.na(`Pr(>F)`) ~ NA,
+                                        .default = `P-adjusted`)) |> 
+        mutate(Parameter = rep(c('Species', 'Residual', 'Total'), length.out = n())) |> 
+        relocate(last_col(), .after = 1)
+    
+    return(d)
+  }
+
+B.3_PERMANOVAPwise_1 <- # tidy
+  B.3_PERMANOVAPwise |> 
+  Z.fun_PPERMANOVACleaner()
+
+B.3_PERMANOVAPwise_1 |> 
+  write_csv("SourceVsTranplants.csv")
+```
+
+PERMDISP.
+
+```{r}
+B.1_PERMDISP <- 
+  betadisper(B.1_ITS2_2, 
+             group = (A.1_Metadata_4 |>
+                        filter(CorrectID %in% (A.1_ITS2_2 |>
+                                                 pull(CorrectID))))[["region"]]) |> 
+  anova()
+```
+
+# ITS2 type profile
+
+```{r}
+B.1_ITS2TypeProf <- 
+  read_tsv("../raw_data/20250829T091611/its2_type_profiles/4_first_analysis_20250829T091611.profiles.absolute.abund_and_meta.txt")
+
+B.1_ITS2TypeProf_1 <- # tidy
+  B.1_ITS2TypeProf |> 
+  slice(-(1:5)) %>% # Remove first 5 rows (unnecessary rows)
+  row_to_names(1) |>  # Move first row to column header
+  rename(sample_name = 2) |>  # Name 2nd column
+  select(-1) |>  # Remove first column (unneeded)
+  drop_na() |> 
+  type_convert() 
+
+B.1_ITS2TypeProf_2 <- 
+  A.1_Metadata_4 |> 
+  select(sample_name, CorrectID, Species, region) |> 
+  left_join(B.1_ITS2TypeProf_1) |> 
+  select(!sample_name)
+
+B.1_ITS2TypeProf_3 <- 
+  B.1_ITS2TypeProf_2 |> 
+  pivot_longer(!1:3) |> 
+  filter(value > 0)
+
+B.1_ITS2TypeProf_4 <- 
+  B.1_ITS2TypeProf_3 |> 
+  distinct(name) |> 
+  pull(name)
+```
+
+Arrange based on ITS2 type profile clustering.
+
+```{r}
+# ITS2 type profile
+## Cladocopium
+# read distance matrix
+B.1_Claodcopium <- 
+  read_tsv("../raw_data/20250829T091611/between_profile_distances/C/20250829T091611_unifrac_profile_distances_C_sqrt.dist",
+           col_names = F) |> 
+  select(!2)
+
+B.1_ClaodcopiumNames <- 
+  B.1_Claodcopium |> 
+  pull(X1)
+
+B.1_ClaodcopiumNames <- 
+  c("ITS2TypeProf", B.1_ClaodcopiumNames)
+
+B.1_Claodcopium <- 
+  B.1_Claodcopium |> 
+  set_names(B.1_ClaodcopiumNames)
+
+B.1_ClaodcopiumNames2 <- 
+  B.1_Claodcopium |> 
+  filter(ITS2TypeProf %in% B.1_ITS2TypeProf_4) |> 
+  pull(ITS2TypeProf)
+
+B.1_ClaodcopiumNames2 <- 
+  c("ITS2TypeProf", B.1_ClaodcopiumNames2)
+
+B.1_Claodcopium <- 
+  B.1_Claodcopium |> 
+  filter(ITS2TypeProf %in% B.1_ClaodcopiumNames2) |> 
+  select(all_of(B.1_ClaodcopiumNames2)) |> 
+  column_to_rownames("ITS2TypeProf")
+
+# distance object
+B.1_Claodcopium_2 <- as.dist(B.1_Claodcopium)
+
+# UPGMA
+B.1_Claodcopium_3 <- 
+  hclust(B.1_Claodcopium_2,
+         method = "average") |> 
+  as.phylo()
+
+# ggtree plot
+B.1_Claodcopium_4 <- 
+  B.1_Claodcopium_3 |> 
+  ggtree() +
+  coord_cartesian(clip = "off")+
+  xlim(0, max(B.1_Claodcopium_3$edge.length) + 0.01)
+
+# Save
+B.1_Claodcopium_4 |> 
+  ggsave(filename = "Tree - Within Tgig - C.svg", 
+         dpi = 900,
+         width = 2, 
+         height = 3.25,
+         unit = "cm")
+
+B.1_Claodcopium_5 <- # tip order
+  B.1_Claodcopium_4$data |>
+  dplyr::filter(isTip) |>
+  dplyr::arrange(y) |>
+  dplyr::pull(label)
+
+
+## Durusdinium
+# read distance matrix
+B.1_Durusdinium <- 
+  read_tsv("../raw_data/20250829T091611/between_profile_distances/D/20250829T091611_unifrac_profile_distances_D_sqrt.dist",
+           col_names = F) |> 
+  select(!2)
+
+B.1_DurusdiniumNames <- 
+  B.1_Durusdinium |> 
+  pull(X1)
+
+B.1_DurusdiniumNames <- 
+  c("ITS2TypeProf", B.1_DurusdiniumNames)
+
+B.1_Durusdinium <- 
+  B.1_Durusdinium |> 
+  set_names(B.1_DurusdiniumNames)
+
+B.1_DurusdiniumNames2 <- 
+  B.1_Durusdinium |> 
+  filter(ITS2TypeProf %in% B.1_ITS2TypeProf_4) |> 
+  pull(ITS2TypeProf)
+
+B.1_DurusdiniumNames2 <- 
+  c("ITS2TypeProf", B.1_DurusdiniumNames2)
+
+B.1_Durusdinium <- 
+  B.1_Durusdinium |> 
+  filter(ITS2TypeProf %in% B.1_DurusdiniumNames2) |> 
+  select(all_of(B.1_DurusdiniumNames2)) |> 
+  column_to_rownames("ITS2TypeProf")
+
+# distance object
+B.1_Durusdinium_2 <- as.dist(B.1_Durusdinium)
+
+# UPGMA
+B.1_Durusdinium_3 <- 
+  hclust(B.1_Durusdinium_2,
+         method = "average") |> 
+  as.phylo()
+
+# ggtree plot
+B.1_Durusdinium_4 <- 
+  B.1_Durusdinium_3 |> 
+  ggtree() +
+  coord_cartesian(clip = "off")+
+  xlim(0, max(B.1_Durusdinium_3$edge.length) + 0.01)
+
+# Save
+B.1_Durusdinium_4 |> 
+  ggsave(filename = "Tree - Within Tgig - D.svg", 
+         dpi = 900,
+         width = 4, 
+         height = 8,
+         unit = "cm")
+
+B.1_Durusdinium_5 <- # tip order
+  B.1_Durusdinium_4$data |>
+  dplyr::filter(isTip) |>
+  dplyr::arrange(y) |>
+  dplyr::pull(label)
+
+# Arrangement of ITS2 type profiles
+B.1_ITS2TypeProfNames <- 
+  c(B.1_Claodcopium_5, B.1_Durusdinium_5, "A3")
+```
+
+Plot.
+
+```{r}
+# Plot
+B.2_ITS2TypeProf <- 
+  B.1_ITS2TypeProf_3 |> 
+  group_by(CorrectID) |>
+  mutate(RelAbun = value/sum(value)) |> 
+  ungroup() |>
+  select(CorrectID, name, RelAbun) |> 
+  pivot_wider(names_from = name,
+              values_from = RelAbun,
+              values_fill = 0) |> 
+  pivot_longer(!1,
+               names_to = "ITS2TypeProf",
+               values_to = "RelAbun") |> 
+  mutate(RelAbun = sqrt(RelAbun),
+         Clade = str_extract(ITS2TypeProf, "[A-Z]")) |>
+  left_join(A.1_Metadata_4) |>
+  mutate(ITS2TypeProf = factor(ITS2TypeProf, levels = B.1_ITS2TypeProfNames)) |> 
+  ggplot(aes(x = CorrectID,
+             y = ITS2TypeProf,
+             fill = RelAbun)) +
+  geom_raster() +
+  facet_grid(cols = vars(region),
+             rows = vars(Clade),
+             space = "free",
+             scale = "free") +
+  scale_y_discrete(expand = c(0,0)) +
+  scale_x_discrete(expand = c(0,0)) +
+  theme_minimal() +
+  theme(legend.title = element_blank(),
+        strip.background = element_blank(),
+        panel.spacing = unit(0.2,'lines'),
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+        axis.text.y = element_text(size = 7, hjust = 0),
+        axis.title = element_blank(),
+        panel.grid = element_blank(),
+        legend.position = "bottom",) +
+  scale_fill_viridis(option = "cividis")
+
+# Save
+B.2_ITS2TypeProf |> 
+  ggsave(filename = "Tile - Within Tgig - With Legend.svg", 
+         dpi = 900,
+         width = 16, 
+         height = 7,
+         unit = "cm")
+```
+
+# PERMANOVA with covariates
+
+```{r}
+C.1_PERMANOVAApproxShellLength <- 
+  adonis2(B.1_ITS2_2 ~ ApproxShellLength, 
+          A.1_Metadata_4,
+          permutations = 9999)
+
+C.1_PERMANOVAApproxAge <- 
+  adonis2(B.1_ITS2_2 ~ ApproxAge, 
+          A.1_Metadata_4,
+          permutations = 9999)
+
+C.1_PERMANOVAAgeTransplanted <- 
+  adonis2(B.1_ITS2_2 ~ AgeTransplanted, 
+          A.1_Metadata_4,
+          permutations = 9999)
+```
+
+# Camiguin
+
+```{r}
+D.1_Metadata <- 
+  A.1_Metadata_3 |> 
+  filter(region == "Camiguin")
+
+D.1_ITS2TypeProf <- 
+  D.1_Metadata |> 
+  left_join(B.1_ITS2TypeProf_1)
+```
+
+Plot.
+
+```{r}
+# Tidy
+D.1_ITS2TypeProf_1 <- 
+  D.1_ITS2TypeProf |> 
+  pivot_longer(!1:4) |> 
+  group_by(CorrectID) |>
+  mutate(RelAbun = value/sum(value)) |> 
+  ungroup() |>
+  select(CorrectID, name, RelAbun) |> 
+  filter(RelAbun > 0) |> 
+  pivot_wider(names_from = name,
+              values_from = RelAbun,
+              values_fill = 0) |> 
+  pivot_longer(!1,
+               names_to = "ITS2TypeProf",
+               values_to = "RelAbun") |> 
+  mutate(RelAbun = sqrt(RelAbun),
+         Clade = str_extract(ITS2TypeProf, "[A-Z]")) |>
+  left_join(D.1_Metadata)
+
+# Plot
+D.2_ITS2TypeProf <- 
+  D.1_ITS2TypeProf_1 |> 
+  ggplot(aes(x = CorrectID,
+             y = ITS2TypeProf,
+             fill = RelAbun)) +
+  geom_tile(color = "white",
+            linewidth = 0.1) +
+  facet_grid(cols = vars(Species),
+             rows = vars(Clade),
+             space = "free",
+             scale = "free") +
+  scale_y_discrete(expand = c(0,0)) +
+  scale_x_discrete(expand = c(0,0)) +
+  theme_minimal() +
+  theme(legend.title = element_blank(),
+        strip.background = element_blank(),
+        panel.spacing = unit(0.2,'lines'),
+        axis.text.x = element_blank(),
+        axis.text.y = element_text(size = 7),
+        axis.title = element_blank(),
+        panel.grid = element_blank(),
+        legend.position = "bottom") +
+  scale_fill_viridis(option = "rocket")
+  
+# Save
+D.2_ITS2TypeProf |> 
+  ggsave(filename = "Tile - Within Camiguin - With Legend.svg", 
+         dpi = 900,
+         width = 17, 
+         height = 8,
+         unit = "cm")
+```

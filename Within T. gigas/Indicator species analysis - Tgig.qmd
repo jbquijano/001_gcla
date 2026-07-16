@@ -1,0 +1,369 @@
+---
+title: "Indicator species analysis - Tgig"
+format: html
+theme: 
+  light: zephyr
+  dark: cyborg
+toc: true
+page-layout: full
+number-sections: true
+number-depth: 3
+editor: visual
+self-contained: true
+---
+
+# Notes
+
+A naming convention for dataframes was made.
+
+1.  Objects were named with a prefix per section arranged alphabetically.
+2.  A 2nd prefix was added to arrange all the data accordingly:
+    -   Dataframes: .**1**
+    -   Plots: .**2**
+    -   Stats: .**3** (those in dataframe format)
+    -   Others:
+        -   Vectors: .**vec**
+        -   Trees: .**tre**
+        -   Distances: .**dis**
+        -   Functions: .**fun**
+3.  If a dataframe will be used multiple times in case a raw dataframe is needed and an edited one should not supersede the raw one, add a suffix at the end (i.e., **\_1** for first edit, **\_2** for second....).
+4.  Limit 3rd prefix names to three letters and if 2 prefixes are needed, separate with "**.**".
+5.  If an object is just an auxiliary object, put a **Z** prefix.
+
+# Load pkgs
+
+```{r}
+pacman::p_load("tidyverse",
+               "indicspecies",
+               "vegan",
+               "compositions",
+               "janitor")
+```
+
+# ITS2 sequences
+
+Load data.
+
+```{r}
+# ITS2 data
+A.1_ITS2 <- 
+  read_tsv("../raw_data/20250829T091611/post_med_seqs/4_first_analysis_20250829T091611.seqs.absolute.abund_and_meta.txt")
+
+A.1_ITS2_1 <- 
+  A.1_ITS2 |> 
+  drop_na()  |> 
+  filter(post_med_unique != 0) |> 
+  select(!c(1, 3:39))
+
+# Metadata
+A.1_Metadata <- 
+  readxl::read_xlsx("../metadata/metadata_20251021.xlsx")
+
+A.1_Metadata_1 <- # rename col ID
+  A.1_Metadata  |> 
+  select(c(1, 2, 3, 12)) |> 
+  rename(sample_name = 1)
+
+A.1_ITS2_2 <- 
+  A.1_ITS2_1 |> 
+  left_join(A.1_Metadata_1) |> 
+  relocate(sample_name, CorrectID, Species, region)
+
+A.1_Metadata_2 <- # filter metadata
+  A.1_Metadata_1 |>
+  filter(CorrectID %in% (A.1_ITS2_2 |> pull(CorrectID)))
+```
+
+Tidy data. Do not filter.
+
+```{r}
+B.1_ITS2 <- 
+  A.1_ITS2_2 |> 
+  arrange(CorrectID) |> 
+  select(-c(1,3,4)) |> 
+  column_to_rownames("CorrectID")
+```
+
+Filter to get the DIVs only.
+
+```{r}
+C.1_DIVs <- 
+  read_tsv("../DIVs.txt",col_names = F) |> 
+  pull()
+
+C.1_DIVs_1 <- 
+  A.1_ITS2_2 |> 
+  pivot_longer(-c(1:4),
+               names_to = "ITS2",
+               values_to = "Count") |> 
+  filter(ITS2 %in% C.1_DIVs) |> 
+  pivot_wider(names_from = "ITS2",
+              values_from = "Count") |> 
+  arrange(CorrectID) |> 
+  select(-c(1,3,4)) |> 
+  column_to_rownames("CorrectID")
+
+# Get Tgigs only
+C.1_DIVs_2 <- 
+  C.1_DIVs_1 |> 
+  rownames_to_column("CorrectID") |> 
+  filter(str_detect(CorrectID, pattern = "TG"))
+
+C.1_DIVs_3 <- # pivot longer
+  C.1_DIVs_2 |> 
+  pivot_longer(-1, names_to = "DIVs", values_to = "Count")
+
+C.1_DIVs_4 <- # get present DIVs
+  C.1_DIVs_3 |> 
+  group_by(DIVs) |> 
+  summarise(Sum = sum(Count)) |> 
+  ungroup() |> 
+  filter(Sum > 0) |> 
+  pull(DIVs)
+
+C.1_DIVs_5 <- # filter
+  C.1_DIVs_3 |>
+  filter(DIVs %in% C.1_DIVs_4)
+```
+
+# Comparison between regions
+
+Bolinao vs. Alaminos
+
+```{r}
+D.1_MetadataBolVsAla <- 
+  A.1_Metadata_2 |> 
+  filter(Species == "T. gigas",
+         region %in% c("Bolinao", "Alaminos")) |> 
+  arrange(CorrectID)
+
+D.1_DIVBolVsAla <- 
+  C.1_DIVs_3 |> 
+  filter(CorrectID %in% (D.1_MetadataBolVsAla |> pull(CorrectID))) |> 
+  pivot_wider(names_from = "DIVs",
+              values_from = "Count") |> 
+  arrange(CorrectID) |> 
+  column_to_rownames("CorrectID")
+
+D.1_MetadataBolVsAla_1 <- 
+  D.1_MetadataBolVsAla |> 
+  pull(region) |> 
+  factor()
+
+D.1_ISABolVsAla_1 <- 
+  multipatt(D.1_DIVBolVsAla, D.1_MetadataBolVsAla_1, 
+                    control = how(nperm=999),
+            duleg = TRUE)
+
+summary(D.1_ISABolVsAla_1)
+```
+
+Bolinao vs. Antique.
+
+```{r}
+D.1_MetadataBolVsAnt <- 
+  A.1_Metadata_2 |> 
+  filter(Species == "T. gigas",
+         region %in% c("Bolinao", "Antique")) |> 
+  arrange(CorrectID)
+
+D.1_DIVBolVsAnt <- 
+  C.1_DIVs_3 |> 
+  filter(CorrectID %in% (D.1_MetadataBolVsAnt |> pull(CorrectID))) |> 
+  pivot_wider(names_from = "DIVs",
+              values_from = "Count") |> 
+  arrange(CorrectID) |> 
+  column_to_rownames("CorrectID")
+
+D.1_MetadataBolVsAnt_1 <- 
+  D.1_MetadataBolVsAnt |> 
+  pull(region) |> 
+  factor()
+
+D.1_ISABolVsAnt_1 <- 
+  multipatt(D.1_DIVBolVsAnt, D.1_MetadataBolVsAnt_1, 
+                    control = how(nperm=999),
+            duleg = TRUE)
+
+summary(D.1_ISABolVsAnt_1)
+```
+
+Bolinao vs. Batangas.
+
+```{r}
+D.1_MetadataBolVsBat <- 
+  A.1_Metadata_2 |> 
+  filter(Species == "T. gigas",
+         region %in% c("Bolinao", "Batangas")) |> 
+  arrange(CorrectID)
+
+D.1_DIVBolVsBat <- 
+  C.1_DIVs_3 |> 
+  filter(CorrectID %in% (D.1_MetadataBolVsBat |> pull(CorrectID))) |> 
+  pivot_wider(names_from = "DIVs",
+              values_from = "Count") |> 
+  arrange(CorrectID) |> 
+  column_to_rownames("CorrectID")
+
+D.1_MetadataBolVsBat_1 <- 
+  D.1_MetadataBolVsBat |> 
+  pull(region) |> 
+  factor()
+
+D.1_ISABolVsBat_1 <- 
+  multipatt(D.1_DIVBolVsBat, D.1_MetadataBolVsBat_1, 
+                    control = how(nperm=999),
+            duleg = TRUE)
+
+summary(D.1_ISABolVsBat_1)
+```
+
+Bolinao vs. Bohol.
+
+```{r}
+D.1_MetadataBolVsBoh <- 
+  A.1_Metadata_2 |> 
+  filter(Species == "T. gigas",
+         region %in% c("Bolinao", "Bohol")) |> 
+  arrange(CorrectID)
+
+D.1_DIVBolVsBoh <- 
+  C.1_DIVs_3 |> 
+  filter(CorrectID %in% (D.1_MetadataBolVsBoh |> pull(CorrectID))) |> 
+  pivot_wider(names_from = "DIVs",
+              values_from = "Count") |> 
+  arrange(CorrectID) |> 
+  column_to_rownames("CorrectID")
+
+D.1_MetadataBolVsBoh_1 <- 
+  D.1_MetadataBolVsBoh |> 
+  pull(region) |> 
+  factor()
+
+D.1_ISABolVsBoh_1 <- 
+  multipatt(D.1_DIVBolVsBoh, D.1_MetadataBolVsBoh_1, 
+                    control = how(nperm=999),
+            duleg = TRUE)
+
+summary(D.1_ISABolVsBoh_1)
+```
+
+Bolinao vs. Camiguin.
+
+```{r}
+D.1_MetadataBolVsCam <- 
+  A.1_Metadata_2 |> 
+  filter(Species == "T. gigas",
+         region %in% c("Bolinao", "Camiguin")) |> 
+  arrange(CorrectID)
+
+D.1_DIVBolVsCam <- 
+  C.1_DIVs_3 |> 
+  filter(CorrectID %in% (D.1_MetadataBolVsCam |> pull(CorrectID))) |> 
+  pivot_wider(names_from = "DIVs",
+              values_from = "Count") |> 
+  arrange(CorrectID) |> 
+  column_to_rownames("CorrectID")
+
+D.1_MetadataBolVsCam_1 <- 
+  D.1_MetadataBolVsCam |> 
+  pull(region) |> 
+  factor()
+
+D.1_ISABolVsCam_1 <- 
+  multipatt(D.1_DIVBolVsCam, D.1_MetadataBolVsCam_1, 
+                    control = how(nperm=999),
+            duleg = TRUE)
+
+summary(D.1_ISABolVsCam_1)
+```
+
+Bolinao vs. Palawan.
+
+```{r}
+D.1_MetadataBolVsPal <- 
+  A.1_Metadata_2 |> 
+  filter(Species == "T. gigas",
+         region %in% c("Bolinao", "Palawan")) |> 
+  arrange(CorrectID)
+
+D.1_DIVBolVsPal <- 
+  C.1_DIVs_3 |> 
+  filter(CorrectID %in% (D.1_MetadataBolVsPal |> pull(CorrectID))) |> 
+  pivot_wider(names_from = "DIVs",
+              values_from = "Count") |> 
+  arrange(CorrectID) |> 
+  column_to_rownames("CorrectID")
+
+D.1_MetadataBolVsPal_1 <- 
+  D.1_MetadataBolVsPal |> 
+  pull(region) |> 
+  factor()
+
+D.1_ISABolVsPal_1 <- 
+  multipatt(D.1_DIVBolVsPal, D.1_MetadataBolVsPal_1, 
+                    control = how(nperm=999),
+            duleg = TRUE)
+
+summary(D.1_ISABolVsPal_1)
+```
+
+Bolinao vs. Samar.
+
+```{r}
+D.1_MetadataBolVsSam <- 
+  A.1_Metadata_2 |> 
+  filter(Species == "T. gigas",
+         region %in% c("Bolinao", "Samar")) |> 
+  arrange(CorrectID)
+
+D.1_DIVBolVsSam <- 
+  C.1_DIVs_3 |> 
+  filter(CorrectID %in% (D.1_MetadataBolVsSam |> pull(CorrectID))) |> 
+  pivot_wider(names_from = "DIVs",
+              values_from = "Count") |> 
+  arrange(CorrectID) |> 
+  column_to_rownames("CorrectID")
+
+D.1_MetadataBolVsSam_1 <- 
+  D.1_MetadataBolVsSam |> 
+  pull(region) |> 
+  factor()
+
+D.1_ISABolVsSam_1 <- 
+  multipatt(D.1_DIVBolVsSam, D.1_MetadataBolVsSam_1, 
+                    control = how(nperm=999),
+            duleg = TRUE)
+
+summary(D.1_ISABolVsSam_1)
+```
+
+Bolinao vs. Zambales.
+
+```{r}
+D.1_MetadataBolVsZam <- 
+  A.1_Metadata_2 |> 
+  filter(Species == "T. gigas",
+         region %in% c("Bolinao", "Zambales")) |> 
+  arrange(CorrectID)
+
+D.1_DIVBolVsZam <- 
+  C.1_DIVs_3 |> 
+  filter(CorrectID %in% (D.1_MetadataBolVsZam |> pull(CorrectID))) |> 
+  pivot_wider(names_from = "DIVs",
+              values_from = "Count") |> 
+  arrange(CorrectID) |> 
+  column_to_rownames("CorrectID")
+
+D.1_MetadataBolVsZam_1 <- 
+  D.1_MetadataBolVsZam |> 
+  pull(region) |> 
+  factor()
+
+D.1_ISABolVsZam_1 <- 
+  multipatt(D.1_DIVBolVsZam, D.1_MetadataBolVsZam_1, 
+                    control = how(nperm=999),
+            duleg = TRUE)
+
+summary(D.1_ISABolVsZam_1)
+```
