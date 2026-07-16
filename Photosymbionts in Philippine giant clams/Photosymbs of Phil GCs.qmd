@@ -1,0 +1,500 @@
+---
+title: "Photosymbionts of Philippine GCs"
+format: html
+theme: 
+  light: zephyr
+  dark: cyborg
+toc: true
+page-layout: full
+number-sections: true
+number-depth: 3
+editor: visual
+self-contained: true
+---
+
+# Notes
+
+A naming convention for dataframes was made.
+
+1.  Objects were named with a prefix per section arranged alphabetically.
+2.  A 2nd prefix was added to arrange all the data accordingly:
+    -   Dataframes: .**1**
+    -   Plots: .**2**
+    -   Stats: .**3** (those in dataframe format)
+    -   Others:
+        -   Vectors: .**vec**
+        -   Trees: .**tre**
+        -   Distances: .**dis**
+        -   Functions: .**fun**
+3.  If a dataframe will be used multiple times in case a raw dataframe is needed and an edited one should not supersede the raw one, add a suffix at the end (i.e., **\_1** for first edit, **\_2** for second....).
+4.  Limit 3rd prefix names to three letters and if 2 prefixes are needed, separate with "**.**".
+5.  If an object is just an auxiliary object, put a **Z** prefix.
+
+# Load pkgs
+
+```{r}
+pacman::p_load(tidyverse,
+               janitor,
+               vegan,
+               cowplot,
+               viridis,
+               rstatix,
+               ggbeeswarm)
+```
+
+# Box plot
+
+Load metadata.
+
+```{r}
+A.1_Metadata <- 
+  readxl::read_xlsx("../metadata/metadata_20251021.xlsx")
+
+A.1_Metadata_1 <- 
+  A.1_Metadata |> 
+  select(c(1, 2, 3, 12)) |> 
+  rename(sample_name = 1)
+```
+
+Load Symportal analysis results.
+
+```{r}
+A.1_ITS2 <- 
+  read_tsv("../raw_data/20250829T091611/post_med_seqs/4_first_analysis_20250829T091611.seqs.absolute.abund_and_meta.txt")
+
+A.1_ITS2_1 <- 
+  A.1_ITS2 |> 
+  drop_na()  |> 
+  filter(post_med_unique != 0) |> 
+  left_join(A.1_Metadata_1) |> 
+  relocate(sample_name, CorrectID, Species, region)
+
+A.1_ITS2_2 <- # tidy
+  A.1_ITS2_1 |> 
+  select(CorrectID, Species, region, 43:503)
+
+A.1_ITS2_3 <- # pivot longer, get capital letter
+  A.1_ITS2_2 |> 
+  pivot_longer(!c(1:3),
+               names_to = "ITS2Sequence",
+               values_to = "Count") |> 
+  mutate(Clade = str_extract(ITS2Sequence, "[A-Z]")) |> 
+  filter(Clade != "G")
+
+A.1_ITS2_4 <- # get total counts per genus per sample
+  A.1_ITS2_3 |> 
+  group_by(CorrectID, Clade) |> 
+  summarise(Total = sum(Count)) |> 
+  ungroup()
+
+A.1_ITS2_5 <- # get relative abundance per genus per sample 
+  A.1_ITS2_4 |> 
+  group_by(CorrectID) |> 
+  mutate(RelativeAbundance = Total/sum(Total)*100) |> 
+  ungroup()
+```
+
+Plot.
+
+```{r}
+A.2_ComparisonAmongGenus <- 
+  A.1_ITS2_5 |> 
+  ggplot(aes(x = Clade,
+             y = RelativeAbundance,
+             color = Clade,
+             fill = Clade)) +
+  stat_summary(fun = "mean",
+               geom = "bar",
+               alpha = 0.75,
+               color = NA,
+               width = 0.75) +
+  stat_summary(fun = mean,
+               fun.data = mean_se,
+               geom = "linerange") +
+  geom_jitter(width = 0.1, alpha = 0.25) +
+  scale_y_continuous(expand = c(0,0),
+                     limits = c(0,100)) +
+  theme_minimal() +
+  coord_cartesian(clip = "off") +
+  theme(panel.grid = element_blank(),
+        axis.line.y = element_line(),
+        axis.ticks.y = element_line(),
+        axis.text.x = element_blank(),
+        axis.title.x = element_blank(),
+        legend.position = "none") +
+  scale_fill_manual(values = 
+                      c("A"= "#746FB4",
+                        "C" = "#209E77",
+                        "D" = "#E7AB06",
+                        "G" = "#A9A9A9")) +
+  scale_color_manual(values = 
+                      c("A"= "#746FB4",
+                        "C" = "#209E77",
+                        "D" = "#E7AB06",
+                        "G" = "#A9A9A9"))
+```
+
+Stats.
+
+```{r}
+A.3_ITS2 <- 
+  A.1_ITS2_5 |> 
+  friedman_test(RelativeAbundance ~ Clade | CorrectID)
+
+A.3_ITS2Pair <- 
+  A.1_ITS2_5 |> 
+  pairwise_wilcox_test(
+    RelativeAbundance ~ Clade, 
+    paired = TRUE,
+    p.adjust.method = "BH")
+```
+
+Save.
+
+```{r}
+A.2_ComparisonAmongGenus |> 
+  ggsave(filename = "Relative abundance of genera.svg", 
+         dpi = 900,
+         width = 5, 
+         height = 5.2,
+         unit = "cm")
+```
+
+# Barplot
+
+Tidy.
+
+```{r}
+B.1_ITS2 <- 
+  A.1_ITS2_4 |> 
+  group_by(Clade) |> 
+  summarise(Count = sum(Total)) |> 
+  ungroup() |> 
+  mutate(RelAb = Count/sum(Count))
+```
+
+Plot.
+
+```{r}
+B.2_ITS2 <- 
+  B.1_ITS2 |> 
+  ggplot(aes(x = 1,
+             y = RelAb,
+             fill = Clade)) +
+  geom_bar(position = "fill",
+           stat = "identity") +
+  theme_minimal() +
+  scale_fill_manual(values = 
+                      c("A"= "#746FB4",
+                        "C" = "#209E77",
+                        "D" = "#E7AB06",
+                        "G" = "#A9A9A9")) +
+  scale_y_continuous(expand = c(0, 0),
+                     limits = c(0,1),
+                     labels = scales::label_percent()) +
+  theme(panel.grid = element_blank(),
+        axis.line.y = element_line(),
+        axis.ticks.y = element_line(),
+        axis.title = element_blank(),
+        axis.text.x = element_blank(),
+        legend.title = element_blank(),
+        legend.position = "none")
+```
+
+Save.
+
+```{r}
+B.2_ITS2 |> 
+  ggsave(filename = "Donut.svg", 
+         dpi = 900,
+         width = 3, 
+         height = 8,
+         unit = "cm")
+```
+
+# ITS2 seqs
+
+Tidy.
+
+```{r}
+C.1_ITS2 <- # pivot longer
+  A.1_ITS2_2 |> 
+  pivot_longer(!c(1:3),
+               names_to = "ITS2",
+               values_to = "Count")
+
+C.1_ITS2_1 <- # get total per sequence, per clade
+  C.1_ITS2 |> 
+  group_by(ITS2) |> 
+  summarize(Count = sum(Count)) |> 
+  mutate(Clade = str_extract(ITS2, "[A-Z]")) 
+```
+
+ITS2 sequences with \>1% relative abundance.
+
+```{r}
+ C.1_ITS2_2 <- 
+   C.1_ITS2_1 |> 
+   mutate(RelAbun = Count/sum(Count) *100)
+ 
+ C.1_ITS2_3 <- 
+   C.1_ITS2_2 |> 
+   filter(RelAbun >= 1) |> 
+   pull(ITS2)
+```
+
+*Symbiodinium.*
+
+```{r}
+C.1_A <- 
+  C.1_ITS2_1 |> 
+  filter(Clade == "A") |> 
+  mutate(Group = if_else(ITS2 %in% C.1_ITS2_3, ITS2, "Others")) |> 
+  group_by(Group) |> 
+  summarise(Count = sum(Count))
+
+C.2_A <- 
+  C.1_A |> 
+  ggplot(aes(x = "A",
+             y = Count,
+             fill = fct_relevel(Group, c("A3", "A6b", "Others")))) +
+  geom_bar(stat = "identity",
+           position = "fill") +
+  scale_y_continuous(expand = c(0,0),
+                     labels = scales::label_percent()) +
+  theme_minimal() +
+  scale_fill_manual(values = c("#2B284C","#746FB4", "darkgray")) +
+  coord_cartesian(clip = "off") +
+  theme(panel.grid = element_blank(),
+        axis.line.y = element_line(),
+        axis.ticks.y = element_line(),
+        axis.title = element_blank(),
+        axis.text.x = element_blank(),
+        legend.title = element_blank())
+```
+
+*Cladocopium.*
+
+```{r}
+C.1_C <- 
+  C.1_ITS2_1 |> 
+  filter(Clade == "C") |> 
+  mutate(Group = if_else(ITS2 %in% C.1_ITS2_3, ITS2, "Others")) |> 
+  group_by(Group) |> 
+  summarise(Count = sum(Count))
+
+C.2_C <- 
+  C.1_C |> 
+  ggplot(aes(x = "A",
+             y = Count,
+             fill = fct_relevel(Group, c("C93a", "C1", "C66", "C1c", "Others")))) +
+  geom_bar(stat = "identity",
+           position = "fill") +
+  scale_y_continuous(expand = c(0,0),
+                     labels = scales::label_percent()) +
+  scale_fill_manual(values = c("#0F4534","#146048","#209E77", "#B0EEDB", "darkgray")) +
+  theme_minimal() +
+  coord_cartesian(clip = "off") +
+  theme(panel.grid = element_blank(),
+        axis.line.y = element_line(),
+        axis.ticks.y = element_line(),
+        axis.title = element_blank(),
+        axis.text.x = element_blank(),
+        legend.title = element_blank())
+```
+
+*Durusdinium.*
+
+```{r}
+C.1_D <- 
+  C.1_ITS2_1 |> 
+  filter(Clade == "D") |> 
+  mutate(Group = if_else(ITS2 %in% C.1_ITS2_3, ITS2, "Others")) |> 
+  group_by(Group) |> 
+  summarise(Count = sum(Count))
+
+C.2_D <- 
+  C.1_D |> 
+  ggplot(aes(x = "A",
+             y = Count,
+             fill = fct_relevel(Group, c("D5", "D4", "D9b", "D1", "Others")))) +
+  geom_bar(stat = "identity",
+           position = "fill") +
+  scale_y_continuous(expand = c(0,0),
+                     labels = scales::label_percent()) +
+  theme_minimal() +
+  scale_fill_manual(values = c("#E67800","#E7AB06","#FAC738", "#FDEAB5", "darkgray")) +
+  coord_cartesian(clip = "off") +
+  theme(panel.grid = element_blank(),
+        axis.line.y = element_line(),
+        axis.ticks.y = element_line(),
+        axis.title = element_blank(),
+        axis.text.x = element_blank(),
+        legend.title = element_blank())
+```
+
+Merge.
+
+```{r}
+C.2_Merged <- 
+  plot_grid(C.2_A,
+            C.2_C,
+            C.2_D,
+            nrow = 1)
+
+C.2_Merged |> # save
+  ggsave(filename = "Top ITS2 sequences.svg", 
+         dpi = 900,
+         width = 13.25, 
+         height = 4.45,
+         unit = "cm")
+```
+
+# RA of ITS2 sequence
+
+Tidy.
+
+```{r}
+D.1_PresenceITS2 <- # presence
+  A.1_ITS2_2 |>
+  select(!c(2,3)) |> 
+  pivot_longer(!1,
+               names_to = "ITS2",
+               values_to = "Count") |> 
+  mutate(Presence = if_else(Count > 0, 1, 0)) |> # get presence data
+  group_by(ITS2) |> # group then get total # of colonies with specific ITS2
+  summarize(TotalPresence = sum(Presence)) |> 
+  ungroup() |> 
+  filter(ITS2 %in% C.1_ITS2_3) |> # filter ITS2 with >1% rel abun
+  mutate(ProportionGCs = TotalPresence/165) |> # get proportion
+  mutate(Clade = str_extract(ITS2, "[A-Z]"))  # get clade info
+```
+
+Plot.
+
+```{r}
+D.2_PresenceITS2 <- 
+  D.1_PresenceITS2 |> 
+  ggplot(aes(x = fct_reorder(ITS2, desc(ProportionGCs)),
+             y = ProportionGCs,
+             color = Clade,
+             fill = Clade)) +
+  geom_col() +
+  scale_y_continuous(expand = c(0,0),
+                     limits = c(0,0.75),
+                     breaks = seq(0, 0.75, by = 0.25),
+                     labels = scales::label_percent()) +
+  coord_cartesian(clip = "off") +
+  theme_minimal() +
+  theme(panel.grid = element_blank(),
+        axis.line.y = element_line(),
+        axis.ticks.y = element_line(),
+        legend.position = "none",
+        axis.title = element_blank()) +
+  scale_fill_manual(values = 
+                      c("A"= "#746FB4",
+                        "C" = "#209E77",
+                        "D" = "#E7AB06",
+                        "G" = "#A9A9A9")) +
+  scale_color_manual(values = 
+                      c("A"= "#746FB4",
+                        "C" = "#209E77",
+                        "D" = "#E7AB06",
+                        "G" = "#A9A9A9"))
+```
+
+Save.
+
+```{r}
+D.2_PresenceITS2 |> # save
+  ggsave(filename = "Presence and abundance.svg", 
+         dpi = 900,
+         width = 10.3, 
+         height = 3.3,
+         unit = "cm")
+```
+
+# ITS2 type profiles
+
+Load data.
+
+```{r}
+E.1_ITS2TypeProf <- 
+  read_tsv("../raw_data/20250829T091611/its2_type_profiles/4_first_analysis_20250829T091611.profiles.absolute.abund_and_meta.txt")
+
+E.1_ITS2TypeProf_1 <- # tidy
+  E.1_ITS2TypeProf |> 
+  slice(-(1:5)) %>% # Remove first 5 rows (unnecessary rows)
+  row_to_names(1) |>  # Move first row to column header
+  rename(sample_name = 2) |>  # Name 2nd column
+  select(-1) |>  # Remove first column (unneeded)
+  drop_na() |> 
+  type_convert() 
+
+E.1_ITS2TypeProf_2 <- # merge with metadata, remove unneeded
+  E.1_ITS2TypeProf_1 |> 
+  left_join(A.1_Metadata_1) |> 
+  filter(sample_name %in% (A.1_ITS2_1 |> pull(sample_name))) |> 
+  relocate(1, 35:37)
+
+E.1_ITS2TypeProf_3 <- # tidy
+  E.1_ITS2TypeProf_2 |> 
+  select(!c(1,3,4))
+
+E.1_ITS2TypeProf_4 <- # manual edits
+  E.1_ITS2TypeProf_3 |> edit()
+
+E.1_ITS2TypeProf_5 <- #pivot 
+  E.1_ITS2TypeProf_4 |> 
+  pivot_longer(!CorrectID,
+               names_to = "ITS2TypeProf",
+               values_to = "Counts") |> 
+  group_by(ITS2TypeProf) |> # get sum per ITS2 type profile
+  summarize(Total = sum(Counts)) |> 
+  mutate(Clade = str_extract(ITS2TypeProf, "[A-Z]")) |> 
+  ungroup() |> 
+  mutate(Denominator = sum(Total),
+         RelativeAbundance = Total/Denominator)
+```
+
+Plot.
+
+```{r}
+E.2_ITS2TypeProf <- 
+  E.1_ITS2TypeProf_5 |> 
+  ggplot(aes(x = fct_reorder(ITS2TypeProf, desc(RelativeAbundance)),
+             y = RelativeAbundance,
+             fill = Clade)) +
+  geom_col() +
+  coord_cartesian(clip = "off") +
+  scale_y_continuous(expand = c(0,0),
+                     limits = c(0,0.20),
+                     labels = scales::label_percent()) +
+  facet_grid(cols = vars(Clade),
+             space = "free",
+             scales = "free") +
+  theme_minimal() +
+  theme(panel.grid = element_blank(),
+        axis.line.y = element_line(),
+        axis.ticks.y = element_line(),
+        legend.position = "none",
+        axis.title = element_blank(),
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+        panel.spacing = unit(0.1,'lines')) +
+  scale_fill_manual(values = 
+                      c("A"= "#746FB4",
+                        "C" = "#209E77",
+                        "D" = "#E7AB06",
+                        "G" = "#A9A9A9"))
+```
+
+Save.
+
+```{r}
+E.2_ITS2TypeProf |> # save
+  ggsave(filename = "ITS2 type profile.svg", 
+         dpi = 900,
+         width = 16, 
+         height = 10,
+         unit = "cm")
+```
