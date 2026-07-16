@@ -1,0 +1,276 @@
+---
+title: "Haplotype and photosymbionts"
+format: html
+theme: 
+  light: zephyr
+  dark: cyborg
+toc: true
+page-layout: full
+number-sections: true
+number-depth: 3
+editor: visual
+self-contained: true
+---
+
+# Notes
+
+A naming convention for dataframes was made.
+
+1.  Objects were named with a prefix per section arranged alphabetically.
+2.  A 2nd prefix was added to arrange all the data accordingly:
+    -   Dataframes: .**1**
+    -   Plots: .**2**
+    -   Stats: .**3** (those in dataframe format)
+    -   Others:
+        -   Vectors: .**vec**
+        -   Trees: .**tre**
+        -   Distances: .**dis**
+        -   Functions: .**fun**
+3.  If a dataframe will be used multiple times in case a raw dataframe is needed and an edited one should not supersede the raw one, add a suffix at the end (i.e., **\_1** for first edit, **\_2** for second....).
+4.  Limit 3rd prefix names to three letters and if 2 prefixes are needed, separate with "**.**".
+5.  If an object is just an auxiliary object, put a **Z** prefix.
+
+# Load pkgs
+
+```{r}
+pacman::p_load(tidyverse,
+               vegan,
+               janitor,
+               ape,
+               ggtree)
+```
+
+# Community structure
+
+Load metadata.
+
+```{r}
+A.1_Metadata <- 
+  readxl::read_xlsx("../metadata/metadata_20251021.xlsx")
+
+A.1_MetadataClean <- 
+  A.1_Metadata |> 
+  select(CorrectID,
+         Species,
+         region) |> 
+  rename(sample_id = 1,
+         species = Species)
+
+A.1_MetadataHaplo <- 
+  read_csv("Haplotype - Metadata.csv")
+
+# Merge metadata
+A.1_MetadataCompleteMerged<- 
+  A.1_MetadataHaplo |> 
+  left_join(A.1_MetadataClean)
+```
+
+Load community data.
+
+```{r}
+B.1_ITS2TypeProf <- 
+  read_tsv("../raw_data/20250829T091611/its2_type_profiles/4_first_analysis_20250829T091611.profiles.absolute.abund_and_meta.txt")
+
+B.1_ITS2TypeProfClean <- 
+  B.1_ITS2TypeProf |> 
+  slice(-(1:5)) %>% # Remove first 5 rows (unnecessary rows)
+  row_to_names(1) |>  # Move first row to column header
+  rename(sample_name = 2) |>  # Name 2nd column
+  select(-1) |>  # Remove first column (unneeded)
+  drop_na() |> 
+  type_convert() 
+
+B.1_ITS2TypeProfClean2 <- 
+  B.1_ITS2TypeProfClean |> 
+  rename(sample_id = 1)
+
+# Correct ITS2 type profile naming
+B.1_ITS2TypeProfCorrect <- 
+  read_csv("../raw_data/Edited ITS2 type profile naming.csv") |> 
+  rename(its2_type = 1) 
+
+
+B.1_ITS2TypeProfCleanMerged <- 
+  A.1_MetadataCompleteMerged |> 
+  left_join(B.1_ITS2TypeProfClean2) |> 
+  
+  # Tidy
+  pivot_longer(!c(sample_id:region),
+               names_to = "its2_type",
+               values_to = "count") |> 
+  left_join(B.1_ITS2TypeProfCorrect)  |> 
+  select(!its2_type) |> 
+  rename(its2_type = Edited) |> 
+  group_by(sample_id)  |>
+  mutate(rel_abun = count/sum(count)) |> 
+  ungroup() |> 
+  mutate(rel_abun = sqrt(rel_abun),
+         clade = str_extract(its2_type, "[A-Z]"))
+```
+
+Plot.
+
+```{r}
+B.2_ITS2TypeProfile <- 
+  B.1_ITS2TypeProfCleanMerged |> 
+  ggplot(aes(x = fct_reorder(sample_id, haplotype),
+             y = its2_type,
+             fill = rel_abun)) +
+  geom_raster() +
+  facet_grid(cols = vars(species),
+             rows = vars(clade),
+             space = "free",
+             scale = "free") +
+  scale_y_discrete(expand = c(0,0)) +
+  scale_x_discrete(expand = c(0,0)) +
+  theme_minimal() +
+  theme(legend.title = element_blank(),
+        strip.background = element_blank(),
+        panel.spacing = unit(0.2,'lines'),
+        axis.text.x = element_blank(),
+        axis.text.y = element_text(size = 7, hjust = 0),
+        axis.title = element_blank(),
+        panel.grid = element_blank(),
+        legend.position = "bottom") +
+  viridis::scale_fill_viridis(option = "cividis")
+
+# Haplotype labels
+B.2_ITS2TypeProfileHaplos <- 
+  A.1_MetadataCompleteMerged |> 
+  ggplot(aes(x = fct_reorder(sample_id,
+                             haplotype),
+             y = 1,
+             fill = haplotype)) + 
+  geom_raster() +
+  facet_grid(cols = vars(species),
+             space = "free",
+             scales = "free") +
+  scale_fill_distiller(palette = "YlGn") +
+  theme_void() +
+  theme(legend.position = "bottom")
+
+# Export
+B.2_ITS2TypeProfileHaplos |> 
+  ggsave(filename = "Haplotypes.svg", 
+         dpi = 900,
+         width = 17.5, 
+         height = 10,
+         unit = "cm")
+
+# Region labels
+B.2_ITS2TypeProfileRegions <- 
+  A.1_MetadataCompleteMerged |> 
+  ggplot(aes(x = fct_reorder(sample_id,
+                             haplotype),
+             y = 1,
+             fill = region)) + 
+  geom_raster() +
+  facet_grid(cols = vars(species),
+             space = "free",
+             scales = "free") +
+  scale_fill_manual(values = c("Alaminos"="#E41A1C",
+                               "Antique"="#377EB8",
+                               "ARNP"="#4DAF4A",
+                               "Batangas"="#984EA3",
+                               "Bohol"="#FF7F00",
+                               "Bolinao"="#FFFF33",
+                               "Calaguas"="#A65628",
+                               "Camiguin"="#F781BF",
+                               "Palawan"="#999999",
+                               "Samar"="#66C2A5",
+                               "Zambales"="#FC8D62")) +
+  theme_void() +
+  theme(legend.position = "bottom")
+
+B.2_ITS2TypeProfileRegions |> 
+  ggsave(filename = "Regions.svg", 
+         dpi = 900,
+         width = 17.5, 
+         height = 10,
+         unit = "cm")
+
+# Biogeographic regions
+A.1_MetadataBiogeo <- 
+  read_csv("Biogeographic regions.csv")
+
+B.2_ITS2TypeProfileBiogeo <- 
+  A.1_MetadataCompleteMerged |> 
+  left_join(A.1_MetadataBiogeo) |> 
+  ggplot(aes(x = fct_reorder(sample_id,
+                             haplotype),
+             y = 1,
+             fill = bio_region)) + 
+  geom_raster() +
+  facet_grid(cols = vars(species),
+             space = "free",
+             scales = "free") +
+  scale_fill_manual(values = c("West Philippine Sea"="#000000",
+                               "Sulu Sea"="#E69F03",
+                               "Visayas Sea"="#56B4E9",
+                               "North Philippine Sea"="#139E73",
+                               "South Philippine Sea"="#F0E441")) +
+  theme_void() +
+  theme(legend.position = "bottom")
+
+B.2_ITS2TypeProfileBiogeo |> 
+  ggsave(filename = "Biogeo.svg", 
+         dpi = 900,
+         width = 17.5, 
+         height = 10,
+         unit = "cm")
+```
+
+Re-arrange, add UniFrac data.
+
+```{r}
+# Get pre-made ITS2 type profile arrangements based on Unifrac data.
+C.1_Cladocopium <- 
+  read_csv("Cladocopium UniFrac - Order.csv",
+           col_names = F) |> 
+  pull(1)
+
+C.1_Durusdinium <- 
+  read_csv("Durusdinium UniFrac - Order.csv",
+           col_names = F) |> 
+  pull(1)
+
+C.1_Symbiodinium <- 
+  read_csv("Symbiodinium UniFrac - Order.csv",
+           col_names = F) |> 
+  pull(1)
+
+C.1_AllUniFrac <- 
+  c(rev(C.1_Symbiodinium), rev(C.1_Cladocopium), rev(C.1_Durusdinium))
+
+# Replot
+C.2_ITS2TypeProfile <- 
+  B.1_ITS2TypeProfCleanMerged |> 
+  ggplot(aes(x = fct_reorder(sample_id, haplotype),
+             y = fct_relevel(its2_type, C.1_AllUniFrac),
+             fill = rel_abun)) +
+  geom_raster() +
+  facet_grid(cols = vars(species),
+             rows = vars(clade),
+             space = "free",
+             scale = "free") +
+  scale_y_discrete(expand = c(0,0)) +
+  scale_x_discrete(expand = c(0,0)) +
+  theme_minimal() +
+  theme(legend.title = element_blank(),
+        strip.background = element_blank(),
+        panel.spacing = unit(0.2,'lines'),
+        axis.text.x = element_blank(),
+        axis.text.y = element_text(size = 7, hjust = 0),
+        axis.title = element_blank(),
+        panel.grid = element_blank(),
+        legend.position = "bottom") +
+  viridis::scale_fill_viridis(option = "cividis")
+
+# Export
+C.2_ITS2TypeProfile |> 
+  ggsave(filename = "ITS2 type profile - By haplotype.svg", 
+         dpi = 900,
+         width = 17.5, 
+         height = 11,
+         unit = "cm")
+```

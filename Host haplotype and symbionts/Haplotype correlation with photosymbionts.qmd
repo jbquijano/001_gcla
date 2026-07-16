@@ -1,0 +1,869 @@
+---
+title: "Mantel test"
+format: html
+theme: 
+  light: zephyr
+  dark: cyborg
+toc: true
+page-layout: full
+number-sections: true
+number-depth: 3
+editor: visual
+self-contained: true
+---
+
+# Notes
+
+A naming convention for dataframes was made.
+
+1.  Objects were named with a prefix per section arranged alphabetically.
+2.  A 2nd prefix was added to arrange all the data accordingly:
+    -   Dataframes: .**1**
+    -   Plots: .**2**
+    -   Stats: .**3** (those in dataframe format)
+    -   Others:
+        -   Vectors: .**vec**
+        -   Trees: .**tre**
+        -   Distances: .**dis**
+        -   Functions: .**fun**
+3.  If a dataframe will be used multiple times in case a raw dataframe is needed and an edited one should not supersede the raw one, add a suffix at the end (i.e., **\_1** for first edit, **\_2** for second....).
+4.  Limit 3rd prefix names to three letters and if 2 prefixes are needed, separate with "**.**".
+5.  If an object is just an auxiliary object, put a **Z** prefix.
+
+# Load pkgs
+
+```{r}
+pacman::p_load(tidyverse,
+               vegan,
+               janitor,
+               ape,
+               pairwiseAdonis)
+```
+
+# Mantel test
+
+## *H. hippopus*
+
+```{r}
+metadata <- 
+  readxl::read_xlsx("../metadata/metadata_20251021.xlsx") |> 
+  select(SymportalID, CorrectID) |> 
+  rename(sample_name = 1, sample_id = 2)
+
+dna <- read.dna("Clean alignments per species/Hhippopus alignment - Clipped.fas",
+                format="fasta")
+
+host_dist <- 
+  dist.dna(dna, model="K80")
+
+community <- 
+  read_tsv("../raw_data/20250829T091611/post_med_seqs/4_first_analysis_20250829T091611.seqs.absolute.abund_and_meta.txt")
+
+community_clean <- 
+  community |> 
+  drop_na()  |> 
+  filter(post_med_unique != 0) |> 
+  select(!c(1, 3:39))
+
+community_cleaner <- 
+  metadata |> 
+  left_join(community_clean) |> 
+  filter(sample_id %in% (dna |> rownames()))
+
+sym_dist <- 
+  community_cleaner |> 
+  select(!1) |> 
+  arrange(match(sample_id, (dna |> rownames()))) |> 
+  column_to_rownames("sample_id") |> 
+  vegdist(method="bray")
+
+mantel_results <- 
+  mantel(host_dist, sym_dist, method="spearman")
+
+mantel_df <- tibble(
+  host_distance = as.vector(host_dist),
+  sym_distance  = as.vector(sym_dist)
+)
+
+mantel_plot <- 
+  mantel_df |> 
+  ggplot(aes(host_distance, sym_distance)) +
+  geom_point(alpha = 0.4) +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(
+    x = "Host genetic distance (COI)",
+    y = "Symbiodiniaceae community dissimilarity (Bray-Curtis)"
+  ) +
+  theme_classic()
+```
+
+## *H. porcellanus*
+
+```{r}
+metadata <- 
+  readxl::read_xlsx("../metadata/metadata_20251021.xlsx") |> 
+  select(SymportalID, CorrectID) |> 
+  rename(sample_name = 1, sample_id = 2)
+
+dna <- read.dna("Clean alignments per species/Hporcellanus alignment - Clipped.fas",
+                format="fasta")
+
+host_dist <- 
+  dist.dna(dna, model="K80")
+
+community <- 
+  read_tsv("../raw_data/20250829T091611/post_med_seqs/4_first_analysis_20250829T091611.seqs.absolute.abund_and_meta.txt")
+
+community_clean <- 
+  community |> 
+  drop_na()  |> 
+  filter(post_med_unique != 0) |> 
+  select(!c(1, 3:39))
+
+community_cleaner <- 
+  metadata |> 
+  left_join(community_clean) |> 
+  filter(sample_id %in% (dna |> rownames()))
+
+sym_dist <- 
+  community_cleaner |> 
+  select(!1) |> 
+  arrange(match(sample_id, (dna |> rownames()))) |> 
+  column_to_rownames("sample_id") |> 
+  vegdist(method="bray")
+
+mantel_results <- 
+  mantel(host_dist, sym_dist, method="spearman")
+
+mantel_df <- tibble(
+  host_distance = as.vector(host_dist),
+  sym_distance  = as.vector(sym_dist)
+)
+
+mantel_plot <- 
+  mantel_df |> 
+  ggplot(aes(host_distance, sym_distance)) +
+  geom_point(alpha = 0.4) +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(
+    x = "Host genetic distance (COI)",
+    y = "Symbiodiniaceae community dissimilarity (Bray-Curtis)"
+  ) +
+  theme_classic()
+```
+
+## *T. crocea*
+
+```{r}
+metadata <- 
+  readxl::read_xlsx("../metadata/metadata_20251021.xlsx") |> 
+  select(SymportalID, CorrectID) |> 
+  rename(sample_name = 1, sample_id = 2)
+
+dna <- read.dna("Clean alignments per species/Tcrocea alignment.fasta",
+                format="fasta")
+
+host_dist <- 
+  dist.dna(dna, model="K80")
+
+community <- 
+  read_tsv("../raw_data/20250829T091611/post_med_seqs/4_first_analysis_20250829T091611.seqs.absolute.abund_and_meta.txt")
+
+community_clean <- 
+  community |> 
+  drop_na()  |> 
+  filter(post_med_unique != 0) |> 
+  select(!c(1, 3:39))
+
+community_cleaner <- 
+  metadata |> 
+  left_join(community_clean) |> 
+  filter(sample_id %in% (dna |> rownames()))
+
+sym_dist <- 
+  community_cleaner |> 
+  select(!1) |> 
+  arrange(match(sample_id, (dna |> rownames()))) |> 
+  column_to_rownames("sample_id") |> 
+  vegdist(method="bray")
+
+mantel_results <- 
+  mantel(host_dist, sym_dist, method="spearman")
+
+mantel_df <- tibble(
+  host_distance = as.vector(host_dist),
+  sym_distance  = as.vector(sym_dist)
+)
+
+mantel_plot <- 
+  mantel_df |> 
+  ggplot(aes(host_distance, sym_distance)) +
+  geom_point(alpha = 0.4) +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(
+    x = "Host genetic distance (COI)",
+    y = "Symbiodiniaceae community dissimilarity (Bray-Curtis)"
+  ) +
+  theme_classic()
+```
+
+## *T. derasa*
+
+```{r}
+metadata <- 
+  readxl::read_xlsx("../metadata/metadata_20251021.xlsx") |> 
+  select(SymportalID, CorrectID) |> 
+  rename(sample_name = 1, sample_id = 2)
+
+dna <- read.dna("Clean alignments per species/Tderasa alignment - Clipped.fas",
+                format="fasta")
+
+host_dist <- 
+  dist.dna(dna, model="K80")
+
+community <- 
+  read_tsv("../raw_data/20250829T091611/post_med_seqs/4_first_analysis_20250829T091611.seqs.absolute.abund_and_meta.txt")
+
+community_clean <- 
+  community |> 
+  drop_na()  |> 
+  filter(post_med_unique != 0) |> 
+  select(!c(1, 3:39))
+
+community_cleaner <- 
+  metadata |> 
+  left_join(community_clean) |> 
+  filter(sample_id %in% (dna |> rownames()))
+
+sym_dist <- 
+  community_cleaner |> 
+  select(!1) |> 
+  arrange(match(sample_id, (dna |> rownames()))) |> 
+  column_to_rownames("sample_id") |> 
+  vegdist(method="bray")
+
+mantel_results <- 
+  mantel(host_dist, sym_dist, method="spearman")
+
+mantel_df <- tibble(
+  host_distance = as.vector(host_dist),
+  sym_distance  = as.vector(sym_dist)
+)
+
+mantel_plot <- 
+  mantel_df |> 
+  ggplot(aes(host_distance, sym_distance)) +
+  geom_point(alpha = 0.4) +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(
+    x = "Host genetic distance (COI)",
+    y = "Symbiodiniaceae community dissimilarity (Bray-Curtis)"
+  ) +
+  theme_classic()
+```
+
+## *T. gigas*
+
+```{r}
+metadata <- 
+  readxl::read_xlsx("../metadata/metadata_20251021.xlsx") |> 
+  select(SymportalID, CorrectID) |> 
+  rename(sample_name = 1, sample_id = 2)
+
+  dna <- read.dna("Clean alignments per species/Tgigas alignment.fasta",
+                format="fasta")
+
+host_dist <- 
+  dist.dna(dna, model="K80")
+
+community <- 
+  read_tsv("../raw_data/20250829T091611/post_med_seqs/4_first_analysis_20250829T091611.seqs.absolute.abund_and_meta.txt")
+
+community_clean <- 
+  community |> 
+  drop_na()  |> 
+  filter(post_med_unique != 0) |> 
+  select(!c(1, 3:39))
+
+community_cleaner <- 
+  metadata |> 
+  left_join(community_clean) |> 
+  filter(sample_id %in% (dna |> rownames()))
+
+sym_dist <- 
+  community_cleaner |> 
+  select(!1) |> 
+  arrange(match(sample_id, (dna |> rownames()))) |> 
+  column_to_rownames("sample_id") |> 
+  vegdist(method="bray")
+
+mantel_results <- 
+  mantel(host_dist, sym_dist, method="spearman")
+
+mantel_df <- tibble(
+  host_distance = as.vector(host_dist),
+  sym_distance  = as.vector(sym_dist)
+)
+
+mantel_plot <- 
+  mantel_df |> 
+  ggplot(aes(host_distance, sym_distance)) +
+  geom_point(alpha = 0.4) +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(
+    x = "Host genetic distance (COI)",
+    y = "Symbiodiniaceae community dissimilarity (Bray-Curtis)"
+  ) +
+  theme_classic()
+```
+
+## *T. maxima*
+
+```{r}
+metadata <- 
+  readxl::read_xlsx("../metadata/metadata_20251021.xlsx") |> 
+  select(SymportalID, CorrectID) |> 
+  rename(sample_name = 1, sample_id = 2)
+
+  dna <- read.dna("Clean alignments per species/Tmaxima alignment - Clipped.fas",
+                format="fasta")
+
+host_dist <- 
+  dist.dna(dna, model="K80")
+
+community <- 
+  read_tsv("../raw_data/20250829T091611/post_med_seqs/4_first_analysis_20250829T091611.seqs.absolute.abund_and_meta.txt")
+
+community_clean <- 
+  community |> 
+  drop_na()  |> 
+  filter(post_med_unique != 0) |> 
+  select(!c(1, 3:39))
+
+community_cleaner <- 
+  metadata |> 
+  left_join(community_clean) |> 
+  filter(sample_id %in% (dna |> rownames()))
+
+sym_dist <- 
+  community_cleaner |> 
+  select(!1) |> 
+  arrange(match(sample_id, (dna |> rownames()))) |> 
+  column_to_rownames("sample_id") |> 
+  vegdist(method="bray")
+
+mantel_results <- 
+  mantel(host_dist, sym_dist, method="spearman")
+
+mantel_df <- tibble(
+  host_distance = as.vector(host_dist),
+  sym_distance  = as.vector(sym_dist)
+)
+
+mantel_plot <- 
+  mantel_df |> 
+  ggplot(aes(host_distance, sym_distance)) +
+  geom_point(alpha = 0.4) +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(
+    x = "Host genetic distance (COI)",
+    y = "Symbiodiniaceae community dissimilarity (Bray-Curtis)"
+  ) +
+  theme_classic()
+```
+
+## *T. noae*
+
+```{r}
+metadata <- 
+  readxl::read_xlsx("../metadata/metadata_20251021.xlsx") |> 
+  select(SymportalID, CorrectID) |> 
+  rename(sample_name = 1, sample_id = 2)
+
+  dna <- read.dna("Clean alignments per species/Tnoae alignment.fasta",
+                format="fasta")
+
+host_dist <- 
+  dist.dna(dna, model="K80")
+
+community <- 
+  read_tsv("../raw_data/20250829T091611/post_med_seqs/4_first_analysis_20250829T091611.seqs.absolute.abund_and_meta.txt")
+
+community_clean <- 
+  community |> 
+  drop_na()  |> 
+  filter(post_med_unique != 0) |> 
+  select(!c(1, 3:39))
+
+community_cleaner <- 
+  metadata |> 
+  left_join(community_clean) |> 
+  filter(sample_id %in% (dna |> rownames()))
+
+sym_dist <- 
+  community_cleaner |> 
+  select(!1) |> 
+  arrange(match(sample_id, (dna |> rownames()))) |> 
+  column_to_rownames("sample_id") |> 
+  vegdist(method="bray")
+
+mantel_results <- 
+  mantel(host_dist, sym_dist, method="spearman")
+
+mantel_df <- tibble(
+  host_distance = as.vector(host_dist),
+  sym_distance  = as.vector(sym_dist)
+)
+
+mantel_plot <- 
+  mantel_df |> 
+  ggplot(aes(host_distance, sym_distance)) +
+  geom_point(alpha = 0.4) +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(
+    x = "Host genetic distance (COI)",
+    y = "Symbiodiniaceae community dissimilarity (Bray-Curtis)"
+  ) +
+  theme_classic()
+```
+
+## *T. squamosa*
+
+```{r}
+metadata <- 
+  readxl::read_xlsx("../metadata/metadata_20251021.xlsx") |> 
+  select(SymportalID, CorrectID) |> 
+  rename(sample_name = 1, sample_id = 2)
+
+  dna <- read.dna("Clean alignments per species/Tsquamosa alignment - Clipped.fas",
+                format="fasta")
+
+host_dist <- 
+  dist.dna(dna, model="K80")
+
+community <- 
+  read_tsv("../raw_data/20250829T091611/post_med_seqs/4_first_analysis_20250829T091611.seqs.absolute.abund_and_meta.txt")
+
+community_clean <- 
+  community |> 
+  drop_na()  |> 
+  filter(post_med_unique != 0) |> 
+  select(!c(1, 3:39))
+
+community_cleaner <- 
+  metadata |> 
+  left_join(community_clean) |> 
+  filter(sample_id %in% (dna |> rownames()))
+
+sym_dist <- 
+  community_cleaner |> 
+  select(!1) |> 
+  arrange(match(sample_id, (dna |> rownames()))) |> 
+  column_to_rownames("sample_id") |> 
+  vegdist(method="bray")
+
+mantel_results <- 
+  mantel(host_dist, sym_dist, method="spearman")
+
+mantel_df <- tibble(
+  host_distance = as.vector(host_dist),
+  sym_distance  = as.vector(sym_dist)
+)
+
+mantel_plot <- 
+  mantel_df |> 
+  ggplot(aes(host_distance, sym_distance)) +
+  geom_point(alpha = 0.4) +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(
+    x = "Host genetic distance (COI)",
+    y = "Symbiodiniaceae community dissimilarity (Bray-Curtis)"
+  ) +
+  theme_classic()
+```
+
+# PERMANOVA
+
+## *H. hippopus*
+
+```{r}
+haplotype_meta <- 
+  read_csv("Haplotype - Metadata.csv") |> 
+  filter(str_detect(sample_id,pattern = "HH")) |> 
+  mutate(haplotype = as.factor(haplotype)) |> 
+  arrange(sample_id)
+
+community <- 
+  read_tsv("../raw_data/20250829T091611/post_med_seqs/4_first_analysis_20250829T091611.seqs.absolute.abund_and_meta.txt")
+
+community_clean <- 
+  community |> 
+  drop_na()  |> 
+  filter(post_med_unique != 0) |> 
+  select(!c(1, 3:39))
+
+metadata <- 
+  readxl::read_xlsx("../metadata/metadata_20251021.xlsx") |> 
+  select(SymportalID, CorrectID) |> 
+  rename(sample_name = 1, sample_id = 2)
+
+metadata_clean <- 
+  readxl::read_xlsx("../metadata/metadata_20251021.xlsx") |> 
+  select(SymportalID, CorrectID) |> 
+  rename(sample_name = 1, sample_id = 2) |> 
+  filter(str_detect(sample_id, "HH"))
+
+community_cleaner <- 
+  metadata_clean |> 
+  left_join(community_clean) |> 
+  select(!1) |> 
+  filter(sample_id %in% (haplotype_meta |> pull(sample_id))) |> 
+  column_to_rownames("sample_id") |> 
+  as.matrix()
+
+beta <- 
+  community_cleaner |> 
+  vegdist(method="bray")
+
+bc_permanova <- 
+  adonis2(beta ~ haplotype,
+          data = haplotype_meta,
+          method = "bray",
+          permutations = 999)
+```
+
+## *H. porcellanus*
+
+```{r}
+haplotype_meta <- 
+  read_csv("Haplotype - Metadata.csv") |> 
+  filter(str_detect(sample_id,pattern = "HP")) |> 
+  mutate(haplotype = as.factor(haplotype)) |> 
+  arrange(sample_id)
+
+community <- 
+  read_tsv("../raw_data/20250829T091611/post_med_seqs/4_first_analysis_20250829T091611.seqs.absolute.abund_and_meta.txt")
+
+community_clean <- 
+  community |> 
+  drop_na()  |> 
+  filter(post_med_unique != 0) |> 
+  select(!c(1, 3:39))
+
+metadata <- 
+  readxl::read_xlsx("../metadata/metadata_20251021.xlsx") |> 
+  select(SymportalID, CorrectID) |> 
+  rename(sample_name = 1, sample_id = 2)
+
+metadata_clean <- 
+  readxl::read_xlsx("../metadata/metadata_20251021.xlsx") |> 
+  select(SymportalID, CorrectID) |> 
+  rename(sample_name = 1, sample_id = 2) |> 
+  filter(str_detect(sample_id, "HP"))
+
+community_cleaner <- 
+  metadata_clean |> 
+  left_join(community_clean) |> 
+  select(!1) |> 
+  filter(sample_id %in% (haplotype_meta |> pull(sample_id))) |> 
+  column_to_rownames("sample_id") |> 
+  as.matrix()
+
+beta <- 
+  community_cleaner |> 
+  vegdist(method="bray")
+
+bc_permanova <- 
+  adonis2(beta ~ haplotype,
+          data = haplotype_meta,
+          method = "bray",
+          permutations = 999)
+```
+
+## *T. crocea*
+
+```{r}
+haplotype_meta <- 
+  read_csv("Haplotype - Metadata.csv") |> 
+  filter(str_detect(sample_id,pattern = "TC")) |> 
+  mutate(haplotype = as.factor(haplotype)) |> 
+  arrange(sample_id)
+
+community <- 
+  read_tsv("../raw_data/20250829T091611/post_med_seqs/4_first_analysis_20250829T091611.seqs.absolute.abund_and_meta.txt")
+
+community_clean <- 
+  community |> 
+  drop_na()  |> 
+  filter(post_med_unique != 0) |> 
+  select(!c(1, 3:39))
+
+metadata <- 
+  readxl::read_xlsx("../metadata/metadata_20251021.xlsx") |> 
+  select(SymportalID, CorrectID) |> 
+  rename(sample_name = 1, sample_id = 2)
+
+metadata_clean <- 
+  readxl::read_xlsx("../metadata/metadata_20251021.xlsx") |> 
+  select(SymportalID, CorrectID) |> 
+  rename(sample_name = 1, sample_id = 2) |> 
+  filter(str_detect(sample_id, "TC"))
+
+community_cleaner <- 
+  metadata_clean |> 
+  left_join(community_clean) |> 
+  select(!1) |> 
+  filter(sample_id %in% (haplotype_meta |> pull(sample_id))) |> 
+  column_to_rownames("sample_id") |> 
+  as.matrix()
+
+beta <- 
+  community_cleaner |> 
+  vegdist(method="bray")
+
+bc_permanova <- 
+  adonis2(beta ~ haplotype,
+          data = haplotype_meta,
+          method = "bray",
+          permutations = 999)
+```
+
+## *T. derasa*
+
+```{r}
+haplotype_meta <- 
+  read_csv("Haplotype - Metadata.csv") |> 
+  filter(str_detect(sample_id,pattern = "TD")) |> 
+  mutate(haplotype = as.factor(haplotype)) |> 
+  arrange(sample_id)
+
+community <- 
+  read_tsv("../raw_data/20250829T091611/post_med_seqs/4_first_analysis_20250829T091611.seqs.absolute.abund_and_meta.txt")
+
+community_clean <- 
+  community |> 
+  drop_na()  |> 
+  filter(post_med_unique != 0) |> 
+  select(!c(1, 3:39))
+
+metadata <- 
+  readxl::read_xlsx("../metadata/metadata_20251021.xlsx") |> 
+  select(SymportalID, CorrectID) |> 
+  rename(sample_name = 1, sample_id = 2)
+
+metadata_clean <- 
+  readxl::read_xlsx("../metadata/metadata_20251021.xlsx") |> 
+  select(SymportalID, CorrectID) |> 
+  rename(sample_name = 1, sample_id = 2) |> 
+  filter(str_detect(sample_id, "TD"))
+
+community_cleaner <- 
+  metadata_clean |> 
+  left_join(community_clean) |> 
+  select(!1) |> 
+  filter(sample_id %in% (haplotype_meta |> pull(sample_id))) |> 
+  column_to_rownames("sample_id") |> 
+  as.matrix()
+
+beta <- 
+  community_cleaner |> 
+  vegdist(method="bray")
+
+bc_permanova <- 
+  adonis2(beta ~ haplotype,
+          data = haplotype_meta,
+          method = "bray",
+          permutations = 999)
+```
+
+## *T. gigas*
+
+```{r}
+haplotype_meta <- 
+  read_csv("Haplotype - Metadata.csv") |> 
+  filter(str_detect(sample_id,pattern = "TG")) |> 
+  mutate(haplotype = as.factor(haplotype)) |> 
+  arrange(sample_id)
+
+community <- 
+  read_tsv("../raw_data/20250829T091611/post_med_seqs/4_first_analysis_20250829T091611.seqs.absolute.abund_and_meta.txt")
+
+community_clean <- 
+  community |> 
+  drop_na()  |> 
+  filter(post_med_unique != 0) |> 
+  select(!c(1, 3:39))
+
+metadata <- 
+  readxl::read_xlsx("../metadata/metadata_20251021.xlsx") |> 
+  select(SymportalID, CorrectID) |> 
+  rename(sample_name = 1, sample_id = 2)
+
+metadata_clean <- 
+  readxl::read_xlsx("../metadata/metadata_20251021.xlsx") |> 
+  select(SymportalID, CorrectID) |> 
+  rename(sample_name = 1, sample_id = 2) |> 
+  filter(str_detect(sample_id, "TG"))
+
+community_cleaner <- 
+  metadata_clean |> 
+  left_join(community_clean) |> 
+  select(!1) |> 
+  filter(sample_id %in% (haplotype_meta |> pull(sample_id))) |> 
+  column_to_rownames("sample_id") |> 
+  as.matrix()
+
+beta <- 
+  community_cleaner |> 
+  vegdist(method="bray")
+
+bc_permanova <- 
+  adonis2(beta ~ haplotype,
+          data = haplotype_meta,
+          method = "bray",
+          permutations = 999)
+```
+
+## *T. maxima*
+
+```{r}
+haplotype_meta <- 
+  read_csv("Haplotype - Metadata.csv") |> 
+  filter(str_detect(sample_id,pattern = "TM")) |> 
+  mutate(haplotype = as.factor(haplotype)) |> 
+  arrange(sample_id)
+
+community <- 
+  read_tsv("../raw_data/20250829T091611/post_med_seqs/4_first_analysis_20250829T091611.seqs.absolute.abund_and_meta.txt")
+
+community_clean <- 
+  community |> 
+  drop_na()  |> 
+  filter(post_med_unique != 0) |> 
+  select(!c(1, 3:39))
+
+metadata <- 
+  readxl::read_xlsx("../metadata/metadata_20251021.xlsx") |> 
+  select(SymportalID, CorrectID) |> 
+  rename(sample_name = 1, sample_id = 2)
+
+metadata_clean <- 
+  readxl::read_xlsx("../metadata/metadata_20251021.xlsx") |> 
+  select(SymportalID, CorrectID) |> 
+  rename(sample_name = 1, sample_id = 2) |> 
+  filter(str_detect(sample_id, "TM"))
+
+community_cleaner <- 
+  metadata_clean |> 
+  left_join(community_clean) |> 
+  select(!1) |> 
+  filter(sample_id %in% (haplotype_meta |> pull(sample_id))) |> 
+  column_to_rownames("sample_id") |> 
+  as.matrix()
+
+beta <- 
+  community_cleaner |> 
+  vegdist(method="bray")
+
+bc_permanova <- 
+  adonis2(beta ~ haplotype,
+          data = haplotype_meta,
+          method = "bray",
+          permutations = 999)
+```
+
+## *T. noae*
+
+```{r}
+haplotype_meta <- 
+  read_csv("Haplotype - Metadata.csv") |> 
+  filter(str_detect(sample_id,pattern = "TN")) |> 
+  mutate(haplotype = as.factor(haplotype)) |> 
+  arrange(sample_id)
+
+community <- 
+  read_tsv("../raw_data/20250829T091611/post_med_seqs/4_first_analysis_20250829T091611.seqs.absolute.abund_and_meta.txt")
+
+community_clean <- 
+  community |> 
+  drop_na()  |> 
+  filter(post_med_unique != 0) |> 
+  select(!c(1, 3:39))
+
+metadata <- 
+  readxl::read_xlsx("../metadata/metadata_20251021.xlsx") |> 
+  select(SymportalID, CorrectID) |> 
+  rename(sample_name = 1, sample_id = 2)
+
+metadata_clean <- 
+  readxl::read_xlsx("../metadata/metadata_20251021.xlsx") |> 
+  select(SymportalID, CorrectID) |> 
+  rename(sample_name = 1, sample_id = 2) |> 
+  filter(str_detect(sample_id, "TN"))
+
+community_cleaner <- 
+  metadata_clean |> 
+  left_join(community_clean) |> 
+  select(!1) |> 
+  filter(sample_id %in% (haplotype_meta |> pull(sample_id))) |> 
+  column_to_rownames("sample_id") |> 
+  as.matrix()
+
+beta <- 
+  community_cleaner |> 
+  vegdist(method="bray")
+
+bc_permanova <- 
+  adonis2(beta ~ haplotype,
+          data = haplotype_meta,
+          method = "bray",
+          permutations = 999)
+```
+
+## *T. squamosa*
+
+```{r}
+haplotype_meta <- 
+  read_csv("Haplotype - Metadata.csv") |> 
+  filter(str_detect(sample_id,pattern = "TS")) |> 
+  mutate(haplotype = as.factor(haplotype)) |> 
+  arrange(sample_id)
+
+community <- 
+  read_tsv("../raw_data/20250829T091611/post_med_seqs/4_first_analysis_20250829T091611.seqs.absolute.abund_and_meta.txt")
+
+community_clean <- 
+  community |> 
+  drop_na()  |> 
+  filter(post_med_unique != 0) |> 
+  select(!c(1, 3:39))
+
+metadata <- 
+  readxl::read_xlsx("../metadata/metadata_20251021.xlsx") |> 
+  select(SymportalID, CorrectID) |> 
+  rename(sample_name = 1, sample_id = 2)
+
+metadata_clean <- 
+  readxl::read_xlsx("../metadata/metadata_20251021.xlsx") |> 
+  select(SymportalID, CorrectID) |> 
+  rename(sample_name = 1, sample_id = 2) |> 
+  filter(str_detect(sample_id, "TS"))
+
+community_cleaner <- 
+  metadata_clean |> 
+  left_join(community_clean) |> 
+  select(!1) |> 
+  filter(sample_id %in% (haplotype_meta |> pull(sample_id))) |> 
+  column_to_rownames("sample_id") |> 
+  as.matrix()
+
+beta <- 
+  community_cleaner |> 
+  vegdist(method="bray")
+
+bc_permanova <- 
+  adonis2(beta ~ haplotype,
+          data = haplotype_meta,
+          method = "bray",
+          permutations = 999)
+```
