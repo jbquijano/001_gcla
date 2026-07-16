@@ -1,0 +1,547 @@
+---
+title: "within_tgig"
+format: html
+theme: 
+  light: zephyr
+  dark: cyborg
+toc: true
+page-layout: full
+number-sections: true
+number-depth: 3
+editor: visual
+self-contained: true
+---
+
+# Load pkgs
+
+```{r}
+pacman::p_load(tidyverse,
+               janitor,
+               vegan,
+               cowplot,
+               rstatix,
+               multcompView,
+               pairwiseAdonis,
+               ggupset)
+```
+
+# Load data
+
+```{r}
+# ITS2 type profile
+its2_prof <- 
+  read_tsv("../raw_data/20250829T091611/its2_type_profiles/4_first_analysis_20250829T091611.profiles.absolute.abund_and_meta.txt")
+
+its2_prof_1 <- # tidy
+  its2_prof |> 
+  slice(-(1:5)) %>% # Remove first 5 rows (unnecessary rows)
+  row_to_names(1) |>  # Move first row to column header
+  rename(sample_name = 2) |>  # Name 2nd column
+  select(-1) |>  # Remove first column (unneeded)
+  drop_na() |> 
+  type_convert() 
+
+its2_prof_2 <- 
+  its2_prof_1 |> 
+  rowwise() |> 
+  mutate(total = sum(c_across(A3:`1510`), na.rm = TRUE)) |> 
+  filter(total != 0)
+
+sample_clean <- # samples with ITS2
+  its2_prof_2 |> 
+  pull(sample_name)
+
+# Metadata
+metadata <- 
+  read_csv("../Alpha diversity/metadata_all_clean.csv")
+
+metadata_1 <- # clean meatdata
+  metadata |> 
+  filter(sample_name %in% sample_clean)
+
+tgig <- 
+  metadata_1 |> 
+  filter(species == "Tgig") |> 
+  pull(sample_name)
+
+# Get manually renamed ITS2 type profiles
+its2_rename <- 
+  read_csv("../Alpha diversity/edited_its2prof_naming.csv")
+```
+
+# Alpha
+
+Tidy.
+
+```{r}
+its2_prof_tgig <- 
+  its2_prof_2 |> 
+  filter(sample_name %in% tgig) |> 
+  arrange(sample_name) |> 
+  select(!total) |> 
+  pivot_longer(!sample_name,
+               names_to = "its2_prof",
+               values_to = "count") |> 
+  left_join(its2_rename) |>
+  select(!its2_prof) |> 
+  rename(its2_prof = edited) |> 
+  filter(count >0)
+
+its2_prof_tgig1 <- 
+  its2_prof_tgig |> 
+  pivot_wider(names_from = its2_prof,
+              values_from = count,
+              values_fill = 0) |> 
+  pivot_longer(!sample_name,
+               names_to = "its2_prof",
+               values_to = "count") |> 
+  left_join(metadata_1)
+
+its2_prof_tgig_alpha <- 
+  its2_prof_tgig1 |> 
+  group_by(sample_name) |> 
+  summarise(shannon = diversity(count, index = "shannon"),
+            richness = specnumber(count)) |> 
+  ungroup() |> 
+  left_join(metadata_1)
+```
+
+Stats.
+
+```{r}
+its2_prof_tgig_alpha_stats <- 
+  its2_prof_tgig_alpha |> 
+  kruskal_test(shannon ~ region)
+```
+
+Plot.
+
+```{r}
+spec_comp <- 
+  its2_prof_tgig_alpha |> 
+  ggplot(aes(x = fct_relevel(region,
+                             c("Bol",
+                               "Ala",
+                               "Zam",
+                               "Ant",
+                               "Pal",
+                               "Bat",
+                               "Boh",
+                               "Cam",
+                               "Sam")),
+             y = shannon)) +
+  stat_summary(fun = "mean", 
+               fill = 'black',
+               geom = 'bar',
+               alpha = 0.75,
+               width = 0.75) +
+  geom_jitter(alpha = 0.5,
+              color = "black",
+              width = 0.15,
+              size = 1.5,
+              height = 0) +
+  theme_bw() +
+  theme(axis.title = element_blank(),
+        panel.grid = element_blank())
+
+spec_comp |> 
+  ggsave(filename = "alpha_tgig_region.svg", 
+         dpi = 900,
+         width = 7, 
+         height = 5.5,
+         unit = "cm")
+
+
+
+  geom_jitter(alpha = 0.5,
+              color = "gray",
+              width = 0.15,
+              size = 1.5) +
+  geom_boxplot(fill = 'black',
+               width = 0.05,
+               outlier.shape = NA,
+               color = 'black') +
+  scale_y_continuous(expand = c(0,0),
+                     limits = c(0,0.4)) +
+  stat_summary(fun = "mean", 
+               fill = 'white',
+               color = 'black',
+               size = 2.5,
+               geom = 'point',
+               shape = 21,
+               stroke = 1) +
+  coord_cartesian(clip = "off") +
+  theme_minimal() +
+  theme(panel.grid = element_blank(),
+        axis.line.y = element_line(),
+        axis.ticks.y = element_line(),
+        axis.title = element_blank(),
+        axis.text = element_text(size = 7))
+```
+
+# Upset
+
+Tidy.
+
+```{r}
+its2_prof_upset_region <- 
+  its2_prof_tgig1 |> 
+  group_by(its2_prof,
+           region) |> 
+  summarise(total = sum(count)) |> 
+  ungroup() |> 
+  pivot_wider(names_from = its2_prof,
+              values_from = total) |>  
+  mutate_if(is.numeric, as.logical) |> 
+  pivot_longer(!region,
+               names_to = 'its2_prof',
+               values_to = 'logic') |> 
+  filter(logic) %>% 
+  select(-logic) |> 
+  group_by(its2_prof) |> 
+  summarize(region = list(region))
+```
+
+Plot.
+
+```{r}
+its2_prof_upset_region_plot <-
+  its2_prof_upset_region |> 
+  ggplot(aes(x = region)) +
+  geom_bar() +
+  scale_x_upset() +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.1),
+                                        add = 0))  +
+  geom_text(
+    aes(label=after_stat(count)),
+    stat='Count',
+    vjust=-1,
+    size = 2) +
+  theme_classic() +
+  theme(panel.grid = element_blank(),
+        axis.title = element_blank(),
+        plot.margin = margin(0.5,0,0,1,
+                             unit ='cm'),
+        axis.line.x = element_blank(),
+        axis.ticks.x = element_blank(),
+        axis.text.x = element_text(size = 7),
+        axis.text.y = element_text(size = 7)) +
+  theme_combmatrix(combmatrix.panel.point.size = 1.5,
+                   combmatrix.panel.line.size = 0.5)
+```
+
+# NMDS
+
+```{r}
+its2 <- 
+  read_tsv("../raw_data/20250829T091611/post_med_seqs/4_first_analysis_20250829T091611.seqs.absolute.abund_and_meta.txt")
+
+its2_1 <- 
+  its2 |> 
+  drop_na()  |> 
+  filter(post_med_unique != 0) |> 
+  select(!c(1, 3:39))
+
+its2_2 <-
+  its2_1 |>
+  filter(sample_name %in% tgig) |> 
+  arrange(sample_name) |> 
+  column_to_rownames("sample_name") |> 
+  as.matrix() |> 
+  sqrt()
+
+# Metadata
+metadata_2 <- 
+  metadata_1 |> 
+  filter(sample_name %in% tgig)
+
+# BC
+bray_curtis <- 
+  its2_2 |> 
+  vegdist()
+
+# NMDS
+bray_curtis_nmds <- 
+  bray_curtis |> 
+  metaMDS(k = 2)
+
+bray_curtis_nmds_1 <- # tidy NMDS data
+  as.data.frame(scores(bray_curtis_nmds)) |> 
+  rownames_to_column("sample_name")
+
+bray_curtis_nmds_2 <- # add metadata
+  bray_curtis_nmds_1 |> 
+  left_join(metadata_1)
+
+bray_curtis_nmds_2 |> 
+  write_csv("tgigas_meta.csv")
+
+bray_curtis_nmds_3 <- 
+  read_csv("tgigas_meta_edited.csv")
+
+# Plot
+nmds_region <- 
+  bray_curtis_nmds_3 |> 
+  ggplot(aes(x = NMDS1, y = NMDS2)) +
+  geom_hline(yintercept = 0,
+             color = 'darkgray',
+             linetype = 'dashed',
+             linewidth = 0.25) +
+  geom_vline(xintercept = 0,
+             color = 'darkgray',
+             linetype = 'dashed',
+             linewidth = 0.25) +
+  geom_point(aes(color = fct_relevel(region,
+                                    c("Cal",
+                               "Sam",
+                               "Ant",
+                               "Pal",
+                               "Ala",
+                               "ARN",
+                               "Bat",
+                               "Bol",
+                               "Zam",
+                               "Cam",
+                               "Boh")),
+                 shape = life_stage),
+             size = 3) +
+  labs(x = "NMDS1",
+       y = "NMDS2",
+       color = "GC species") +
+  scale_color_manual(values = 
+                       c("Ala"="#E41A1C",
+                               "Ant"="#377EB8",
+                               "ARN"="#4DAF4A",
+                               "Bat"="#984EA3",
+                               "Boh"="#FF7F00",
+                               "Bol"="#FFFF33",
+                               "Cal"="#A65628",
+                               "Cam"="#F781BF",
+                               "Pal"="#999999",
+                               "Sam"="#66C2A5",
+                               "Zam"="#FC8D62")) +
+  theme_minimal() +
+  theme(panel.grid = element_blank(),
+        strip.background = element_blank(),
+        axis.ticks = element_blank(),
+        axis.text = element_blank(),
+        axis.line = element_line(),panel.background    = element_rect(fill = "transparent", colour = NA),
+        plot.background     = element_rect(fill = "transparent", colour = NA),
+        legend.background   = element_rect(fill = "transparent", colour = NA),
+        legend.box.background = element_rect(fill = "transparent", colour = NA),
+        legend.text = element_text(size = 7),
+        legend.position = "none",
+        axis.title = element_text(size = 8),
+        legend.title = element_blank())
+
+nmds_region |> 
+  ggsave(filename = "nmds_tgig_region.svg", 
+         dpi = 900,
+         width = 5.5, 
+         height = 5.5,
+         unit = "cm")
+```
+
+PERMANOVA.
+
+```{r}
+permanova_region <- 
+  adonis2(bray_curtis ~ get("region"), 
+          data = (metadata_2 |> 
+                    filter(sample_name %in% (its2_1 |>
+                                             pull(sample_name))) |>
+                    arrange(sample_name)))
+
+permanova_pairwise_region <- # Pairwise PERMANOVA
+  pairwise.adonis2(bray_curtis ~ region,
+                   data = (metadata_2 |>
+                             filter(sample_name %in% (its2_1 |>
+                                                      pull(sample_name))) |>
+                      arrange(sample_name)),
+                   nperm = 9999)
+
+# Pairwise PERMANOVA tidy function
+permanova_pairwise_cleaner <- 
+  function(pmanova_res){
+    a <- 
+      pmanova_res[-1] |> 
+      bind_rows(.id = 'groups') |> 
+      drop_na() %>%
+      .$`Pr(>F)` |> 
+      p.adjust(method = 'BH') 
+    
+    b <- 
+      unique(pmanova_res[-1] |> 
+               bind_rows(.id = 'groups'))$groups |> 
+      unique()
+      
+    d <- 
+       a %>% 
+        data.frame(b,.) |> 
+        rename('groups' = 1,
+               `P-adjusted` = 2) %>% 
+        left_join(pmanova_res[-1] |> 
+                    bind_rows(.id = 'groups'), 
+                  ., 
+                  by = 'groups') |> 
+        mutate(`P-adjusted` = case_when(is.na(`Pr(>F)`) ~ NA,
+                                        .default = `P-adjusted`)) |> 
+        mutate(Parameter = rep(c('Species', 'Residual', 'Total'), length.out = n())) |> 
+        relocate(last_col(), .after = 1)
+    
+    return(d)
+  }
+
+permanova_pairwise_region_1 <- 
+  permanova_pairwise_region |> 
+  permanova_pairwise_cleaner() |> 
+  drop_na() |> 
+  mutate(groups = str_replace(groups, "_vs_", "-")) |> 
+  select(groups, `P-adjusted`, R2) |> 
+  as.data.frame() |> 
+  separate(groups, into = c("group_1", "group_2"))
+
+permanova_pairwise_region_2 <- 
+  permanova_pairwise_region_1 %>%
+  bind_rows(
+    permanova_pairwise_region_1 %>%
+      rename(group_1 = group_2,
+             group_2 = group_1)
+  ) %>%
+  mutate(sig = case_when(
+    `P-adjusted` < 0.001 ~ "***",
+    `P-adjusted` < 0.01 ~ "**",
+    `P-adjusted` < 0.05 ~ "*",
+    TRUE ~ ""
+  ))
+
+permanova_pairwise_region_2 |> 
+  write_csv("PERMANOVA_pairwise.csv")
+
+permdisp_region <- 
+  betadisper(bray_curtis, 
+             group = (metadata_2 |>
+                        filter(sample_name %in% (its2_1 |>
+                                                 pull(sample_name))))[["region"]]) |> 
+  anova()
+```
+
+# Heatmap
+
+```{r}
+its2_prof_3 <- 
+  its2_prof_tgig1 |> 
+  mutate(genus = str_extract(its2_prof, "[A-Za-z]+")) |> 
+  group_by(corrected_id) |> 
+  mutate(rel_abun = sqrt(count/sum(count))) |> 
+  ungroup()
+
+its2_arrangement <- 
+  read_tsv("../tgig_its2prof_arrangement.txt", 
+           col_names = F) |> 
+  pull(1)
+
+
+its2_prof_heatmap_plot <- 
+  its2_prof_3 |> 
+  ggplot(aes(x = corrected_id,
+             y = fct_relevel(its2_prof, rev(its2_arrangement)),
+             fill = rel_abun)) +
+  geom_raster() +
+  facet_grid(cols = vars(fct_relevel(region, c("Bol",
+                               "Ala",
+                               "Zam",
+                               "Ant",
+                               "Pal",
+                               "Bat",
+                               "Boh",
+                               "Cam",
+                               "Sam"))),
+             rows = vars(genus),
+             space = "free",
+             scale = "free") +
+  scale_y_discrete(expand = c(0,0)) +
+  scale_x_discrete(expand = c(0,0)) +
+  theme_minimal() +
+  theme(legend.title = element_blank(),
+        strip.background = element_blank(),
+        panel.spacing = unit(0.05,'lines'),
+        axis.text.x = element_text(size = 5),
+        axis.text.y = element_text(size = 6),
+        axis.title = element_blank(),
+        panel.grid = element_blank(),
+        legend.position = "bottom") +
+  viridis::scale_fill_viridis(option = "cividis")
+
+its2_prof_heatmap_plot |> 
+  ggsave(filename = "plot_with_x_axis.svg", 
+         dpi = 900,
+         width = 20, 
+         height = 10,
+         unit = "cm")
+```
+
+Merge.
+
+```{r}
+merged_plots_ab <- 
+  plot_grid(spec_comp,
+            its2_prof_upset_region_plot,
+            ncol = 2,
+            rel_widths = c(1,1.25),
+            align = "hv",
+            axis = "tl")
+
+merged_plots_ab |> 
+  ggsave(filename = "merged_plots_ab.svg", 
+         dpi = 900,
+         width = 17, 
+         height = 5.5,
+         unit = "cm")
+
+
+merged_plots_cd <- 
+  plot_grid(nmds_region,
+            its2_prof_heatmap_plot,
+            nrow = 1,
+            rel_heights = c(2,1),
+            align = "hv",
+            axis = "bl")
+
+merged_plots_cd |> 
+  ggsave(filename = "merged_plots_cd.svg", 
+         dpi = 900,
+         width = 15, 
+         height = 6,
+         unit = "cm")
+
+merged_plots_ab2 <- 
+  plot_grid(spec_comp,
+            nmds_region,
+            NULL,
+            ncol = 3,
+            rel_widths = c(1,1,0.5),
+            align = "hv",
+            axis = "tl")
+
+merged_plots_cd2 <- 
+  plot_grid(its2_prof_upset_region_plot,
+            plot_grid(NULL,its2_prof_heatmap_plot, nrow = 1, rel_widths = c(0.25,1)),
+            ncol = 1,
+            align = "hv",
+            axis = "tr")
+
+merged_plots_ab2 |> 
+  ggsave(filename = "merged_plots_ab2.svg", 
+         dpi = 900,
+         width = 17, 
+         height = 5.5,
+         unit = "cm")
+
+merged_plots_cd2 |> 
+  ggsave(filename = "merged_plots_cd2.svg", 
+         dpi = 900,
+         width = 15, 
+         height = 12,
+         unit = "cm")
+```
