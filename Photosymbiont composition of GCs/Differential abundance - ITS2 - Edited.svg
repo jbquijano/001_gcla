@@ -1,0 +1,308 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   width="17cm"
+   height="6.4999304cm"
+   viewBox="0 0 481.88976 184.25"
+   version="1.1"
+   id="svg24"
+   sodipodi:docname="Differential abundance - ITS2 - Edited.svg"
+   inkscape:version="1.4.2 (f4327f4, 2025-05-13)"
+   inkscape:export-filename="Differential abundance - ITS2 - Edited.png"
+   inkscape:export-xdpi="900"
+   inkscape:export-ydpi="900"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs24" />
+  <sodipodi:namedview
+     id="namedview24"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="pt"
+     inkscape:zoom="1.5154344"
+     inkscape:cx="349.07482"
+     inkscape:cy="12.867597"
+     inkscape:window-width="2304"
+     inkscape:window-height="1262"
+     inkscape:window-x="-11"
+     inkscape:window-y="425"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="g25" />
+  <g
+     class="svglite"
+     id="g24">
+    <defs
+       id="defs1">
+      <style
+         type="text/css"
+         id="style1"><![CDATA[
+    .svglite line, .svglite polyline, .svglite polygon, .svglite path, .svglite rect, .svglite circle {
+      fill: none;
+      stroke: #000000;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-miterlimit: 10.00;
+    }
+    .svglite text {
+      white-space: pre;
+    }
+    .svglite g.glyphgroup path {
+      fill: inherit;
+      stroke: none;
+    }
+  ]]></style>
+    </defs>
+    <rect
+       width="100%"
+       height="100%"
+       style="fill:none;stroke:none"
+       id="rect1"
+       x="0"
+       y="0" />
+    <defs
+       id="defs2">
+      <clipPath
+         id="cpMC4wMHwxODQuMjV8MC4wMHwxODQuMjU=">
+        <rect
+           x="0"
+           y="0"
+           width="184.25"
+           height="184.25"
+           id="rect2" />
+      </clipPath>
+    </defs>
+    <g
+       clip-path="url(#cpMC4wMHwxODQuMjV8MC4wMHwxODQuMjU=)"
+       id="g2" />
+    <defs
+       id="defs3">
+      <clipPath
+         id="cpMjQuNzN8MTU5LjUzfDAuMDB8MTg0LjI1">
+        <rect
+           x="24.73"
+           y="0"
+           width="134.8"
+           height="184.25"
+           id="rect3" />
+      </clipPath>
+    </defs>
+    <g
+       clip-path="url(#cpMjQuNzN8MTU5LjUzfDAuMDB8MTg0LjI1)"
+       id="g3" />
+    <g
+       clip-path="url(#cpMC4wMHwxODQuMjV8MC4wMHwxODQuMjU=)"
+       id="g4" />
+    <defs
+       id="defs4">
+      <clipPath
+         id="cpNjkuMTB8MTU0LjA1fDU4LjMxfDE0My4yNQ==">
+        <rect
+           x="69.099998"
+           y="58.310001"
+           width="84.940002"
+           height="84.940002"
+           id="rect4" />
+      </clipPath>
+    </defs>
+    <g
+       clip-path="url(#cpMC4wMHwxODQuMjV8MC4wMHwxODQuMjU=)"
+       id="g23"
+       transform="translate(141.95403)">
+      <g
+         id="g25">
+        <g
+           clip-path="url(#cpNjkuMTB8MTU0LjA1fDU4LjMxfDE0My4yNQ==)"
+           id="g5"
+           transform="translate(0,-10.148623)">
+          <image
+             width="79.639999"
+             height="79.639999"
+             x="71.760002"
+             y="60.959999"
+             preserveAspectRatio="none"
+             image-rendering="pixelated"
+             xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFEAAABRCAYAAACqj0o2AAAA/klEQVR4nO3SsQ1BYRhGYeR2RLRKc5lAZQGlHYyn1F6NliUev0TOs8D75eRbvp7zezHI5XAaNbW43m/DtlbDlv5YEYEiAkUEiggUESgiUESgiEARgSICRQSKCBQRKCJQRKCIQBGBIgJFBIoIFBEoIlBEoIhAEYFpf9wNG3vc52FbI/WJQBGBIgJFBIoIFBEoIlBEoIhAEYEiAkUEiggUESgiUESgiEARgSICRQSKCBQRKCJQRKCIQBGBabtZ//qGrzjvjsO2+kSgiEARgSICRQSKCBQRKCJQRKCIQBGBIgJFBIoIFBEoIlBEoIhAEYEiAkUEiggUESgiUESgiMAHNIwLtVZlwjkAAAAASUVORK5CYII="
+             id="image4" />
+        </g>
+        <text
+           x="64.169998"
+           y="130.47"
+           text-anchor="end"
+           style="font-size:8.8px;font-family:Arial;fill:#4d4d4d"
+           textLength="11.25"
+           lengthAdjust="spacingAndGlyphs"
+           id="text5"
+           transform="translate(0,-10.148623)">C1</text>
+        <text
+           x="64.169998"
+           y="103.93"
+           text-anchor="end"
+           style="font-size:8.8px;font-family:Arial;fill:#4d4d4d"
+           textLength="16.139999"
+           lengthAdjust="spacingAndGlyphs"
+           id="text6"
+           transform="translate(0,-10.148623)">C66</text>
+        <text
+           x="64.169998"
+           y="77.379997"
+           text-anchor="end"
+           style="font-size:8.8px;font-family:Arial;fill:#4d4d4d"
+           textLength="21.030001"
+           lengthAdjust="spacingAndGlyphs"
+           id="text7"
+           transform="translate(0,-10.148623)">C93a</text>
+        <text
+           x="85.029999"
+           y="154.48"
+           text-anchor="middle"
+           style="font-size:8.8px;font-family:Arial;fill:#4d4d4d"
+           textLength="20.030001"
+           lengthAdjust="spacingAndGlyphs"
+           id="text8"
+           transform="translate(0,-10.148623)">Tgig-</text>
+        <text
+           x="85.029999"
+           y="163.99001"
+           text-anchor="middle"
+           style="font-size:8.8px;font-family:Arial;fill:#4d4d4d"
+           textLength="18.08"
+           lengthAdjust="spacingAndGlyphs"
+           id="text9"
+           transform="translate(0,-10.148623)">Tder</text>
+        <text
+           x="111.57"
+           y="154.48"
+           text-anchor="middle"
+           style="font-size:8.8px;font-family:Arial;fill:#4d4d4d"
+           textLength="22.969999"
+           lengthAdjust="spacingAndGlyphs"
+           id="text10"
+           transform="translate(0,-10.148623)">Tnoa-</text>
+        <text
+           x="111.57"
+           y="163.99001"
+           text-anchor="middle"
+           style="font-size:8.8px;font-family:Arial;fill:#4d4d4d"
+           textLength="17.110001"
+           lengthAdjust="spacingAndGlyphs"
+           id="text11"
+           transform="translate(0,-10.148623)">Tgig</text>
+        <text
+           x="138.12"
+           y="154.48"
+           text-anchor="middle"
+           style="font-size:8.8px;font-family:Arial;fill:#4d4d4d"
+           textLength="21.52"
+           lengthAdjust="spacingAndGlyphs"
+           id="text12"
+           transform="translate(0,-10.148623)">Tsqu-</text>
+        <text
+           x="138.12"
+           y="163.99001"
+           text-anchor="middle"
+           style="font-size:8.8px;font-family:Arial;fill:#4d4d4d"
+           textLength="17.110001"
+           lengthAdjust="spacingAndGlyphs"
+           id="text13"
+           transform="translate(0,-10.148623)">Tgig</text>
+        <text
+           x="111.57"
+           y="176.45"
+           text-anchor="middle"
+           style="font-size:11px;font-family:Arial"
+           textLength="59.310001"
+           lengthAdjust="spacingAndGlyphs"
+           id="text14"
+           transform="translate(0,-4.8744649)">Comparison</text>
+        <text
+           transform="rotate(-90,64.355689,26.275689)"
+           text-anchor="middle"
+           style="font-size:11px;font-family:Arial"
+           textLength="23.25"
+           lengthAdjust="spacingAndGlyphs"
+           id="text15">ITS2</text>
+        <text
+           x="55.240002"
+           y="30.35"
+           style="font-size:11px;font-family:Arial"
+           textLength="20.780001"
+           lengthAdjust="spacingAndGlyphs"
+           id="text16"
+           transform="translate(-12.944032,-5.9491923)">LFC</text>
+        <image
+           width="86.400002"
+           height="17.280001"
+           x="68.565971"
+           y="12.009857"
+           preserveAspectRatio="none"
+           xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASwAAAABCAYAAABkOJMpAAABUUlEQVQ4jXWR25HdMAxDD6B0t3Vs/w1cEfkgLTl3JvbIpAgCfFi/+omWWTa20RK28VptJbwG02A29kISS0Zr8uQ+y8j3LguGu7QasxA6Olq6Gvbkd0xaWAIL2RiNhsF0jeFqCQTCp1cZJIG7F9kstQbWmasxkG4eonuV0B8jefqYOhZeQjMHC1Bzz5yvgwFfjTP77Ohof1nprdF9Mj7fmDhWsxvM7Kb7RnQvzx7g5A2xZxeXY/rRy+p/94AgQObLy39u98m8dbyO1jmksyr75lWATaVI0pYaZpF8qAwnRc1J9vibqiLs9p/Yrntns+tDqqjaFDdnZx/tz+CpG6+Hk7St28OuGvzGKjc/FfYe7jNf1WBtH43A5DWWo9ubrMqpk0ASkmJXxs/odx7k6NV+4Xnqj8Yz2/RbYWoU2VfjcKtr3Fnqn/uu4QZ2DWcXO/1X/wLNA4NolyY/vAAAAABJRU5ErkJggg=="
+           id="image16" />
+        <polyline
+           points="102.21,24.78 102.21,28.24 "
+           style="stroke:#ffffff;stroke-width:0.38;stroke-linecap:butt"
+           id="polyline16"
+           transform="translate(-12.944032,1.049858)" />
+        <polyline
+           points="124.71,24.78 124.71,28.24 "
+           style="stroke:#ffffff;stroke-width:0.38;stroke-linecap:butt"
+           id="polyline17"
+           transform="translate(-12.944032,1.049858)" />
+        <polyline
+           points="147.20,24.78 147.20,28.24 "
+           style="stroke:#ffffff;stroke-width:0.38;stroke-linecap:butt"
+           id="polyline18"
+           transform="translate(-12.944032,1.049858)" />
+        <polyline
+           points="102.21,14.41 102.21,10.96 "
+           style="stroke:#ffffff;stroke-width:0.38;stroke-linecap:butt"
+           id="polyline19"
+           transform="translate(-12.944032,1.049858)" />
+        <polyline
+           points="124.71,14.41 124.71,10.96 "
+           style="stroke:#ffffff;stroke-width:0.38;stroke-linecap:butt"
+           id="polyline20"
+           transform="translate(-12.944032,1.049858)" />
+        <polyline
+           points="147.20,14.41 147.20,10.96 "
+           style="stroke:#ffffff;stroke-width:0.38;stroke-linecap:butt"
+           id="polyline21"
+           transform="translate(-12.944032,1.049858)" />
+        <text
+           x="102.21"
+           y="40.02"
+           text-anchor="middle"
+           style="font-size:8.8px;font-family:Arial"
+           textLength="7.8099999"
+           lengthAdjust="spacingAndGlyphs"
+           id="text21"
+           transform="translate(-12.944032,1.049858)">-4</text>
+        <text
+           x="124.71"
+           y="40.02"
+           text-anchor="middle"
+           style="font-size:8.8px;font-family:Arial"
+           textLength="4.8899999"
+           lengthAdjust="spacingAndGlyphs"
+           id="text22"
+           transform="translate(-12.944032,1.049858)">0</text>
+        <text
+           x="147.2"
+           y="40.02"
+           text-anchor="middle"
+           style="font-size:8.8px;font-family:Arial"
+           textLength="4.8899999"
+           lengthAdjust="spacingAndGlyphs"
+           id="text23"
+           transform="translate(-12.944032,1.049858)">4</text>
+      </g>
+    </g>
+  </g>
+</svg>
