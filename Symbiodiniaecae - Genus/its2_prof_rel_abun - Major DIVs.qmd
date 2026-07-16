@@ -1,0 +1,181 @@
+---
+title: "ITS2 type profile relative abundance"
+format: html
+theme: 
+  light: zephyr
+  dark: cyborg
+toc: true
+page-layout: full
+number-sections: true
+number-depth: 3
+editor: visual
+self-contained: true
+---
+
+# Load pkgs
+
+```{r}
+pacman::p_load(tidyverse,
+               cowplot,
+               janitor)
+```
+
+# Load data
+
+```{r}
+# ITS2 data
+its2 <- 
+  read_tsv("../raw_data/20250829T091611/post_med_seqs/4_first_analysis_20250829T091611.seqs.absolute.abund_and_meta.txt")
+
+its2_1 <- 
+  its2 |> 
+  drop_na()  |> 
+  filter(post_med_unique != 0) |> 
+  select(!c(1, 3:39))
+
+sample_clean <- # samples with ITS2
+  its2_1 |> 
+  pull(sample_name)
+
+# Metadata
+metadata <- 
+  read_csv("../Beta diversity/metadata_all_clean.csv")
+
+metadata_1 <- # clean meatdata
+  metadata |> 
+  filter(sample_name %in% sample_clean) |> 
+  arrange(sample_name)
+
+# Get major DIVs
+major_divs <- 
+  read_tsv("../MajorDIVs.txt")
+
+major_divs2 <- 
+  c("A3",
+    "A6b",
+    "C93a",
+    "C1",
+    "C66",
+    "C1c",
+    "D5",
+    "D4",
+    "D9b",
+    "D1")
+
+its2_2 <- 
+  its2_1 |> 
+  left_join(metadata_1) |> 
+  pivot_longer(!c(1,463:last_col())) |> 
+  filter(name %in% major_divs2)
+
+# Species
+its2_species <- 
+  its2_2 |> 
+  group_by(species, name, corrected_id) |> 
+  summarise(Total = sum(value)) |> 
+  ungroup() |> 
+  group_by(corrected_id) |> 
+  mutate(RelAbun = Total/sum(Total)) |>
+  ungroup() |> 
+  mutate(RelAbun = if_else(is.na(RelAbun), 0, RelAbun)) |> 
+  mutate(genus = str_extract(name, "[A-Za-z]+")) 
+
+its2_species_p <- 
+  its2_species |> 
+  ggplot(aes(x = corrected_id,
+             y = RelAbun,
+             fill = name,
+             color = name)) +
+  geom_bar(stat = "identity") +
+  facet_grid(cols = vars(fct_relevel(species, 
+                                     c("Hpor", "Hhip", "Tgig", "Tder",
+                                       "Tmax", "Tnoa", "Tsqu", "Tcro"))),
+             rows = vars(genus),
+             scales = "free_x",
+             space = "free") +
+  scale_x_discrete(expand = c(0,0)) +
+  scale_y_continuous(expand = c(0,0),
+                     breaks = c(0,1)) +
+  theme_bw() +
+  theme(axis.ticks = element_blank(),
+        axis.text = element_blank(),
+        axis.title.x = element_blank(),
+        panel.grid = element_blank(),
+        axis.line = element_blank(),
+        strip.background = element_blank(),
+        panel.background = element_rect(fill = "#363737"),
+        panel.border = element_blank(),
+        panel.spacing = unit(0.1, "cm"))
+
+  
+# Manual coloring (A - 5, C - 17, D - 11)
+its2_prof_A <- 
+  colorRampPalette(c("#746FB4", "#D2D0E6"))(3)
+
+its2_prof_C <- 
+  colorRampPalette(c("#267798", "#62B6D8", "#209E77", "#96EAD0"))(6)
+
+its2_prof_D <- 
+  colorRampPalette(c("#E4530A", "#F9A073", "#E7AB06", "#FCDE88"))(6)
+
+its2_prof_colors <- 
+  c(its2_prof_A, its2_prof_C, its2_prof_D)
+
+its2_species2 <- # re-arrange
+  its2_species |> 
+  group_by(genus,name) |> 
+  summarise(Total = sum(Total)) |> 
+  ungroup() |> 
+  arrange(genus, desc(Total)) |> 
+  pull(name)
+
+its2_species_p <- 
+  its2_species |> 
+  ggplot(aes(x = corrected_id,
+             y = RelAbun,
+             fill = fct_relevel(name, its2_species2))) +
+  geom_bar(stat = "identity",
+           width = 1.1) +
+  facet_grid(cols = vars(fct_relevel(species, 
+                                     c("Hpor", "Hhip", "Tgig", "Tder",
+                                       "Tmax", "Tnoa", "Tsqu", "Tcro"))),
+             rows = vars(genus),
+             scales = "free_x",
+             space = "free") +
+  scale_x_discrete(expand = c(0,0)) +
+  scale_y_continuous(expand = c(0,0),
+                     breaks = c(0,1)) +
+  theme_bw() +
+  theme(axis.ticks = element_blank(),
+        axis.text = element_blank(),
+        axis.title.x = element_blank(),
+        panel.grid = element_blank(),
+        axis.line = element_blank(),
+        strip.background = element_blank(),
+        panel.background = element_rect(fill = "#BEBEBE"),
+        panel.border = element_blank(),
+        panel.spacing = unit(0.5, "pt"),
+        legend.title = element_blank(),
+        legend.position = "none") +
+  scale_fill_manual(values = c("A3" = "#746FB4",
+                               "A6b" = "#CFCDE5",
+                               "C93a" = "#267798",
+                               "C1" = "#62B6D8",
+                               "C66" = "#209E77",
+                               "C1c" = "#B0EEDB",
+                               "D5" = "#E67800",
+                               "D4" = "#E7AB06",
+                               "D9b" = "#FAC738",
+                               "D1" = "#FDEAB5"))
+```
+
+Plot.
+
+```{r}
+its2_species_p |> 
+  ggsave(filename = "major_divs_rel_abun_per_species.svg", 
+         dpi = 900,
+         width = 17.75, 
+         height = 5,
+         unit = "cm")
+```

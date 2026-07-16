@@ -1,0 +1,120 @@
+---
+title: "GC Genus ITS2"
+format: html
+theme: 
+  light: zephyr
+  dark: cyborg
+toc: true
+page-layout: full
+number-sections: true
+number-depth: 3
+editor: visual
+self-contained: true
+---
+
+# Load pkgs
+
+```{r}
+pacman::p_load(tidyverse,
+               janitor,
+               cowplot)
+```
+
+# Load data
+
+```{r}
+its2 <- 
+  read_tsv("../raw_data/20250829T091611/post_med_seqs/4_first_analysis_20250829T091611.seqs.absolute.abund_and_meta.txt")
+
+its2_1 <- 
+  its2 |> 
+  drop_na()  |> 
+  filter(post_med_unique != 0) |> 
+  select(!c(1, 3:39))
+
+sample_clean <- # samples with ITS2
+  its2_1 |> 
+  pull(sample_name)
+
+its2_2 <-
+  its2_1 |> 
+  pivot_longer(!1,
+               names_to = "its2",
+               values_to = "count")
+
+# Metadata
+metadata <- 
+  read_csv("../Alpha diversity/metadata_all_clean.csv")
+
+metadata_1 <- # clean meatdata
+  metadata |> 
+  filter(sample_name %in% sample_clean) |> 
+  arrange(sample_name)
+
+its2_3 <- 
+  its2_2 |> 
+  left_join(metadata_1)
+```
+
+# Tidy
+
+```{r}
+top_its2 <- 
+  its2_3 |>
+  group_by(its2) |> 
+  summarize(total = sum(count)) |> 
+  ungroup() |> 
+  mutate(rel_abun = total/sum(total)*100) |> 
+  filter(rel_abun >= 1) |> 
+  pull(its2)
+
+its2_4 <- 
+  its2_3 |> 
+  mutate(presence = if_else(count > 0, 1, 0)) |> 
+  group_by(its2) |> 
+  summarise(individuals = sum(presence)) |> 
+  ungroup() |> 
+  mutate(its2 = if_else(its2 %in% top_its2, its2, "Others")) |> 
+  mutate(prop_gcs = individuals/165 * 100) |> 
+  mutate(genus = str_extract(its2, "[A-Z]")) |> 
+  filter(its2 != "Others")
+```
+
+# Plot
+
+```{r}
+its2_plot <- 
+  its2_4 |> 
+  ggplot(aes(x = fct_reorder(its2, desc(prop_gcs)),
+             y = prop_gcs,
+             fill = genus)) +
+  scale_y_continuous(labels = scales::percent_format(scale = 1),
+                     limits = c(0, 80)) +
+  geom_col() +
+  facet_grid(cols = vars(genus),
+             scales = "free",
+             space = "free") +
+  scale_fill_manual(values = c("A" = "#746FB4",
+                               "C" = "#209E77",
+                               "D"= "#E7AB06")) +
+  scale_x_discrete(expand = c(0,0)) +
+  theme_classic() +
+  theme(axis.line.x = element_blank(),
+        axis.ticks.x = element_blank(),
+        strip.background = element_blank(),
+        strip.text = element_blank(),
+        axis.title = element_blank(),
+        panel.spacing = unit(0.5,'lines'),
+        legend.position = "none")
+```
+
+Save.
+
+```{r}
+its2_plot |> 
+  ggsave(filename = "its2_per_individual.svg", 
+         dpi = 900,
+         width = 9, 
+         height = 4,
+         unit = "cm")
+```
