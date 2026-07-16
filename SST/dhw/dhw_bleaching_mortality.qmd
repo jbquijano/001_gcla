@@ -1,0 +1,592 @@
+---
+title: "DHW"
+format: html
+theme: 
+  light: zephyr
+  dark: cyborg
+toc: true
+page-layout: full
+number-sections: true
+number-depth: 3
+editor: visual
+self-contained: true
+---
+
+# Load pkgs
+
+```{r}
+pacman::p_load(tidyverse,
+               terra,
+               ncdf4)
+```
+
+# DHWs
+
+## Alaminos
+
+```{r}
+# Import
+dhw_Alaminos <- 
+  rast("Alaminos_DHW_1985-2025.nc")
+
+# Convert to df
+values <- as.numeric(values(dhw_Alaminos))
+dates <- time(dhw_Alaminos)
+
+df_Alaminos <- data.frame(
+  date = dates,
+  dhw = values
+) |> 
+  mutate(sampling_region = "Alaminos",
+         cluster = "B")
+
+df_Alaminos1 <- 
+  df_Alaminos %>%
+  mutate(year = year(date)) %>%
+  group_by(year) %>%
+  summarise(
+    max_dhw = max(dhw, na.rm = TRUE),
+    .groups = "drop"
+  ) |> 
+  ungroup() |> 
+  mutate(sampling_region = "Alaminos",
+         cluster = "B")
+
+df_Alaminos2 <- 
+  df_Alaminos1 %>%
+  mutate(
+    bleaching = max_dhw >= 4 & max_dhw < 8,
+    mortality = max_dhw >= 8
+  ) %>%
+  summarise(
+    bleaching_years = sum(bleaching),
+    mortality_years = sum(mortality),
+    max_dhw_recorded = max(max_dhw)
+  ) |> 
+  mutate(sampling_region = "Alaminos",
+         cluster = "B")
+```
+
+## Antique
+
+```{r}
+# Import
+dhw_Antique <- 
+  rast("Antique_DHW_1985-2025.nc")
+
+# Convert to df
+values <- as.numeric(values(dhw_Antique))
+dates <- time(dhw_Antique)
+
+df_Antique <- data.frame(
+  date = dates,
+  dhw = values
+) |> 
+  mutate(sampling_region = "Antique",
+         cluster = "A")
+
+df_Antique1 <- 
+  df_Antique %>%
+  mutate(year = year(date)) %>%
+  group_by(year) %>%
+  summarise(
+    max_dhw = max(dhw, na.rm = TRUE),
+    .groups = "drop"
+  ) |> 
+  mutate(sampling_region = "Antique",
+         cluster = "A")
+
+df_Antique2 <- 
+  df_Antique1 %>%
+  mutate(
+    bleaching = max_dhw >= 4 & max_dhw < 8,
+    mortality = max_dhw >= 8
+  ) %>%
+  summarise(
+    bleaching_years = sum(bleaching),
+    mortality_years = sum(mortality),
+    max_dhw_recorded = max(max_dhw)
+  ) |> 
+  mutate(sampling_region = "Antique",
+         cluster = "A")         
+```
+
+## ARNP
+
+```{r}
+# Import
+dhw_ARNP <- 
+  rast("ARNP_DHW_1985-2025.nc")
+
+# Convert to df
+values <- as.numeric(values(dhw_ARNP))
+dates <- time(dhw_ARNP)
+
+df_ARNP <- data.frame(
+  date = dates,
+  dhw = values
+) |> 
+  mutate(sampling_region = "ARNP",
+         cluster = "C")
+
+df_ARNP1 <- 
+  df_ARNP %>%
+  mutate(year = year(date)) %>%
+  group_by(year) %>%
+  summarise(
+    max_dhw = max(dhw, na.rm = TRUE),
+    .groups = "drop"
+  ) |> 
+  mutate(sampling_region = "ARNP",
+         cluster = "C")
+
+df_ARNP2 <- 
+  df_ARNP1 %>%
+  mutate(
+    bleaching = max_dhw >= 4 & max_dhw < 8,
+    mortality = max_dhw >= 8
+  ) %>%
+  summarise(
+    bleaching_years = sum(bleaching),
+    mortality_years = sum(mortality),
+    max_dhw_recorded = max(max_dhw)
+  ) |> 
+  mutate(sampling_region = "ARNP",
+         cluster = "C")         
+```
+
+## Batangas
+
+```{r}
+# Import
+dhw_Batangas <- 
+  rast("Batangas_DHW_1985-2025.nc")
+
+# Convert to df
+values <- as.numeric(values(dhw_Batangas))
+dates <- time(dhw_Batangas)
+
+df_Batangas <- data.frame(
+  date = dates,
+  dhw = values
+) |> 
+  mutate(sampling_region = "Batangas",
+         cluster = "A")
+
+df_Batangas1 <- 
+  df_Batangas %>%
+  mutate(year = year(date)) %>%
+  group_by(year) %>%
+  summarise(
+    max_dhw = max(dhw, na.rm = TRUE),
+    .groups = "drop"
+  ) |> 
+  mutate(sampling_region = "Batangas",
+         cluster = "A")
+
+df_Batangas2 <- 
+  df_Batangas1 %>%
+  mutate(
+    bleaching = max_dhw >= 4 & max_dhw < 8,
+    mortality = max_dhw >= 8
+  ) %>%
+  summarise(
+    bleaching_years = sum(bleaching),
+    mortality_years = sum(mortality),
+    max_dhw_recorded = max(max_dhw)
+  ) |> 
+  mutate(sampling_region = "Batangas",
+         cluster = "A")
+```
+
+## Bohol
+
+```{r}
+# Import
+dhw_Bohol <- 
+  rast("Bohol_DHW_1985-2025.nc")
+
+# Convert to df
+values <- as.numeric(values(dhw_Bohol))
+dates <- time(dhw_Bohol)
+
+df_Bohol <- data.frame(
+  date = dates,
+  dhw = values
+) |> 
+  mutate(sampling_region = "Bohol",
+         cluster = "A")
+
+df_Bohol1 <- 
+  df_Bohol %>%
+  mutate(year = year(date)) %>%
+  group_by(year) %>%
+  summarise(
+    max_dhw = max(dhw, na.rm = TRUE),
+    .groups = "drop"
+  ) |> 
+  mutate(sampling_region = "Bohol",
+         cluster = "A")
+
+df_Bohol2 <- 
+  df_Bohol1 %>%
+  mutate(
+    bleaching = max_dhw >= 4 & max_dhw < 8,
+    mortality = max_dhw >= 8
+  ) %>%
+  summarise(
+    bleaching_years = sum(bleaching),
+    mortality_years = sum(mortality),
+    max_dhw_recorded = max(max_dhw)
+  ) |> 
+  mutate(sampling_region = "Bohol",
+         cluster = "A")
+```
+
+## Bolinao
+
+```{r}
+# Import
+dhw_Bolinao <- 
+  rast("Bolinao_DHW_1985-2025.nc")
+
+# Convert to df
+values <- as.numeric(values(dhw_Bolinao))
+dates <- time(dhw_Bolinao)
+
+df_Bolinao <- data.frame(
+  date = dates,
+  dhw = values
+) |> 
+  mutate(sampling_region = "Bolinao",
+         cluster = "B")
+
+df_Bolinao1 <- 
+  df_Bolinao %>%
+  mutate(year = year(date)) %>%
+  group_by(year) %>%
+  summarise(
+    max_dhw = max(dhw, na.rm = TRUE),
+    .groups = "drop"
+  ) |> 
+  mutate(sampling_region = "Bolinao",
+         cluster = "B")
+
+df_Bolinao2 <- 
+  df_Bolinao1 %>%
+  mutate(
+    bleaching = max_dhw >= 4 & max_dhw < 8,
+    mortality = max_dhw >= 8
+  ) %>%
+  summarise(
+    bleaching_years = sum(bleaching),
+    mortality_years = sum(mortality),
+    max_dhw_recorded = max(max_dhw)
+  ) |> 
+  mutate(sampling_region = "Bolinao",
+         cluster = "B")
+```
+
+## Calaguas
+
+```{r}
+# Import
+dhw_Calaguas <- 
+  rast("Calaguas_DHW_1985-2025.nc")
+
+# Convert to df
+values <- as.numeric(values(dhw_Calaguas))
+dates <- time(dhw_Calaguas)
+
+df_Calaguas <- data.frame(
+  date = dates,
+  dhw = values
+) |> 
+  mutate(sampling_region = "Calaguas",
+         cluster = "A")
+
+df_Calaguas1 <- 
+  df_Calaguas %>%
+  mutate(year = year(date)) %>%
+  group_by(year) %>%
+  summarise(
+    max_dhw = max(dhw, na.rm = TRUE),
+    .groups = "drop"
+  ) |> 
+  mutate(sampling_region = "Calaguas",
+         cluster = "A")
+
+df_Calaguas2 <- 
+  df_Calaguas1 %>%
+  mutate(
+    bleaching = max_dhw >= 4 & max_dhw < 8,
+    mortality = max_dhw >= 8
+  ) %>%
+  summarise(
+    bleaching_years = sum(bleaching),
+    mortality_years = sum(mortality),
+    max_dhw_recorded = max(max_dhw)
+  ) |> 
+  mutate(sampling_region = "Calaguas",
+         cluster = "A")
+```
+
+## Camiguin
+
+```{r}
+# Import
+dhw_Camiguin <- 
+  rast("Camiguin_DHW_1985-2025.nc")
+
+# Convert to df
+values <- as.numeric(values(dhw_Camiguin))
+dates <- time(dhw_Camiguin)
+
+df_Camiguin <- data.frame(
+  date = dates,
+  dhw = values
+) |> 
+  mutate(sampling_region = "Camiguin",
+         cluster = "A")
+
+df_Camiguin1 <- 
+  df_Camiguin %>%
+  mutate(year = year(date)) %>%
+  group_by(year) %>%
+  summarise(
+    max_dhw = max(dhw, na.rm = TRUE),
+    .groups = "drop"
+  ) |> 
+  mutate(sampling_region = "Camiguin",
+         cluster = "A")
+
+df_Camiguin2 <- 
+  df_Camiguin1 %>%
+  mutate(
+    bleaching = max_dhw >= 4 & max_dhw < 8,
+    mortality = max_dhw >= 8
+  ) %>%
+  summarise(
+    bleaching_years = sum(bleaching),
+    mortality_years = sum(mortality),
+    max_dhw_recorded = max(max_dhw)
+  ) |> 
+  mutate(sampling_region = "Camiguin",
+         cluster = "A")
+```
+
+## Palawan
+
+```{r}
+# Import
+dhw_Palawan <- 
+  rast("Palawan_DHW_1985-2025.nc")
+
+# Convert to df
+values <- as.numeric(values(dhw_Palawan))
+dates <- time(dhw_Palawan)
+
+df_Palawan <- data.frame(
+  date = dates,
+  dhw = values
+) |> 
+  mutate(sampling_region = "Palawan",
+         cluster = "C")
+
+df_Palawan1 <- 
+  df_Palawan %>%
+  mutate(year = year(date)) %>%
+  group_by(year) %>%
+  summarise(
+    max_dhw = max(dhw, na.rm = TRUE),
+    .groups = "drop"
+  ) |> 
+  mutate(sampling_region = "Palawan",
+         cluster = "C")
+
+df_Palawan2 <- 
+  df_Palawan1 %>%
+  mutate(
+    bleaching = max_dhw >= 4 & max_dhw < 8,
+    mortality = max_dhw >= 8
+  ) %>%
+  summarise(
+    bleaching_years = sum(bleaching),
+    mortality_years = sum(mortality),
+    max_dhw_recorded = max(max_dhw)
+  ) |> 
+  mutate(sampling_region = "Palawan",
+         cluster = "C")
+```
+
+## Samar
+
+```{r}
+# Import
+dhw_Samar <- 
+  rast("Samar_DHW_1985-2025.nc")
+
+# Convert to df
+values <- as.numeric(values(dhw_Samar))
+dates <- time(dhw_Samar)
+
+df_Samar <- data.frame(
+  date = dates,
+  dhw = values
+) |> 
+  mutate(sampling_region = "Samar",
+         cluster = "B")
+
+df_Samar1 <- 
+  df_Samar %>%
+  mutate(year = year(date)) %>%
+  group_by(year) %>%
+  summarise(
+    max_dhw = max(dhw, na.rm = TRUE),
+    .groups = "drop"
+  ) |> 
+  mutate(sampling_region = "Samar",
+         cluster = "B")
+
+df_Samar2 <- 
+  df_Samar1 %>%
+  mutate(
+    bleaching = max_dhw >= 4 & max_dhw < 8,
+    mortality = max_dhw >= 8
+  ) %>%
+  summarise(
+    bleaching_years = sum(bleaching),
+    mortality_years = sum(mortality),
+    max_dhw_recorded = max(max_dhw)
+  ) |> 
+  mutate(sampling_region = "Samar",
+         cluster = "B")
+```
+
+## Zambales
+
+```{r}
+# Import
+dhw_Zambales <- 
+  rast("Zambales_DHW_1985-2025.nc")
+
+# Convert to df
+values <- as.numeric(values(dhw_Zambales))
+dates <- time(dhw_Zambales)
+
+df_Zambales <- data.frame(
+  date = dates,
+  dhw = values
+) |> 
+  mutate(sampling_region = "Zambales",
+         cluster = "C")
+
+df_Zambales1 <- 
+  df_Zambales %>%
+  mutate(year = year(date)) %>%
+  group_by(year) %>%
+  summarise(
+    max_dhw = max(dhw, na.rm = TRUE),
+    .groups = "drop"
+  ) |> 
+  mutate(sampling_region = "Zambales",
+         cluster = "C")
+
+df_Zambales2 <- 
+  df_Zambales1 %>%
+  mutate(
+    bleaching = max_dhw >= 4 & max_dhw < 8,
+    mortality = max_dhw >= 8
+  ) %>%
+  summarise(
+    bleaching_years = sum(bleaching),
+    mortality_years = sum(mortality),
+    max_dhw_recorded = max(max_dhw)
+  ) |> 
+  mutate(sampling_region = "Zambales",
+         cluster = "C")
+```
+
+# Merge
+
+## Max DHW
+
+Annual max DHW, central measure.
+
+```{r}
+annual_max_all <- 
+  bind_rows(df_Alaminos1, df_Antique1, df_ARNP1, df_Batangas1, df_Bohol1, df_Bolinao1,
+            df_Calaguas1, df_Camiguin1, df_Palawan1, df_Samar1, df_Zambales1) |> 
+  group_by(sampling_region, cluster) |> 
+  summarize(max_dhw = max(max_dhw))
+```
+
+Plot.
+
+```{r}
+annual_max_all_plot <- 
+  annual_max_all |>
+  ggplot(aes(x = sampling_region,
+             y = max_dhw)) +
+  geom_col()+
+  facet_grid(cols = vars(cluster),
+             scales = "free",
+             space = "free") +
+  theme_classic()
+```
+
+## Max DHW and distribution
+
+```{r}
+annual_max_dist <- 
+  bind_rows(df_Alaminos2, df_Antique2, df_ARNP2, df_Batangas2, df_Bohol2, df_Bolinao2,
+            df_Calaguas2, df_Camiguin2, df_Palawan2, df_Samar2, df_Zambales2)
+```
+
+Clean.
+
+```{r}
+annual_max_dist1 <- 
+  annual_max_dist |> 
+  pivot_longer(!sampling_region:cluster,
+               names_to = "bleaching_parameter",
+               values_to = "values") |> 
+  filter(bleaching_parameter != "max_dhw_recorded")
+```
+
+Plot.
+
+```{r}
+annual_max_dist_plot <- 
+  annual_max_dist1 |> 
+  ggplot(aes(x = sampling_region,
+             y = values,
+             group = fct_relevel(bleaching_parameter, c("mortality_years",
+                                                        "bleaching_years")),
+             fill = fct_relevel(bleaching_parameter, c("mortality_years",
+                                                        "bleaching_years")))) +
+  geom_bar(stat = "identity",
+           position = "dodge",
+           width = 0.9) +
+  facet_grid(cols = vars(cluster),
+             scales = "free",
+             space = "free") +
+  scale_y_continuous(breaks = seq(0, max(annual_max_dist1$values), by = 2)) +
+  theme_classic() +
+  scale_fill_manual(values = c("black", "#D5D8DD")) +
+  theme(axis.line.x = element_blank(),
+        axis.ticks.x = element_blank(),
+        strip.background = element_blank(),
+        legend.position = "none",
+        axis.title = element_blank(),
+        axis.text.x = element_text(size = 7),
+        axis.text.y = element_text(size = 7),
+        )
+
+annual_max_dist_plot |> 
+  ggsave(filename = "dhw_bleaching_mortality.svg", 
+         dpi = 900,
+         width = 7.25, 
+         height = 5,
+         unit = "cm")
+```
