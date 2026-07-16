@@ -1,0 +1,602 @@
+---
+title: "Cophylogeny"
+format: html
+theme: 
+  light: zephyr
+  dark: cyborg
+toc: true
+page-layout: full
+number-sections: true
+number-depth: 3
+editor: visual
+self-contained: true
+---
+
+# Load pkgs
+
+```{r}
+pacman::p_load(ape,
+               tidyverse,
+               vegan,
+               phangorn,
+               paco,
+               janitor,
+               dendextend,
+               phytools,
+               rstatix,
+               multcompView)
+```
+
+# Load data
+
+```{r}
+# Host
+host_tree <- read.tree("GCCOISeqs_AlignedAllAddKeep_20251022_clipkitsmartgap.fa.treefile")
+
+host_tree$tip.label <- sub(".*\\|", "", host_tree$tip.label)
+
+# ITS2
+its2prof_dist <- 
+  read_tsv("../raw_data/20250829T091611/between_profile_distances/A/20250829T091611_unifrac_profile_distances_A_sqrt.dist", col_names = F) |> 
+  select(!2) |> 
+  column_to_rownames("X1") |> 
+  as.dist()
+
+colnames(its2prof_dist) <- rownames(its2prof_dist)
+
+
+# ITS2 type profile
+its2_prof <- 
+  read_tsv("../raw_data/20250829T091611/its2_type_profiles/4_first_analysis_20250829T091611.profiles.absolute.abund_and_meta.txt")
+
+its2_prof_1 <- # tidy
+  its2_prof |> 
+  slice(-(1:5)) %>% # Remove first 5 rows (unnecessary rows)
+  row_to_names(1) |>  # Move first row to column header
+  rename(sample_name = 2) |>  # Name 2nd column
+  select(-1) |>  # Remove first column (unneeded)
+  drop_na() |> 
+  type_convert() 
+
+its2_prof_2 <- 
+  its2_prof_1 |> 
+  rowwise() |> 
+  mutate(total = sum(c_across(A3:`1510`), na.rm = TRUE)) |> 
+  filter(total != 0)
+
+sample_clean <- # samples with ITS2
+  its2_prof_2 |> 
+  pull(sample_name)
+
+# Metadata
+metadata <- 
+  read_csv("../Alpha diversity/metadata_all_clean.csv")
+
+metadata_1 <- # clean meatdata
+  metadata |> 
+  filter(sample_name %in% sample_clean) |> 
+  arrange(sample_name)
+
+its2_rename <- 
+  read_csv("../raw_data/Edited ITS2 type profile naming.csv") |> 
+  rename(its2_prof = 1)
+```
+
+# Tidy A
+
+```{r}
+# A
+hosts_with_A <- 
+  its2_prof_2 |> 
+  select(!total) |> 
+  pivot_longer(!c(sample_name),
+               names_to = "its2_prof",
+               values_to = "count") |> 
+  left_join(metadata_1) |>  # get metadata
+  left_join(its2_rename) |> 
+  select(!its2_prof) |> 
+  rename(its2_prof = Edited) |> 
+  mutate(genus = str_extract(its2_prof, "[A-Z]")) |> 
+  filter(genus == "A" & count > 0) |> 
+  distinct(corrected_id) |> 
+  pull()
+
+
+# A2
+its2_prof_3 <- 
+  its2_prof_2 |> 
+  select(!total) |> 
+  pivot_longer(!c(sample_name),
+               names_to = "its2_prof",
+               values_to = "count") |> 
+  left_join(metadata_1) |> 
+  select(corrected_id,
+         count,
+         its2_prof) |>  # get metadata
+  left_join(its2_rename) |> 
+  mutate(genus = str_extract(Edited, "[A-Z]")) |> 
+  filter(genus == "A" & count > 0) |>
+  mutate(presence = if_else(count > 0, 1, 0)) |> 
+  select(!c(Edited, genus, count)) |> 
+  pivot_wider(names_from = its2_prof,
+              values_from = presence, 
+              values_fill = 0) |> 
+  filter(!corrected_id %in% setdiff(hosts_with_A, host_tree_pruned$tip.label))
+
+# Filter host
+host_tree_pruned <- drop.tip(
+  host_tree,
+  setdiff(host_tree$tip.label, hosts_with_A)
+)
+
+# Which are missing? # TG50 and TG65; no COI sequence but we're sure that they're TG
+setdiff(hosts_with_A, host_tree_pruned$tip.label)
+```
+
+## PACo A
+
+```{r}
+is.binary.tree(host_tree_pruned)
+```
+
+Convert.
+
+```{r}
+# Host distance
+DH <- cophenetic(host_tree_pruned)
+DH <- as.dist(DH) |> 
+  as.matrix()
+
+labels(DH)
+
+# Association matrix
+A <- 
+  its2_prof_3 |> 
+  column_to_rownames("corrected_id") |> 
+  as.matrix()
+
+A <- A[rownames(DH), ] # re-arrange
+
+all(rownames(A) == labels(DH))  # must be TRUE
+
+# Symbiont
+its2prof_dist <- 
+  read_tsv("../raw_data/20250829T091611/between_profile_distances/A/20250829T091611_unifrac_profile_distances_A_sqrt.dist", col_names = F) |> 
+  select(!2) |> 
+  column_to_rownames("X1") |> 
+  as.dist()
+
+DS <- its2prof_dist |> 
+  as.matrix()
+A <- A[, rownames(DS), drop = FALSE] # re-arrange
+all(colnames(A) == rownames(DS)) # must be TRUE
+
+# Run
+D <- prepare_paco_data(DH, DS, A)
+D <- add_pcoord(D, correction = "cailliez")
+D <- PACo(D, nperm = 999, seed = 123, symmetric = T)
+
+D$gof
+D$p
+D$proc
+```
+
+# Tidy C
+
+```{r}
+# C
+hosts_with_C <- 
+  its2_prof_2 |> 
+  select(!total) |> 
+  pivot_longer(!c(sample_name),
+               names_to = "its2_prof",
+               values_to = "count") |> 
+  left_join(metadata_1) |>  # get metadata
+  left_join(its2_rename) |> 
+  select(!its2_prof) |> 
+  rename(its2_prof = Edited) |> 
+  mutate(genus = str_extract(its2_prof, "[A-Z]")) |> 
+  filter(genus == "C" & count > 0) |> 
+  distinct(corrected_id) |> 
+  pull()
+
+# Symbiont
+its2prof_dist <- 
+  read_tsv("../raw_data/20250829T091611/between_profile_distances/C/20250829T091611_unifrac_profile_distances_C_sqrt.dist", col_names = F) |> 
+  select(!2) |> 
+  column_to_rownames("X1") |> 
+  as.dist()
+
+# Filter host
+host_tree_pruned <- drop.tip(
+  host_tree,
+  setdiff(host_tree$tip.label, hosts_with_C)
+)
+
+write.tree(
+  host_tree_pruned,
+  file = "host_tree_pruned.nwk"
+)
+
+# Which are missing? # TG50 and TG65; no COI sequence but we're sure that they're TG
+setdiff(hosts_with_C, host_tree_pruned$tip.label)
+
+# C2
+its2_prof_C <- 
+  its2_prof_2 |> 
+  select(!total) |> 
+  pivot_longer(!c(sample_name),
+               names_to = "its2_prof",
+               values_to = "count") |> 
+  left_join(metadata_1) |> 
+  select(corrected_id,
+         count,
+         its2_prof) |>  # get metadata
+  left_join(its2_rename) |> 
+  mutate(genus = str_extract(Edited, "[A-Z]")) |> 
+  filter(genus == "C" & count > 0) |>
+  mutate(presence = if_else(count > 0, 1, 0)) |> 
+  select(!c(Edited, genus, count)) |> 
+  pivot_wider(names_from = its2_prof,
+              values_from = presence, 
+              values_fill = 0) |> 
+  filter(!corrected_id %in% setdiff(hosts_with_C, host_tree_pruned$tip.label))
+```
+
+## PACo C
+
+```{r}
+# Host distance
+DH <- cophenetic(host_tree_pruned)
+DH <- as.dist(DH) |> 
+  as.matrix()
+
+labels(DH)
+
+# Association matrix
+C <- 
+  its2_prof_C |> 
+  column_to_rownames("corrected_id") |> 
+  as.matrix()
+
+all(rownames(DH) %in% rownames(C))
+
+# re-arrange
+C <- C[rownames(DH), ]
+all(rownames(C) == rownames(DH))  # must be TRUE
+
+# Symbiont
+DS <- its2prof_dist |> 
+  as.matrix()
+C <- C[, rownames(DS), drop = FALSE] # re-arrange
+all(colnames(C) == rownames(DS)) # must be TRUE
+
+# Run
+D <- prepare_paco_data(DH, DS, C)
+D <- add_pcoord(D, correction = "cailliez")
+D <- PACo(D, nperm = 999, seed = 123, symmetric = T)
+
+D$gof
+D$p
+D$proc
+
+R2 <- 1 - D$gof$ss
+
+# Residuals per pair
+Z <- 
+  residuals_paco(D$proc) |> 
+  as.data.frame() |> 
+  rownames_to_column("link")
+
+Z_1 <- 
+  paco_links(D, n = 999)
+
+Z_2 <- 
+  Z_1$jackknife |> 
+  as.data.frame() |> 
+  rownames_to_column("pair") |> 
+  rename(jack = 2) |> 
+  mutate(species = str_sub(pair, 1, 2))
+
+Z_2 |> 
+  write_csv("cladocopium_jackknifed_squared_residuals.csv")
+
+X_centered <- scale(D$p$X, scale = FALSE)
+
+total_ss <- sum(X_centered^2)
+
+residual_ss <- D$p$ss
+
+# R² = 1 - (residual / total)
+R2 <- 1 - (residual_ss / total_ss)
+
+# Method 3: if using vegan directly
+protest(D$H_PCo, D$P_PCo, permutations = 999)
+```
+
+## Plot jack
+
+```{r}
+# Overall
+Z_2_plot <- 
+  Z_2 |> 
+  ggplot(aes(x = jack,
+             y = fct_reorder(pair,
+                             jack),
+             fill = species)) +
+  geom_col(width = 0.9)  +
+  geom_vline(xintercept = median(Z_2$jack),
+             linetype = "dashed") +
+  theme_classic() +
+  theme(axis.line.y = element_blank(),
+        axis.ticks.y = element_blank(),
+        panel.spacing = unit(0.05,'lines'),
+        axis.text.y = element_text(size = 6),
+        axis.title = element_blank()) +
+  scale_fill_manual(values = c("HH"="darkred",
+                         "HP"="#cf202e",
+                         "TC"="#f78822",
+                         "TS"="#f6db35",
+                         "TN"="#6dc067",
+                         "TM"="#4185be",
+                         "TD"="#8f499c",
+                         "TG"="#201146"))
+
+Z_2_plot |> 
+  ggsave(filename = "all_jackknifed_residuals.svg", 
+         dpi = 900,
+         width = 18, 
+         height = 27,
+         unit = "cm")
+
+# Per species
+Z_2_plot_2 <- 
+  Z_2 |> 
+  ggplot(aes(x = fct_relevel(species,
+                             c("HP",
+                               "HH",
+                               "TG",
+                               "TD",
+                               "TM",
+                               "TN",
+                               "TS",
+                               "TC")),
+             y = jack)) +
+  geom_jitter(alpha = 0.5,
+              color = "gray",
+              width = 0.15,
+              size = 1.5) +
+  geom_boxplot(fill = 'black',
+               width = 0.05,
+               outlier.shape = NA,
+               color = 'black') +
+  scale_y_continuous(expand = c(0,0),
+                     limits = c(0,0.4)) +
+  stat_summary(fun = "median", 
+               fill = 'white',
+               color = 'black',
+               size = 2.5,
+               geom = 'point',
+               shape = 21,
+               stroke = 1) +
+  coord_cartesian(clip = "off") +
+  theme_minimal() +
+  theme(panel.grid = element_blank(),
+        axis.line.y = element_line(),
+        axis.ticks.y = element_line(),
+        axis.title = element_blank(),
+        axis.text = element_text(size = 7))
+
+Z_2_stats <- 
+  Z_2 |> 
+  kruskal_test(jack ~ species)
+
+Z_2_stats_2 <- 
+  Z_2 |> 
+  dunn_test(jack ~ species, p.adjust.method = "BH")
+
+Z_2_stats_3 <- 
+  Z_2_stats_2 |> 
+  mutate(group = paste(group1, group2, sep = "-")) |> 
+  select(group,p.adj) |> 
+  deframe() |> 
+  multcompLetters(threshold = 0.05)
+
+Z_2_plot_2 |> 
+  ggsave(filename = "box_residuals.svg", 
+         dpi = 900,
+         width = 8, 
+         height = 3,
+         unit = "cm")
+```
+
+## Tangle
+
+```{r}
+# Example trees
+host_tree <- rtree(10)
+symb_tree <- rtree(10)
+
+# Matching association matrix (host ↔ symbiont)
+assoc <- cbind(host_tree$tip.label,
+               symb_tree$tip.label)
+
+# Build cophylogeny object
+cophy <- cophylo(host_tree, symb_tree, assoc = assoc)
+
+# Plot
+plot(cophy,
+     link.type = "curved",
+     link.lwd = 2,
+     link.col = "blue")
+
+assoc_df <- C %>%
+  as.data.frame() %>%
+  rownames_to_column("host") %>%
+  pivot_longer(-host, names_to = "symb", values_to = "value") %>%
+  filter(value > 0) %>%
+  select(host, symb)
+
+assoc <- as.matrix(assoc_df)
+
+host_tree_pruned2 <- 
+  read.tree("host_tree_pruned_arranged.nwk")
+
+plot(host_tree_pruned2)
+
+nodelabels(cex = 0.5, 
+           frame = "none")
+
+host_tree_pruned2 <- 
+  host_tree_pruned2 |> 
+  phytools::rotateNodes(nodes = 143)  |> 
+  phytools::rotateNodes(nodes = 144)
+
+host_tree_pruned2 <- 
+  host_tree_pruned2 |> 
+  phytools::rotateNodes(nodes = 163) |> 
+  phytools::rotateNodes(nodes = 193) |> 
+  phytools::rotateNodes(nodes = 205) |> 
+  phytools::rotateNodes(nodes = 232) |> 
+  phytools::rotateNodes(nodes = 240)
+
+
+cophy <- cophylo(host_tree_pruned2, 
+                 as.phylo(hclust(as.dist(DS), method = "average")), 
+                 assoc = assoc,
+                 rotate = F)
+
+svg("cophylo_plot_C_v2.svg", width = 9.5, height = 8)
+plot(cophy,
+     link.type = "curved",
+     link.lwd = 1,
+     link.col = "blue",
+     link.lty = 1,
+     fsize = c(0.25, 0.75))
+dev.off()
+
+svg("cophylo_plot_C_v3.svg", width = 9.5, height = 8)
+plot(cophy,
+     link.type = "curved",
+     link.lwd = 1,
+     link.col = "blue",
+     link.lty = 1,
+     fsize = c(0.25, 0.75))
+dev.off()
+```
+
+# Tidy D
+
+```{r}
+# D
+hosts_with_Du <- 
+  its2_prof_2 |> 
+  select(!total) |> 
+  pivot_longer(!c(sample_name),
+               names_to = "its2_prof",
+               values_to = "count") |> 
+  left_join(metadata_1) |>  # get metadata
+  left_join(its2_rename) |> 
+  select(!its2_prof) |> 
+  rename(its2_prof = Edited) |> 
+  mutate(genus = str_extract(its2_prof, "[A-Z]")) |> 
+  filter(genus == "D" & count > 0) |> 
+  distinct(corrected_id) |> 
+  pull()
+
+
+# D2
+its2_prof_Du <- 
+  its2_prof_2 |> 
+  select(!total) |> 
+  pivot_longer(!c(sample_name),
+               names_to = "its2_prof",
+               values_to = "count") |> 
+  left_join(metadata_1) |> 
+  select(corrected_id,
+         count,
+         its2_prof) |>  # get metadata
+  left_join(its2_rename) |> 
+  mutate(genus = str_extract(Edited, "[A-Z]")) |> 
+  filter(genus == "D" & count > 0) |>
+  mutate(presence = if_else(count > 0, 1, 0)) |> 
+  select(!c(Edited, genus, count)) |> 
+  pivot_wider(names_from = its2_prof,
+              values_from = presence, 
+              values_fill = 0) |> 
+  filter(!corrected_id %in% setdiff(hosts_with_D, host_tree_pruned$tip.label))
+
+# Filter host
+host_tree_pruned <- drop.tip(
+  host_tree,
+  setdiff(host_tree$tip.label, hosts_with_Du)
+)
+
+# Which are missing? # TG50 and TG65; no COI sequence but we're sure that they're TG
+setdiff(hosts_with_Du, host_tree_pruned$tip.label)
+```
+
+## PACo D
+
+```{r}
+# Host distance
+DH <- cophenetic(host_tree_pruned)
+DH <- as.dist(DH) |> 
+  as.matrix()
+
+labels(DH)
+
+# Association matrix
+its2_prof_3 <- 
+  its2_prof_2 |> 
+  select(!total) |> 
+  pivot_longer(!c(sample_name),
+               names_to = "its2_prof",
+               values_to = "count") |> 
+  left_join(metadata_1) |> 
+  select(corrected_id,
+         count,
+         its2_prof) |>  # get metadata
+  left_join(its2_rename) |> 
+  mutate(genus = str_extract(Edited, "[A-Z]")) |> 
+  filter(genus == "D" & count > 0) |>
+  mutate(presence = if_else(count > 0, 1, 0)) |> 
+  select(!c(Edited, genus, count)) |> 
+  pivot_wider(names_from = its2_prof,
+              values_from = presence, 
+              values_fill = 0) |> 
+  filter(!corrected_id %in% setdiff(hosts_with_Du, host_tree_pruned$tip.label))
+
+Du <- 
+  its2_prof_3 |> 
+  column_to_rownames("corrected_id") |> 
+  as.matrix()
+
+Du <- Du[rownames(DH), ] # re-arrange
+
+all(rownames(Du) == rownames(DH))  # must be TRUE
+
+# Symbiont
+its2prof_dist <- 
+  read_tsv("../raw_data/20250829T091611/between_profile_distances/D/20250829T091611_unifrac_profile_distances_D_sqrt.dist", col_names = F) |> 
+  select(!2) |> 
+  column_to_rownames("X1") |> 
+  as.dist()
+
+DS <- its2prof_dist |> 
+  as.matrix()
+Du <- Du[, rownames(DS), drop = FALSE] # re-arrange
+all(colnames(Du) == rownames(DS)) # must be TRUE
+
+# Run
+D <- prepare_paco_data(DH, DS, Du)
+D <- add_pcoord(D, correction = "cailliez")
+D <- PACo(D, nperm = 999, seed = 123, symmetric = T)
+
+
+D$gof
+D$p
+D$proc
+
+R2 <- 1 - D$gof$ss
+```

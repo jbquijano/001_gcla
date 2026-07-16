@@ -1,0 +1,319 @@
+---
+title: "Community across biogeographic regions"
+format: html
+theme: 
+  light: zephyr
+  dark: cyborg
+toc: true
+page-layout: full
+number-sections: true
+number-depth: 3
+editor: visual
+self-contained: true
+---
+
+# Notes
+
+A naming convention for dataframes was made.
+
+1.  Objects were named with a prefix per section arranged alphabetically.
+2.  A 2nd prefix was added to arrange all the data accordingly:
+    -   Dataframes: .**1**
+    -   Plots: .**2**
+    -   Stats: .**3** (those in dataframe format)
+    -   Others:
+        -   Vectors: .**vec**
+        -   Trees: .**tre**
+        -   Distances: .**dis**
+        -   Functions: .**fun**
+3.  If a dataframe will be used multiple times in case a raw dataframe is needed and an edited one should not supersede the raw one, add a suffix at the end (i.e., **\_1** for first edit, **\_2** for second....).
+4.  Limit 3rd prefix names to three letters and if 2 prefixes are needed, separate with "**.**".
+5.  If an object is just an auxiliary object, put a **Z** prefix.
+
+# Load pkgs
+
+```{r}
+pacman::p_load(tidyverse,
+               janitor,
+               vegan,
+               pairwiseAdonis,
+               viridis)
+```
+
+# Community structure
+
+Import metadata.
+
+```{r}
+A.1_Metadata <- 
+  readxl::read_xlsx("../metadata/metadata_20251021.xlsx")
+
+A.1_MetadataClean <- 
+  A.1_Metadata |> 
+  select(SymportalID, CorrectID, Species, region) |> 
+  clean_names()
+
+A.1_MetadataBiogeo <- 
+  read_csv("Biogeographic regions.csv")
+
+A.1_MetadataCleanMerged <- 
+  A.1_MetadataClean |> 
+  left_join(A.1_MetadataBiogeo)
+```
+
+Load community data.
+
+```{r}
+A.1_ITS2 <- 
+  read_tsv("../raw_data/20250829T091611/post_med_seqs/4_first_analysis_20250829T091611.seqs.absolute.abund_and_meta.txt")
+
+A.1_MetadataCleanMerged2 <- 
+  A.1_MetadataCleanMerged |> 
+  rename(sample_name = 1) |> 
+  arrange(correct_id)
+
+A.1_ITS2_2 <- 
+  A.1_ITS2 |> 
+  drop_na()  |> 
+  filter(post_med_unique != 0) |> 
+  select(!c(1, 3:39))
+
+A.1_ITS2_3 <- 
+  A.1_ITS2_2 |> 
+  left_join(A.1_MetadataCleanMerged2) |> 
+  relocate(sample_name, correct_id, species, region, bio_region)
+```
+
+Make matrix.
+
+```{r}
+A.1_ITS2_4 <- # retain CorrectID only
+  A.1_ITS2_3 |> 
+  select(!c(1,3,4,5)) |> 
+  arrange(correct_id)  |> 
+  column_to_rownames("correct_id") |> 
+  as.matrix() |> 
+  sqrt()
+```
+
+Compute Bray-Curtis dissimilarity.
+
+```{r}
+A.1_ITS2BrayCurtis <- 
+  A.1_ITS2_4 |> 
+  vegdist()
+
+A.2_PERMANOVA <- 
+  adonis2(A.1_ITS2BrayCurtis ~ get("bio_region"), 
+          data = (A.1_MetadataCleanMerged2 |> 
+                    filter(correct_id %in% (A.1_ITS2_3 |>
+                                             pull(correct_id))) |>
+                    arrange(correct_id)))
+
+A.2_PERMANOVAPairwise <- 
+  pairwise.adonis2(A.1_ITS2BrayCurtis ~ bio_region,
+                   data = (A.1_MetadataCleanMerged2 |>
+                             filter(correct_id %in% (A.1_ITS2_3 |>
+                                                      pull(correct_id))) |>
+                      arrange(correct_id)),
+                   nperm = 9999)
+
+Z.fun_PPERMANOVACleaner <- 
+  function(pmanova_res){
+    a <- 
+      pmanova_res[-1] |> 
+      bind_rows(.id = 'groups') |> 
+      drop_na() %>%
+      .$`Pr(>F)` |> 
+      p.adjust(method = 'BH') 
+    
+    b <- 
+      unique(pmanova_res[-1] |> 
+               bind_rows(.id = 'groups'))$groups |> 
+      unique()
+      
+    d <- 
+       a %>% 
+        data.frame(b,.) |> 
+        rename('groups' = 1,
+               `P-adjusted` = 2) %>% 
+        left_join(pmanova_res[-1] |> 
+                    bind_rows(.id = 'groups'), 
+                  ., 
+                  by = 'groups') |> 
+        mutate(`P-adjusted` = case_when(is.na(`Pr(>F)`) ~ NA,
+                                        .default = `P-adjusted`)) |> 
+        mutate(Parameter = rep(c('Species', 'Residual', 'Total'), length.out = n())) |> 
+        relocate(last_col(), .after = 1)
+    
+    return(d)
+  }
+
+A.2_PERMANOVAPairwise2 <- # tidy
+  A.2_PERMANOVAPairwise |> 
+  Z.fun_PPERMANOVACleaner()
+```
+
+Plot.
+
+```{r}
+# Import ITS2 type profiles
+B.1_ITS2TypeProf <- 
+  read_tsv("../raw_data/20250829T091611/its2_type_profiles/4_first_analysis_20250829T091611.profiles.absolute.abund_and_meta.txt")
+
+B.1_ITS2TypeProfClean <- 
+  B.1_ITS2TypeProf |> 
+  slice(-(1:5)) %>% # Remove first 5 rows (unnecessary rows)
+  row_to_names(1) |>  # Move first row to column header
+  rename(symportal_id = 2) |>  # Name 2nd column
+  select(-1) |>  # Remove first column (unneeded)
+  drop_na() |> 
+  type_convert() 
+
+B.1_ITS2TypeProfClean2 <- 
+  B.1_ITS2TypeProfClean |> 
+  left_join(A.1_MetadataClean) |> 
+  left_join(A.1_MetadataBiogeo) |> 
+  relocate(symportal_id, correct_id:bio_region) |> 
+  rename(sample_id = 2)
+
+# Correct ITS2 type profile naming
+B.1_ITS2TypeProfCorrect <- 
+  read_csv("../raw_data/Edited ITS2 type profile naming.csv") |> 
+  rename(its2_type = 1) 
+
+B.1_ITS2TypeProfCleanMerged <- 
+  B.1_ITS2TypeProfClean2 |> 
+  filter(sample_id %in% (A.1_ITS2_3 |> pull(correct_id))) |> 
+  
+  # Tidy
+  pivot_longer(!c(symportal_id:bio_region),
+               names_to = "its2_type",
+               values_to = "count") |> 
+  left_join(B.1_ITS2TypeProfCorrect)  |> 
+  select(!its2_type) |> 
+  rename(its2_type = Edited) |> 
+  group_by(sample_id)  |>
+  mutate(rel_abun = count/sum(count)) |> 
+  ungroup() |> 
+  mutate(rel_abun = sqrt(rel_abun),
+         clade = str_extract(its2_type, "[A-Z]"))
+
+B.2_ITS2TypeProfile <- 
+  B.1_ITS2TypeProfCleanMerged |> 
+  ggplot(aes(x = fct_reorder(sample_id, species),
+             y = its2_type,
+             fill = rel_abun)) +
+  geom_raster() +
+  facet_grid(cols = vars(bio_region),
+             rows = vars(clade),
+             space = "free",
+             scale = "free") +
+  scale_y_discrete(expand = c(0,0)) +
+  scale_x_discrete(expand = c(0,0)) +
+  theme_minimal() +
+  theme(legend.title = element_blank(),
+        strip.background = element_blank(),
+        panel.spacing = unit(0.2,'lines'),
+        axis.text.x = element_blank(),
+        axis.text.y = element_text(size = 7, hjust = 0),
+        axis.title = element_blank(),
+        panel.grid = element_blank(),
+        legend.position = "bottom") +
+  viridis::scale_fill_viridis(option = "cividis")
+
+# Export
+B.2_ITS2TypeProfile |> 
+  ggsave(filename = "By biogeographic regions.svg", 
+         dpi = 900,
+         width = 18, 
+         height = 10,
+         unit = "cm")
+
+# Region labels
+B.2_ITS2TypeProfile_region_lab <- 
+  B.1_ITS2TypeProfCleanMerged |> 
+  ggplot(aes(x = fct_reorder(sample_id,
+                             species),
+             y = 1,
+             fill = species)) + 
+  geom_raster() +
+  facet_grid(cols = vars(bio_region),
+             space = "free",
+             scales = "free") +
+  scale_fill_manual(values = 
+                       c("H. hippopus"="darkred",
+                         "H. porcellanus"="#cf202e",
+                         "T. crocea"="#f78822",
+                         "T. squamosa"="#f6db35",
+                         "T. noae"="#6dc067",
+                         "T. maxima"="#4185be",
+                         "T. derasa"="#8f499c",
+                         "T. gigas"="#201146")) +
+  theme_void() +
+  theme(legend.position = "bottom")
+
+B.2_ITS2TypeProfile_region_lab |> 
+  ggsave(filename = "By species - Labels.svg", 
+         dpi = 900,
+         width = 17.5, 
+         height = 10,
+         unit = "cm")
+```
+
+NMDS
+
+```{r}
+C.1_ITS2BrayCurtisNMDS <- 
+  A.1_ITS2BrayCurtis |> 
+  metaMDS(k = 2)
+
+C.1_ITS2BrayCurtisNMDS_1 <- # tidy NMDS data
+  as.data.frame(scores(C.1_ITS2BrayCurtisNMDS)) |> 
+  rownames_to_column("correct_id")
+
+C.1_ITS2BrayCurtisNMDS_2 <- # add metadata
+  C.1_ITS2BrayCurtisNMDS_1 |> 
+  left_join(A.1_MetadataCleanMerged2)
+
+C.2_ITS2BrayCurtisNMDS <- 
+  C.1_ITS2BrayCurtisNMDS_2 |> 
+  ggplot(aes(x = NMDS1, y = NMDS2)) +
+  geom_hline(yintercept = 0,
+             color = 'darkgray',
+             linetype = 'dashed',
+             linewidth = 0.25) +
+  geom_vline(xintercept = 0,
+             color = 'darkgray',
+             linetype = 'dashed',
+             linewidth = 0.25)  +
+  stat_ellipse(aes(group = bio_region,
+                   color = bio_region),
+               level = 0.75) +
+  geom_point(aes(color = bio_region))+
+  labs(x = "NMDS1",
+       y = "NMDS2",
+       color = "GC species") +
+  scale_color_manual(values = c("West Philippine Sea"="#FDE725",
+                               "Sulu Sea"="#7AD151",
+                               "Visayas Sea"="#440154",
+                               "North Philippine Sea"="#414487",
+                               "South Philippine Sea"="#2A788E")) +
+  theme_minimal() +
+  theme(panel.grid = element_blank(),
+        strip.background = element_blank(),
+        axis.ticks = element_blank(),
+        axis.text = element_blank(),
+        axis.line = element_line(),panel.background    = element_rect(fill = "transparent", colour = NA),
+        plot.background     = element_rect(fill = "transparent", colour = NA),
+        legend.background   = element_rect(fill = "transparent", colour = NA),
+        legend.box.background = element_rect(fill = "transparent", colour = NA),
+        legend.position = "none")
+
+C.2_ITS2BrayCurtisNMDS |> 
+  ggsave(filename = "By biogeographic regions - NMDS.svg", 
+         dpi = 900,
+         width = 10, 
+         height = 10,
+         unit = "cm")
+```
